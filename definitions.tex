@@ -7,8 +7,9 @@
 We consider a system composed of $n$ server processes $\Pi = \{ 1, \dots, n\}$ that communicate by exchanging messages.
 All messages sent between processes are digitally signed.
 Processes can be \emph{correct} or \emph{faulty}, where correct processes
-follow the algorithm and the faulty one may behave in an arbitrary way, i.e., we consider Byzantine faults.
-We assume than the number of faulty servers is limited to $f$.
+follow the algorithm and faulty ones may behave in an arbitrary way. Therefore,
+we consider Byzantine faults.  We assume that the total voting power of
+faulty servers is limited to $f$.
 
 We consider a partially synchronous system model:
 in all executions of the system, there is a bound $\Delta$
@@ -19,7 +20,7 @@ before $t+\Delta$.
 We do not make any assumption
 before $GST$. For example, messages among correct processes can be
 delayed, dropped or duplicated before $GST$. Spoofing/impersonation attacks are
-assumed to be impossible also before $GST$.
+also assumed to be impossible before $GST$.
 
 We assume that process steps (which might include
 sending and receiving messages)
