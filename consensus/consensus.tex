@@ -1,0 +1,174 @@
+
+\section{Tendermint consensus algorithm}
+\label{sec:tendermint}
+
+\newcommand\Disseminate{\textbf{Disseminate}}
+
+\newcommand\Proposal{\mathsf{PROPOSAL}}
+\newcommand\ProposalPart{\mathsf{PROPOSAL\mbox{-}PART}}
+\newcommand\PrePrepare{\mathsf{INIT}}
+\newcommand\Prevote{\mathsf{PREVOTE}}
+\newcommand\Precommit{\mathsf{PRECOMMIT}}
+\newcommand\Decision{\mathsf{DECISION}}
+
+\newcommand\ViewChange{\mathsf{VC}}
+\newcommand\ViewChangeAck{\mathsf{VC\mbox{-}ACK}}
+\newcommand\NewPrePrepare{\mathsf{VC\mbox{-}INIT}}
+\newcommand\coord{\mathsf{proposer}}
+
+\newcommand\newHeight{newHeight}
+\newcommand\newRound{newRound}
+\newcommand\nil{nil}
+\newcommand\prevote{prevote}
+\newcommand\prevoteWait{prevoteWait}
+\newcommand\precommit{precommit}
+\newcommand\precommitWait{precommitWait}
+\newcommand\commit{commit}
+
+\newcommand\timeoutPropose{timeoutPropose}
+\newcommand\timeoutPrevote{timeoutPrevote}
+\newcommand\timeoutPrecommit{timeoutPrecommit}
+\newcommand\proofOfLocking{proof\mbox{-}of\mbox{-}locking}
+
+\begin{algorithm}[htb!]
+\def\baselinestretch{1}
+\scriptsize\raggedright
+\begin{algorithmic}[1]
+	\SHORTSPACE
+\INIT{}
+\STATE $h_p := 0$ \COMMENT{current height, or consensus instance we are currently executing}
+\STATE $round_p := 0$   \COMMENT{current round number} 
+\STATE $step_p  \in \set{\propose=0, \prevote=1, \prevoteWait=2, \precommit=3, \precommitWait=4, \commit=5}$, initially $\propose$  
+\STATE $decision_p[] := nil$ for every element of the array
+\STATE $lockedValue_p := nil$
+\STATE $lockedRound_p := -1$ 
+%\STATE ~~$\timeoutPropose := initTimeoutPropose + r*timeoutDelta$
+%\STATE ~~$\timeoutPrevote := initTimeoutPrevote + r*timeoutDelta$
+%\STATE $\timeoutPrecommit := initTimeoutPrecommit + r*timeoutDelta$
+\ENDINIT
+\SHORTSPACE
+\STATE \textbf{upon} start \textbf{do}  $StartRound(0)$
+\SHORTSPACE
+\FUNCTION{$StartRound(round)$} \label{line:tab:startRound}
+	\STATE	$round_p \assign round$
+	\STATE	$step_p \assign \propose$
+	\IF{$\coord(h_p, round_p) = p$} 
+		\IF{$lockedValue_p \neq \nil$} \label{line:tab:isThereLockedValue}
+			\STATE $proposal \assign lockedValue_p$
+		\ELSE
+			\STATE $proposal \assign getValue()$ \label{line:tab:getValidValue}
+		\ENDIF 	  
+		\STATE \Broadcast\ $\li{\Proposal,h_p, round_p, proposal, lockedRound_p}$  \label{line:tab:send-proposal}
+	\ELSE
+		\STATE \textbf{after} $\timeoutPropose$ execute $OnTimeoutPropose(h_p, round_p)$ 
+	\ENDIF
+\ENDFUNCTION
+
+\SPACE
+\UPON{$\li{\Proposal,h_p,round_p, v, r}$ \From\ $\coord(h_p,round_p)$ \With\ $state_p = \propose$} \label{line:tab:recvProposal}			
+ \IF{$!valid(v) \vee lockedRound_p > r  \wedge lockedValue_p \neq v$}  \label{line:tab:acceptProposal1}		
+ 	\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,\nil}$  \label{line:tab:prevote-nil}	
+ 	\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote1} 
+ \ELSIF{$valid(v) \wedge lockedRound_p = -1  \vee lockedValue_p = v$}
+ 	\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,id(v)}$  \label{line:tab:prevote-proposal}	
+ 	\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote2} 
+ \ENDIF
+ \IF{$r > -1 \wedge r < round_p$}
+ 	\STATE \textbf{gossip} $\li{\Prevote, h_p, r, id(v)}$ messages from message log \label{line:tab:gossip-prevotes}	
+ \ENDIF		 
+\ENDUPON
+
+\SPACE
+\UPON{$\li{\Proposal,h_p,round_p, v, r}$ \From\ $\coord(h_p,round_p)$ \textbf{AND} $2f+1$ $\li{\Prevote,h_p, r,id(v)}$  \With\
+	$step_p = \propose$} \label{line:tab:acceptProposal}
+	\IF{$r > lockedRound_p \wedge valid(v)$}
+		\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,id(v)}$  \label{line:tab:prevote-higher-proposal}	
+		\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote3} 		 
+	\ENDIF
+\ENDUPON
+
+\SPACE
+\UPON{$2f+1$ $\li{\Prevote,h_p, round_p,*}$ \With\ $state_p \le \prevote$} \label{line:tab:recvAny2/3Prevote}
+	\STATE \textbf{after} $\timeoutPrevote$ execute $OnTimeoutPrevote(h_p, round_p)$ \label{line:tab:timeoutPrevote}
+	\STATE $step_p \assign \prevoteWait$
+\ENDUPON
+
+\SPACE
+\UPON{$\li{\Proposal,h_p,round_p, v, *}$ \From\ $\coord(h_p,round_p)$ \textbf{AND} $2f+1$ $\li{\Prevote,h_p, round_p,id(v)}$  \With\ $valid(v)$} \label{line:tab:recvPrevote}
+	\STATE $lockedValue_p \assign v$                \label{line:tab:setLockedValue}
+	\STATE $lockedRound_p \assign round_p$   \label{line:tab:setLockedRound} 
+	\IF{$step_p = \prevote$}
+		\STATE \Broadcast \ $\li{\Precommit,h_p,round_p,id(v))}$  \label{line:tab:precommit-v}	
+		\STATE $step_p \assign \precommit$ \label{line:tab:setStateToCommit}
+	\ENDIF
+\ENDUPON
+
+\SHORTSPACE
+\UPON{$2f+1$ $\li{\Prevote,h_p,round_p,\nil}$ \With\ $state_p \le \prevote$}
+	\STATE \Broadcast \ $\li{\Precommit,h_p,round_p,\nil}$   \label{line:tab:precommit-nil}
+	\STATE $step_p \assign \precommit$
+\ENDUPON
+
+\SPACE
+\UPON{$2f+1$ $\li{\Precommit,h_p,round_p,*}$ \With\ $state_p \le \precommitWait$} \label{line:tab:startTimeoutPrecommit}
+	\STATE \textbf{after} $\timeoutPrecommit$ execute $OnTimeoutPrecommit(h_p, round_p)$
+	\STATE $step_p \assign \precommitWait$
+\ENDUPON 
+
+\SPACE
+\UPON{$\li{\Proposal,h_p,round_p, v, *}$ \From\ $\coord(h_p,round_p)$ \textbf{AND} $2f+1$ $\li{\Precommit,h_p,round_p,id(v)}$} \label{line:tab:onDecideRule} 
+\IF{$decision_p[h_p] = \nil \wedge v \neq \nil \wedge valid(v)$}
+	\STATE $decision_p[h_p] = v$   \label{line:tab:decide} 
+	\STATE$h_p \assign h_p + 1$  \label{line:tab:increaseHeight} 
+	\STATE reset $lockedRound_p$ and $lockedValue_p$ to init values and empty message log 
+	\STATE $StartRound(0)$   	
+\ENDIF
+\ENDUPON
+
+\SHORTSPACE
+\UPON{$2f+1$ $\li{*,h_p,round, *, *}$ \textbf{with} $round > round_p$} \label{line:tab:skipRounds}
+\STATE $StartRound(round)$ \label{line:tab:nextRound2}
+\ENDUPON
+
+\SHORTSPACE
+\FUNCTION{$OnTimeoutPropose(height,round)$} \label{line:tab:onTimeoutPropose}
+\IF{$height = h_p \wedge round = round_p \wedge step_p = \propose$}
+\STATE \Broadcast \ $\li{\Prevote,h_p,round_p, \nil}$  \label{line:tab:prevote-nil-on-timeout}	
+\STATE $step_p \assign \prevote$
+\ENDIF	
+\ENDFUNCTION
+
+\SHORTSPACE
+\FUNCTION{$OnTimeoutPrevote(height,round)$} \label{line:tab:onTimeoutPrevote}
+\IF{$height = h_p \wedge round = round_p \wedge step_p = \prevote$}
+\STATE \Broadcast \ $\li{\Precommit,h_p,round_p,\nil}$   \label{line:tab:precommit-nil-onTimeout}
+\STATE $step_p \assign \precommit$
+\ENDIF	
+\ENDFUNCTION
+
+\SHORTSPACE
+\FUNCTION{$OnTimeoutPrecommit(height,round)$} \label{line:tab:onTimeoutPrecommit}
+\IF{$height = h_p \wedge round = round_p \wedge step_p = \precommit$}
+\STATE $StartRound(round_p + 1)$ \label{line:tab:nextRound} 
+\ENDIF	
+\ENDFUNCTION	
+\end{algorithmic}
+\caption{Tendermint consensus algorithm}
+\label{alg:tendermint}
+\end{algorithm}
+
+In this section we present Tendermint Byzantine fault-tolerant consensus algorithm. The algorithm is inspired by the PBFT SMR algorithm~\cite{CL02:tcs} and the DLS algorithm for authenticated faults (the Algorithm 2 from \cite{DLS88:jacm}), but the algorithm structure is quite different in Tendermint\footnote{The comparison with related consensus algorithms is given in Section~\ref{sec:relatedWork}.}. There is only a single mode of execution in Tendermint, i.e., there is no separation between the normal and the recovery mode, which is the case in PBFT-like protocols (e.g., \cite{CL02:tcs}, \cite{Ver09:spinning} or \cite{Cle09:aardvark}). We believe that this makes the protocol simpler to understand and implement correctly.
+   
+The code of the algorithm is given as Algorithm~\ref{alg:tendermint}. We present algorithm as a set of \emph{upon rules} that are executed atomically\footnote{In case several rules are active at the same time, the first rule to be executed is picked randomly. The correctness of the algorithm do not depend on the ordering in which rules are executed.}. We assume that processes exchange protocol messages using gossip protocol and received and sent messages at every process are stored in the local \emph{message log}. The upon rule is triggered once message log contains messages such that the corresponding condition evaluates to $\tt{true}$. 
+
+We denote with $n$ the total voting power of the processes in the system, and we assume that the total voting power of faulty processes in the system is bounded with a system parameter $f$. 
+The algorithm assumes that $n > 3f$, i.e., it requires that the faulty processes have together the voting power that is smaller than one third of the total voting power. For simplicity we present the algorithm for the case $n = 3f + 1$.
+
+The algorithm proceeds in rounds, where each round has a dedicated \emph{proposer}. The assignment scheme of rounds to proposers is known to all processes and is given as a function $\coord_p(height, round)$, returning the proposer for the round $r$ in the consensus instance $height$ at the process $p$. The simple implementation of the proposer selection function is weighted round-robin, where processes are rotated proportional to its voting power\footnote{A validator with more voting power is selected more frequently, proportional to its power. More precisely, during a sequence of rounds of size $n$, every process is proposer in a number of rounds equal to its voting power.}. 
+
+Every round starts by proposer suggesting a value with $\Proposal$ message. In the initial round of each consensus instance (called \emph{height} in Tendermint), a proposer is free to chose the value to suggest. In the Algorithm~\ref{alg:tendermint}, process obtains value to propose using external function    
+$getValue()$ that returns valid value to propose. In the following rounds, the correct proposer will suggest new value only if it hasn't locked some value, i.e., $lockedValue \neq \nil$ (see lines~\ref{line:tab:isThereLockedValue}-\ref{line:tab:getValidValue}). 
+
+As a proposer might be a faulty process, a correct process will not blindly accept proposer value. A correct process accepts proposal for some value $v$ if $v$ is \emph{valid} value, and if it has not locked any value ($lockedValue = \nil$) or if it has locked $v$ ($lockedValue = v$), see line~\ref{line:tab:acceptProposal1}. In case the proposed value is $v$ and a correct process $p$ has locked some other value ($v' \neq v$), it will accept proposal if it sees the proof that $v$ was possibly locked in some round higher than $lockedRound_p$ (see rule at line~\ref{line:tab:acceptProposal}). Otherwise, a correct process will reject proposal. 
+
+TODO: Finish description of the algorithm. Maybe add a picture. 
