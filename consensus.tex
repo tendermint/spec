@@ -130,7 +130,7 @@ $step_p \le \prevote$} \label{line:tab:recvPrevote}
 
 \SPACE
 \UPON{receiving $\li{\Precommit,height_p,round,v}$ \From\ at least $2f+1$ processes \With\ $step_p < \commit$} \label{line:tab:onPrecommitRule}
-  \IF{$vote \neq \nil$}
+  \IF{$v \neq \nil$}
 	   \STATE $decide(height_p, v)$ \label{line:tab:decide}
 	   \STATE$height_p \assign height_p + 1$
 	   \STATE reset $round_p$, $step_p$, $lockedRound_p$, $lockedValue_p$, $validValue_p$ and $validRound$ to init values    
