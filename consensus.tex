@@ -51,7 +51,7 @@
 \SPACE
 \FUNCTION{$StartRound(round)$} \label{line:tab:startRound}
 \STATE $round_p \assign round$
-\STATE $state_p \assign \propose$
+\STATE $step_p \assign \propose$
 \IF{$\coord(height_p, round_p) = p$} 
 	\IF{$lockedValue_p \neq \nil$}
 		\STATE $proposal \assign lockedValue$
@@ -66,7 +66,7 @@
 \ENDFUNCTION
 
 \SPACE
-\UPON{receiving $\li{\Proposal,height_p,round_p, proposal}$ \From\ $\coord(height_p,round_p)$ \With\ $state_p = \propose$} \label{line:tab:recvProposal} 
+\UPON{receiving $\li{\Proposal,height_p,round_p, proposal}$ \From\ $\coord(height_p,round_p)$ \With\ $step_p = \propose$} \label{line:tab:recvProposal} 
  \IF{$lockedValue_p \neq \nil$}  \label{line:tab:hasLockedValue}
  	\STATE \PBroadcast \ $\li{\Prevote,height_p,round_p,lockedValue_p}$ to all \label{line:tab:send-locked-value}
  \ELSIF{$valid(proposal))$} \label{line:tab:locked-value-nil} 
@@ -74,26 +74,26 @@
  \ELSE
    \STATE \PBroadcast \ $\li{\Prevote,height_p,round_p,\nil}$ to all \label{line:tab:send-prevote-nil}	
  \ENDIF
- \STATE $state_p \assign \prevote$ \label{line:tab:setStateToPrevote}
+ \STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote}
 \ENDUPON
 
 \SPACE
 \FUNCTION{$OnTimeoutPropose(height,round)$} \label{line:tab:onTimeoutPropose}
-\IF{$height = height_p \wedge round = round_p \wedge state_p = \propose$}
+\IF{$height = height_p \wedge round = round_p \wedge step_p = \propose$}
 	\STATE \PBroadcast \ $\li{\Prevote,height_p,round_p,\nil}$ to all 
-	\STATE $state_p \assign \prevote$  
+	\STATE $step_p \assign \prevote$  
 \ENDIF	
 \ENDFUNCTION
 
 \SPACE
 \UPON{receiving $\li{\Prevote,height_p, round_p,*}$  \From\ at least $2f+1$ processes \With\
-	$state_p \le \prevote$} \label{line:tab:recvAny2/3Prevote}
+	$step_p \le \prevote$} \label{line:tab:recvAny2/3Prevote}
 	\STATE \textbf{after} $\timeoutPrevote$ execute $OnTimeoutPrevote(height_p, round_p)$ \label{line:tab:timeoutPrevote}
 \ENDUPON
 
 \SPACE
 \UPON{receiving $\li{\Prevote,height_p, round_p,v}$  \From\ at least $2f+1$ processes \With\
-$state_p \le \prevote$} \label{line:tab:recvPrevote}
+$step_p \le \prevote$} \label{line:tab:recvPrevote}
  \IF{$v \neq \nil$}
   \STATE $lockedValue_p \assign v$   \label{line:tab:setLockedValue}
   \STATE $lockedRound_p \assign round_p$   \label{line:tab:setLockedRound} 
@@ -101,7 +101,7 @@ $state_p \le \prevote$} \label{line:tab:recvPrevote}
  \ELSE 
    \STATE \PBroadcast \ $\li{\Precommit,height_p,round_p,\nil}$ to all \label{line:tab:send-precommit-nil}	
  \ENDIF
- \STATE $state_p \assign \precommit$ \label{line:tab:setStateToCommit}
+ \STATE $step_p \assign \precommit$ \label{line:tab:setStateToCommit}
 \ENDUPON
 
 \SPACE
@@ -122,14 +122,14 @@ $state_p \le \prevote$} \label{line:tab:recvPrevote}
 
 \SPACE
 \FUNCTION{$OnTimeoutPrevote(height,round)$} \label{line:tab:onTimeoutPrevote}
-\IF{$height = height_p \wedge round = round_p \wedge state_p = \prevote$}
+\IF{$height = height_p \wedge round = round_p \wedge step_p = \prevote$}
   \STATE \PBroadcast \ $\li{\Precommit,height_p,round_p,\nil}$ to all  \label{line:tab:precommit-nil-onTimeout}
-  \STATE $state_p \assign \precommit$  
+  \STATE $step_p \assign \precommit$  
 \ENDIF	
 \ENDFUNCTION
 
 \SPACE
-\UPON{receiving $\li{\Precommit,height_p,round,v}$ \From\ at least $2f+1$ processes \With\ $state_p < \commit$} \label{line:tab:onPrecommitRule}
+\UPON{receiving $\li{\Precommit,height_p,round,v}$ \From\ at least $2f+1$ processes \With\ $step_p < \commit$} \label{line:tab:onPrecommitRule}
   \IF{$vote \neq \nil$}
 	   \STATE $decide(height_p, v)$ \label{line:tab:decide}
 	   \STATE$height_p \assign height_p + 1$
@@ -142,13 +142,13 @@ $state_p \le \prevote$} \label{line:tab:recvPrevote}
 \ENDUPON
  
 \SPACE
-\UPON{receiving $\li{\Precommit,height_p,round_p,*}$  \From\ at least $2f+1$ processes \With\ $state_p = \precommit$} \label{line:tab:startTimeoutPrecommit}
+\UPON{receiving $\li{\Precommit,height_p,round_p,*}$  \From\ at least $2f+1$ processes \With\ $step_p = \precommit$} \label{line:tab:startTimeoutPrecommit}
 	\STATE \textbf{after} $\timeoutPrecommit$ execute $OnTimeoutPrecommit(height_p, round_p)$
 \ENDUPON 
 
 \SPACE
 \FUNCTION{$OnTimeoutPrecommit(height,round)$} \label{line:tab:onTimeoutPrecommit}
-\IF{$height = height_p \wedge round = round_p \wedge state_p = \precommit$}
+\IF{$height = height_p \wedge round = round_p \wedge step_p = \precommit$}
 \STATE $StartRound(round_p+1)$
 \ENDIF	
 \ENDFUNCTION
@@ -193,9 +193,9 @@ However, before a value is decided, a process might change his mind and unlock i
 
 Locking phase starts by a process suggesting what value should be locked in the current round. This is achieved by sending a $\Prevote$ message to all processes. If a correct process has locked some value $v$ ($lockedValue = v \neq \nil$), he votes for $v$ and ignores the suggested value by the proposer (see lines~\ref{line:tab:hasLockedValue}-\ref{line:tab:send-locked-value}). Otherwise, a process might accept the value suggested by the proposer if the proposal is valid\footnote{Validity of a value is an application specific and defined by the function \emph{valid()}.}, and vote for that value (see lines~\ref{line:tab:locked-value-nil}-\ref{line:tab:setStateToPrevote}). In case the suggested value is invalid or a process has not received any proposal from the current coordinator within $\timeoutPropose$ from the start of the current round, it votes with $\nil$ value (see line~\ref{line:tab:send-prevote-nil} and line \ref{line:tab:onTimeoutPropose}). Note that $\nil$ is special value that can not be locked, and it is used to inform others that the algorithm step has not completed successfully; in case of the locking phase, a process has not received a valid value from the proposer on time. 
 
-A process locks value $v$ if it receives at least $2f+1$ $\Prevote$ messages for the value $v$ in the current round (see lines~\ref{line:tab:recvPrevote}-\ref{line:tab:setLockedRound}). A correct process sends only a single $\Prevote$ message in every round. Algorithm relies on the $state$ variable to prevent correct processes from sending more than one $\Prevote$ message in a single round. As a correct process sends a single $\Prevote$ message in a round, and $f$ is the total voting power of faulty processes, two correct processes cannot receive $2f+1$ $\Prevote$ messages for different values in a single round. So if two correct processes lock some value in a given round $r$, then it must be the same value. We will prove this formally in the section~\ref{sec:proof}.    
+A process locks value $v$ if it receives at least $2f+1$ $\Prevote$ messages for the value $v$ in the current round (see lines~\ref{line:tab:recvPrevote}-\ref{line:tab:setLockedRound}). A correct process sends only a single $\Prevote$ message in every round. Algorithm relies on the $step$ variable to prevent correct processes from sending more than one $\Prevote$ message in a single round. As a correct process sends a single $\Prevote$ message in a round, and $f$ is the total voting power of faulty processes, two correct processes cannot receive $2f+1$ $\Prevote$ messages for different values in a single round. So if two correct processes lock some value in a given round $r$, then it must be the same value. We will prove this formally in the section~\ref{sec:proof}.    
 
-The locking phase ends by processes informing others if they locked some value in the current round (or not) by sending $\Precommit$ message. If a process has locked some value $v$ in the current round, then this value is sent in the $\Precommit$ message (see line~\ref{line:tab:send-precommit}); otherwise $\nil$ is sent (line~\ref{line:tab:send-precommit-nil} and \ref{line:tab:precommit-nil-onTimeout}). A correct process sends only single $\Precommit$ message in every round. Similarly as with the $\Prevote$ message, the algorithm relies on the $state$ variable to prevent correct processes from sending more than one $\Precommit$ message in a single round. 
+The locking phase ends by processes informing others if they locked some value in the current round (or not) by sending $\Precommit$ message. If a process has locked some value $v$ in the current round, then this value is sent in the $\Precommit$ message (see line~\ref{line:tab:send-precommit}); otherwise $\nil$ is sent (line~\ref{line:tab:send-precommit-nil} and \ref{line:tab:precommit-nil-onTimeout}). A correct process sends only single $\Precommit$ message in every round. Similarly as with the $\Prevote$ message, the algorithm relies on the $step$ variable to prevent correct processes from sending more than one $\Precommit$ message in a single round. 
 
 \subsection{Unlocking mechanism}
 \label{sec:unlocking}
