@@ -20,10 +20,10 @@ We assume that process steps (which might include sending and receiving messages
 Processes are equipped with clocks so they can measure local timeouts.
 All protocol messages are signed, i.e., when a correct process $q$ receives a signed message $m$ from its peer, the process $q$ can verify who was the original sender of the message $m$.
 
-The details of the Tendermint gossip protocol will be discussed in a separate technical report. For the sake of this report it is sufficient to assume that messages are being gossiped between processes and the following property holds (in addition to the partial synchrony network assumptions) hold:
+The details of the Tendermint gossip protocol will be discussed in a separate technical report. For the sake of this report it is sufficient to assume that messages are being gossiped between processes and the following property holds (in addition to the partial synchrony network assumptions):
 
 \begin{itemize}
-	\item \emph{Gossip communication:} If a correct process $p$ receives some message $m$ at time $t \ge GST$, all correct processes will receive $m$ before $t + \Delta$. Furthermore, if a correct process receives some message $m$ at time $t < GST$, all correct processes will receive message before $GST + k\Delta$ for some constant $k$.   
+	\item \emph{Gossip communication:} If a correct process $p$ receives some message $m$ at time $t$, all correct processes will receive $m$ before $max\{t, GST\} + \Delta$.    
 \end{itemize}
 
 
@@ -61,9 +61,6 @@ requests will be processed.
 
  \subsection{Consensus}
  \label{sec:consensus}
-
- \newcommand{\propose}{\mathsf{propose}}
- \newcommand{\decide}{\mathsf{decide}}
 
 Tendermint solves state machine replication by sequentially executing consensus instances to agree on the content of the next block of transactions that are then executed by the service being replicated. We consider a variant of the Byzantine consensus problem called Validity Predicate-based Byzantine consensus that is motivated by blockchain
 systems~\cite{GLR17:red-belly-bc}. The problem is defined by an agreement, a termination, and a validity
