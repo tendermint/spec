@@ -7,12 +7,12 @@ We consider a system of processes that communicate by exchanging messages.
 Processes can be correct or faulty, where a faulty process can behave in an arbitrary way,
  i.e., we consider Byzantine faults. We assume that each process has some amount of voting power (voting power of a process can be $0$).
 Processes in our model are not part of the single administration domain; therefore we cannot enforce a direct network connectivity between all processes. Instead, we assume that each process is connected to a subset of processes called peers, 
-such that there is an indirect communication channel between all correct processes. Communication between processes is established using a gossip protocol.
+such that there is an indirect communication channel between all correct processes. Communication between processes is established using a gossip protocol \cite{Dem1987:gossip}.
 
 Formally, we model the network communication using the \emph{partially synchronous system model}~\cite{DLS88:jacm}: in all executions
 of the system there is a bound $\Delta$ and an instant GST (Global Stabilization Time) such that all communication among correct processes 
 after GST is reliable and $\Delta$-timely, i.e., if a correct process $p$ sends message $m$ at time $t \ge GST$ to correct process $q$, then $q$ will receive $m$ before $t + \Delta$\footnote{Note that as we do not assume direct communication channels among all correct processes, this implies that before the message $m$ reaches $q$, it might pass through a number of 
-	correct processes that will forward the message $m$ using gossip protocol towards $q$.}. Messages among correct processes can be delayed, dropped or duplicated before GST. Spoofing/impersonation attacks are assumed to be impossible also before GST. 
+	correct processes that will forward the message $m$ using gossip protocol towards $q$.}. Messages among correct processes can be delayed, dropped or duplicated before GST. 
 The bound $\Delta$ and GST are system parameters whose values are not required to be known for the safety of our algorithm. Termination of the algorithm is guaranteed within a bounded duration after GST.
 In practice, the algorithm will work correctly in the slightly weaker variant of the model where the system alternates between (long enough) good periods (corresponds to the \emph{after} GST period where system is reliable and $\Delta$-timely) and bad periods (corresponds to the period \emph{before} GST during which the system is asynchronous and messages can be lost), but considering the GST model simplifies the discussion.  
 
@@ -34,7 +34,7 @@ The details of the Tendermint gossip protocol will be discussed in a separate te
 \subsection{State Machine Replication}
 
 State machine replication (SMR) is a general approach for replicating
-services that can be modeled as a deterministic state
+services modeled as a deterministic state
 machine~\cite{Lam78:cacm,Sch90:survey}.
 The key idea of this approach is to guarantee that all replicas start
 in the same state and then apply requests from clients in the
