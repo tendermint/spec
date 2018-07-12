@@ -40,15 +40,12 @@
 \INIT{}
 \STATE $h_p := 0$ \COMMENT{current height, or consensus instance we are currently executing}
 \STATE $round_p := 0$   \COMMENT{current round number} 
-\STATE $step_p  \in \set{\propose=0, \prevote=1, \prevoteWait=2, \precommit=3}$, initially $\propose$  
-\STATE $decision_p[] := nil$ for every element of the array
+\STATE $step_p  \in \set{\propose, \prevote, \prevoteWait, \precommit}$ 
+\STATE $decision_p[] := nil$ 
 \STATE $lockedValue_p := nil$
 \STATE $lockedRound_p := -1$ 
 \STATE $validValue_p := nil$
 \STATE $validRound_p := -1$
-%\STATE ~~$\timeoutPropose := initTimeoutPropose + r*timeoutDelta$
-%\STATE ~~$\timeoutPrevote := initTimeoutPrevote + r*timeoutDelta$
-%\STATE $\timeoutPrecommit := initTimeoutPrecommit + r*timeoutDelta$
 \ENDINIT
 \SHORTSPACE
 \STATE \textbf{upon} start \textbf{do}  $StartRound(0)$
@@ -160,7 +157,7 @@
 \end{algorithm}
 
 In this section we present the Tendermint Byzantine fault-tolerant consensus algorithm. 
-The code of the algorithm is given as Algorithm~\ref{alg:tendermint}. We present the algorithm as a set of \emph{upon rules} that are executed atomically\footnote{In case several rules are active at the same time, the first rule to be executed is picked randomly. The correctness of the algorithm does not depend on the order in which rules are executed.}. We assume that processes exchange protocol messages using a gossip protocol and that both received and sent messages are stored in the local \emph{message log} for every process. An upon rule is triggered once the message log contains messages such that the corresponding condition evaluates to $\tt{true}$. The condition that assumes a reception of $X$ messages of a particular type and content, denotes a set of messages whose senders have aggregate voting power at least equal to $X$. The variables with index $p$ are process local state variables, while variables without index $p$ are value placeholders. The sign $*$ denotes any value.    
+The algorithm is specified by the pseudo-code listening in Algorithm~\ref{alg:tendermint}. We present the algorithm as a set of \emph{upon rules} that are executed atomically\footnote{In case several rules are active at the same time, the first rule to be executed is picked randomly. The correctness of the algorithm does not depend on the order in which rules are executed.}. We assume that processes exchange protocol messages using a gossip protocol and that both received and sent messages are stored in a local message log for every process. An upon rule is triggered once the message log contains messages such that the corresponding condition evaluates to $\tt{true}$. The condition that assumes a reception of $X$ messages of a particular type and content, denotes a set of messages whose senders have aggregate voting power at least equal to $X$. The variables with index $p$ are process local state variables, while variables without index $p$ are value placeholders. The sign $*$ denotes any value.    
 
 We denote with $n$ the total voting power of processes in the system, and we assume that the total voting power of faulty processes in the system is bounded with a system parameter $f$. 
 The algorithm assumes that $n > 3f$, i.e., it requires that the total voting power of faulty processes is smaller than one third of the total voting power. For simplicity we present the algorithm for the case $n = 3f + 1$.
