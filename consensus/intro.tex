@@ -32,7 +32,7 @@ In this paper we describe a novel Byzantine-fault tolerant consensus algorithm
 that is at the core of the BFT SMR platform called Tendermint\footnote{The
 Tendermint platform is available open source at
 https://github.com/tendermint/tendermint.}. The Tendermint patform consists of
-a high-performance BFT SMR implementation in Go, a flexible interface for
+a high-performance BFT SMR implementation written in Go, a flexible interface for
 building arbitrary deterministic applications above the consensus, and a suite
 of tools for deployment and management.  
 
@@ -92,9 +92,9 @@ corresponds to a value the process considers as acceptable for a decision:
     value id, \item in Fast Byzantine Paxos~\cite{MA06:tdsc} it is the value
         itself that is being sent.  \end{itemize}
 
-In both cases, using this mechanism in the system model we consider (high
+In both cases, using this mechanism in our system model (ie. high
 number of nodes over gossip based network) would have high communication
-complexity that is increased with the number of processes: in the first case as
+complexity that increases with the number of processes: in the first case as
 the message sent depends on the total number of processes, and in the second
 case as the value (block of transactions) is sent by each process. The set of
 messages received in the first step are normally piggybacked on the proposal
@@ -114,7 +114,7 @@ the recovery mode, which is the case in other PBFT-like protocols (e.g.,
 this makes Tendermint simpler to understand and implement correctly.  
 
 The remainder of the paper is as follows: Section~\ref{sec:definitions} defines
-a system model considered and gives the problem definitions. Tendermint
+the system model and gives the problem definitions. Tendermint
 consensus algorithm is introduced in Section~\ref{sec:tendermint} and the
 proofs are presented in Section~\ref{sec:proof}. We discuss related work in
 Section~\ref{sec:relatedWork} and conclude in Section~\ref{sec:conclusion}.  
