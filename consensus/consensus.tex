@@ -45,7 +45,7 @@
         \ENDFUNCTION
 
 \SPACE \UPON{$\li{\Proposal,h_p,round_p, v, r}$ \From\ $\coord(h_p,round_p)$
-\With\ $state_p = \propose$} \label{line:tab:recvProposal}
+\With\ $step_p = \propose$} \label{line:tab:recvProposal}
 \IF{$!valid(v) \vee (lockedRound_p > r  \wedge lockedValue_p \neq v$)}
 \label{line:tab:acceptProposal1}		\STATE \Broadcast \
 $\li{\Prevote,h_p,round_p,\nil}$  \label{line:tab:prevote-nil}	\STATE $step_p
