@@ -177,7 +177,7 @@ timeout expires.         \end{proof}
     leave round $r$ before time $t_0 + \Delta$ (unless it has already set
     $validValue$ to $v$ and $validRound$ to $r$). It is sufficient to prove
     this, since by the \emph{Gossip communication} property the messages that
-    $p$ received at time $t$ and that triggered rule at
+    $p$ received at time $t_0$ and that triggered rule at
     line~\ref{line:tab:recvPrevote} will be received by time $t_0 + \Delta$ by
     all correct processes, so all correct processes that are still in round $r$
     will set $validValue$ to $v$ and $validRound$ to $r$ (by the rule at
@@ -186,18 +186,18 @@ timeout expires.         \end{proof}
     updating $validValue$ to $v$ and $validRound$ to $r$ (we denote this time
     with $t_1$). The Lemma is correct if $t_0 + \Delta < t_1$. 
 
-If the process $p$ locks a value $v$ at time $t$, this implies that $p$
+If the process $p$ locks a value $v$ at time $t_0$, this implies that $p$
 received the valid $\Proposal$ message for $v$ and $2f+1$
-$\li{\Prevote,h,r,id(v)}$ at time $t$. At least $f+1$ of those messages are
+$\li{\Prevote,h,r,id(v)}$ at time $t_0$. At least $f+1$ of those messages are
 sent by correct processes. Let's denote this set of correct processes as $C$. By
 Lemma~\ref{lemma:majority-intersection} any set of $2f+1$ $\Prevote$ messages
 in round $r$ contains at least a single message from the set $C$. 
 
-Let's denote as time $t$ the earliest point in time a correct process triggered
-$\timeoutPrevote(r)$. This implies that $c$ received $2f+1$ $\Prevote$ messages
+Let's denote as time $t$ the earliest point in time a correct process, $c_1$, triggered
+$\timeoutPrevote(r)$. This implies that $c_1$ received $2f+1$ $\Prevote$ messages
 (see the rule at line \ref{line:tab:recvAny2/3Prevote}), where at least one of
-those messages was sent by a process $c$ from the set $C$.  Therefore, process
-$c$ had received $\Proposal$ message before time $t$. By the \emph{Gossip
+those messages was sent by a process $c_2$ from the set $C$.  Therefore, process
+$c_2$ had received $\Proposal$ message before time $t$. By the \emph{Gossip
 communication} property, all correct processes will receive $\Proposal$ and
 $2f+1$ $\Prevote$ messages for round $r$ by time $t+\Delta$. The latest point
 in time $p$ will trigger $\timeoutPrevote(r)$ is $t+\Delta$\footnote{Note that
