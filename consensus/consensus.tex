@@ -128,7 +128,7 @@ protocol and that both received and sent messages are stored in a local message
 log for every process. An upon rule is triggered once the message log contains
 messages such that the corresponding condition evaluates to $\tt{true}$. The
 condition that assumes reception of $X$ messages of a particular type and
-content, denotes a set of messages whose senders have aggregate voting power at
+content denotes a set of messages whose senders have aggregate voting power at
 least equal to $X$. The variables with index $p$ are process local state
 variables, while variables without index $p$ are value placeholders. The sign
 $*$ denotes any value.    
@@ -196,8 +196,9 @@ $validValue$ variable is to store the most recent possible decision value; the
 $validRound$ is the last round in which $validValue$ is updated. Apart from
 those variables, a process also stores the current consensus instance ($h_p$,
 called \emph{height} in Tendermint), and the current round number ($round_p$)
-and attaches them to every message. Finally a process also stores an array of
-decisions (Tendermint assumes a sequence of consensus instances) $decision_p$. 
+and attaches them to every message. Finally, a process also stores an array of
+decisions, $decision_p$ (Tendermint assumes a sequence of consensus instances,
+one for each height).
 
 Every round starts by a proposer suggesting a value with the $\Proposal$
 message (see line \ref{line:tab:send-proposal}). In the initial round of each
@@ -217,7 +218,7 @@ correct process sends $\Proposal$ message with $validValue$ ($validRound > -1$)
 at time $t > GST$, by the \emph{Gossip communication} property, the
 corresponding $\Proposal$ and the $\Prevote$ messages will be received by all
 correct processes before time $t+\Delta$. Therefore, all correct processes will
-be able to verify the correctness of the suggested value as it supported by the
+be able to verify the correctness of the suggested value as it is supported by the
 $\Proposal$ and the corresponding $2f+1$ voting power equivalent $\Prevote$
 messages.   
 
@@ -227,7 +228,7 @@ $v$, and if $p$ hasn't locked any value ($lockedRound = -1$) or $p$ has locked
 the value $v$ ($lockedValue = v$); see the line
 \ref{line:tab:accept-proposal-2}.  In case the proposed pair is $(v,r)$ and a
 correct process $p$ has locked some other value ($v' \neq v$), it will accept
-$v$ only if $v'$ was a more recent possible decision value\footnote{As
+$v$ only if $v$ was a more recent possible decision value\footnote{As
 explained above, the possible decision value in a round $r$ is the one for
 which $\Proposal$ and the corresponding $2f+1$ $\Prevote$ messages are received
 for the round $r$.} in a round $r > lockedRound_p$.  Otherwise, a correct
@@ -293,12 +294,12 @@ expires in the round $r_1$ (see the rule at line
 
 The second thing to note is that during good period, because of the
 \emph{Gossip communication} property, if a correct process $p$ locks a value
-$v$ is some round $r$, all correct processes will update $validValue$ to $v$
+$v$ in some round $r$, all correct processes will update $validValue$ to $v$
 and $validRound$ to $r$ before the end of the round $r$ (we prove this formally
 in the Section~\ref{sec:proof}). The intuition is that messages that led to $p$
 locking a value $v$ in the round $r$ will be gossiped to all correct processes
 before the end of the round $r$, so it will update $validValue$ and
-$validRound$ (the lineline~\ref{line:tab:recvPrevote}). Therefore, if a correct
+$validRound$ (the line~\ref{line:tab:recvPrevote}). Therefore, if a correct
 process locks some value during good period, $validValue$ and $validRound$ are
 updated by all correct processes so that the value proposed in the following
 rounds will be acceptable by all correct processes. And last thing to note is
