@@ -6,13 +6,13 @@
 We consider a system of processes that communicate by exchanging messages.
 Processes can be correct or faulty, where a faulty process can behave in an arbitrary way,
  i.e., we consider Byzantine faults. We assume that each process has some amount of voting power (voting power of a process can be $0$).
-Processes in our model are not part of the single administration domain; therefore we cannot enforce a direct network connectivity between all processes. Instead, we assume that each process is connected to a subset of processes called peers, 
+Processes in our model are not part of a single administration domain; therefore we cannot enforce a direct network connectivity between all processes. Instead, we assume that each process is connected to a subset of processes called peers, 
 such that there is an indirect communication channel between all correct processes. Communication between processes is established using a gossip protocol \cite{Dem1987:gossip}.
 
 Formally, we model the network communication using the \emph{partially synchronous system model}~\cite{DLS88:jacm}: in all executions
 of the system there is a bound $\Delta$ and an instant GST (Global Stabilization Time) such that all communication among correct processes 
 after GST is reliable and $\Delta$-timely, i.e., if a correct process $p$ sends message $m$ at time $t \ge GST$ to correct process $q$, then $q$ will receive $m$ before $t + \Delta$\footnote{Note that as we do not assume direct communication channels among all correct processes, this implies that before the message $m$ reaches $q$, it might pass through a number of 
-	correct processes that will forward the message $m$ using gossip protocol towards $q$.}. Messages among correct processes can be delayed, dropped or duplicated before GST. 
+	correct processes that will forward the message $m$ using gossip protocol towards $q$.}. Messages among correct processes can be delayed, dropped or duplicated before GST. Spoofing/impersonation attacks are assumed to be impossible at all times due to the use of public-key cryptography.. 
 The bound $\Delta$ and GST are system parameters whose values are not required to be known for the safety of our algorithm. Termination of the algorithm is guaranteed within a bounded duration after GST.
 In practice, the algorithm will work correctly in the slightly weaker variant of the model where the system alternates between (long enough) good periods (corresponds to the \emph{after} GST period where system is reliable and $\Delta$-timely) and bad periods (corresponds to the period \emph{before} GST during which the system is asynchronous and messages can be lost), but considering the GST model simplifies the discussion.  
 
@@ -48,14 +48,14 @@ implementing a replicated state machine tolerant to (Byzantine) faults:
 	and process the same sequence of requests.
 \end{itemize}
 
-Moreover, as Schneider also notes this property can be decomposed into
+Moreover, as Schneider also notes, this property can be decomposed into
 two parts, \emph{Agreement} and \emph{Order}: Agreement
 requires all (non-faulty) replicas to receive all
 requests, and Order requires that the order of received requests
 is the same at all replicas.
 
 There is an additional requirement that needs to be ensured by Byzantine tolerant state machine replication:
-only requests (called transactions in the Tendermint terminology) proposed by clients are executed. In Tendermint, transaction verification is responsibility of the service that is 
+only requests (called transactions in the Tendermint terminology) proposed by clients are executed. In Tendermint, transaction verification is the responsibility of the service that is 
 being replicated; upon receiving a transaction from the client, the Tendermint process will ask the service if the request is valid, and only valid 
 requests will be processed. 
 
@@ -72,4 +72,4 @@ property.
  \item \emph{Validity:} A decided value is valid, i.e., it satisfies the predefined predicate denoted \emph{valid()}.
  \end{itemize}
 
-This variant of the Byzantine consensus problem has an application-specific valid() predicate to indicate whether a value is valid. In the context of blockchain systems, for example, a value is not valid if it does not contain an appropriate hash of the last value (block) added to the blockchain.
+ This variant of the Byzantine consensus problem has an application-specific \emph{valid()} predicate to indicate whether a value is valid. In the context of blockchain systems, for example, a value is not valid if it does not contain an appropriate hash of the last value (block) added to the blockchain.
