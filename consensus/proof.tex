@@ -79,15 +79,21 @@ Validity.  \end{lemma}
 decided.  \end{proof}	
 
 \begin{lemma} \label{lemma:round-synchronisation} If we assume that:
-\begin{enumerate} \item a correct process $p$ is the first correct process to
+\begin{enumerate} 
+    \item a correct process $p$ is the first correct process to
             enter a round $r>0$ at time $t > GST$ (for every correct process
-            $c$, $round_c \le r$ at time $t$) \item a proposer of round $r$ is
-            a correct process $q$ \item for every correct process $c$,
-            $lockedRound_c \le validRound_q$ at time $t$ \item $\timeoutPropose
+            $c$, $round_c \le r$ at time $t$) 
+    \item a proposer of round $r$ is
+            a correct process $q$ 
+    \item for every correct process $c$,
+            $lockedRound_c \le validRound_q$ at time $t$ 
+    \item $\timeoutPropose
                 > 2\Delta + \timeoutPrecommit$, $\timeoutPrevote > 2\Delta$ and
-                $\timeoutPrecommit > 2\Delta$, \end{enumerate} then all correct
-            processes decide in round $r$ before $t + 4\Delta +
-        \timeoutPrecommit$.  \end{lemma}	
+                $\timeoutPrecommit > 2\Delta$, 
+\end{enumerate} 
+then all correct processes decide in round $r$ before $t + 4\Delta +
+        \timeoutPrecommit$.  
+\end{lemma}	
 
 \begin{proof} As $p$ is the first correct process to enter round $r$, it
     executed the line~\ref{line:tab:nextRound} after $\timeoutPrecommit$
