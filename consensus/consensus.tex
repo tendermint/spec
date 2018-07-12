@@ -89,7 +89,7 @@
 \ENDUPON
 
 \SPACE
-\UPON{$2f+1$ $\li{\Prevote,h_p, round_p,*}$ \With\ $state_p = \prevote$} \label{line:tab:recvAny2/3Prevote}
+\UPON{$2f+1$ $\li{\Prevote,h_p, round_p,*}$ \With\ $step_p = \prevote$} \label{line:tab:recvAny2/3Prevote}
 	\STATE \textbf{after} $\timeoutPrevote$ execute $OnTimeoutPrevote(h_p, round_p)$ \label{line:tab:timeoutPrevote}
 		\STATE $step_p \assign \prevoteWait$ \label{line:tab:setStateToPrevoteWait} 
 \ENDUPON
@@ -107,7 +107,7 @@
 \ENDUPON
 
 \SHORTSPACE
-\UPON{$2f+1$ $\li{\Prevote,h_p,round_p, \nil}$ \With\ $state_p = \prevote$}
+\UPON{$2f+1$ $\li{\Prevote,h_p,round_p, \nil}$ \With\ $step_p = \prevote$}
 	\STATE \Broadcast \ $\li{\Precommit,h_p,round_p, \nil}$   \label{line:tab:precommit-v-1}
 	\STATE $step_p \assign \precommit$
 \ENDUPON
