@@ -17,7 +17,7 @@ $\nil$.  \end{lemma}
 
 \begin{proof} We prove the result by induction on $r$.
 
-\emph{Base step $r = r_0 + 1:$} Lets denote with $C$ the set of correct
+\emph{Base step $r = r_0 + 1:$} Let's denote with $C$ the set of correct
 processes with voting power equal to $f+1$.  By the rules at
 line~\ref{line:tab:recvProposal} and line~\ref{line:tab:acceptProposal}, the
 processes from the set $C$ can't accept $\Proposal$ for any value different
@@ -32,7 +32,7 @@ processes from the set $C$ send $\Prevote$ for $id(v)$ or $\nil$ in rounds $r_0
 \le r \le r_1$, by Lemma~\ref{lemma:majority-intersection} there is no value
 $v' \neq v$ for which it is possible to receive $2f+1$ $\Prevote$ messages in
 those rounds (i). Therefore, we have for all processes from the set $C$,
-$lockedValue = v$ and $lockedRound \ge r_0$.   Lets assume by a contradiction
+$lockedValue = v$ and $lockedRound \ge r_0$.   Let's assume by a contradiction
 that a process $q$ from the set $C$ sends $\Prevote$ in round $r_1 + 1$ for
 value $id(v')$, where $v' \neq v$. This is possible only by
 line~\ref{line:tab:prevote-higher-proposal}.  Note that this implies that $q$
@@ -58,7 +58,7 @@ process sends a single $\Precommit$ message in a round, then $v=v'$.
 We prove the case $r > r_0$ by contradiction. By the
 rule~\ref{line:tab:onDecideRule}, $p$ has received at least $2f+1$ voting-power
 equivalent of $\li{\Precommit,h_p,r_0,id(v)}$ messages, i.e., at least $f+1$
-voting-power equivalent processes have locked value $v$ in round $r_0$ and have
+voting-power equivalent correct processes have locked value $v$ in round $r_0$ and have
 sent those messages (i). Let denote this set of messages with $C$.  On the
 other side, $q$ has received at least $2f+1$ voting power equivalent of
 $\li{\Precommit,h_q, r,id(v')}$ messages. As the voting power of all faulty
@@ -83,7 +83,7 @@ decided.  \end{proof}
     \item a correct process $p$ is the first correct process to
             enter a round $r>0$ at time $t > GST$ (for every correct process
             $c$, $round_c \le r$ at time $t$) 
-    \item a proposer of round $r$ is
+    \item the proposer of round $r$ is
             a correct process $q$ 
     \item for every correct process $c$,
             $lockedRound_c \le validRound_q$ at time $t$ 
@@ -133,7 +133,7 @@ line~\ref{line:tab:decide} on $v$.
 
 This scenario holds if every correct process $q$ sends a $\Precommit$ message
 before $\timeoutPrevote$ expires, and if $\timeoutPrecommit$ does not expire
-before $t + 4\Delta + \timeoutPrecommit$.  Lets assume that a correct process
+before $t + 4\Delta + \timeoutPrecommit$.  Let's assume that a correct process
 $c_1$ is the first correct process to trigger $\timeoutPrevote$ (see the rule
 at line~\ref{line:tab:recvAny2/3Prevote}) at time $t_1 > t$. This implies that
 before time $t_1$, $c_1$ received a $\Proposal$ ($step_{c_1}$ must be
@@ -151,7 +151,7 @@ $\timeoutPrevote$ expire.
 
 On the other hand, $\timeoutPrecommit$ is triggered in a correct process $c_2$
 after it receives any set of $2f+1$ $\Precommit$ messages for the first time.
-Lets denote with $t_2 > t$ the earliest point in time $\timeoutPrecommit$ is
+Let's denote with $t_2 > t$ the earliest point in time $\timeoutPrecommit$ is
 triggered in some correct process $c_2$. This implies that $c_2$ has received
 at least $f+1$ $\Precommit$ messages for $id(v)$ from correct processes, i.e.,
 those processes have received $\Proposal$ for $v$ and $2f+1$ $\Prevote$
@@ -189,11 +189,11 @@ timeout expires.         \end{proof}
 If the process $p$ locks a value $v$ at time $t$, this implies that $p$
 received the valid $\Proposal$ message for $v$ and $2f+1$
 $\li{\Prevote,h,r,id(v)}$ at time $t$. At least $f+1$ of those messages are
-sent by correct processes. Lets denote this set of correct processes as $C$. By
+sent by correct processes. Let's denote this set of correct processes as $C$. By
 Lemma~\ref{lemma:majority-intersection} any set of $2f+1$ $\Prevote$ messages
 in round $r$ contains at least a single message from the set $C$. 
 
-Lets denote as time $t$ the earliest point in time a correct process triggered
+Let's denote as time $t$ the earliest point in time a correct process triggered
 $\timeoutPrevote$. This implies that $c$ received $2f+1$ $\Prevote$ messages
 (see the rule at line \ref{line:tab:recvAny2/3Prevote}), where at least one of
 those messages was sent by a process $c$ from the set $C$.  Therefore, process
@@ -202,12 +202,12 @@ communication} property, all correct processes will receive $\Proposal$ and
 $2f+1$ $\Prevote$ messages for round $r$ by time $t+\Delta$. The latest point
 in time $p$ will trigger $\timeoutPrevote$ is $t+\Delta$\footnote{Note that
 even if $p$ was in smaller round at time $t$ it will start round $r$ by time
-$t+\Delta$.}.  So the latest point in time $p$ can lock the value value $v$ in
+$t+\Delta$.}.  So the latest point in time $p$ can lock the value $v$ in
 round $r$ is $t_0 = t+\Delta+\timeoutPrevote$ (as at this point
 $\timeoutPrevote$ expires, so a process sends $\Precommit$ $\nil$ and updates
 $step$ to $\precommit$, see line \ref{line:tab:onTimeoutPrevote}).  
 
-Note that according to the algorithm \ref{alg:tendermint}, a correct process
+Note that according to the Algorithm \ref{alg:tendermint}, a correct process
 can not send a $\Precommit$ message before receiving $2f+1$ $\Prevote$
 messages.  Therefore, no correct process can send a $\Precommit$ message in
 round $r$ before time $t$. If a correct process sends a $\Precommit$ message
@@ -256,7 +256,7 @@ Termination.  \end{lemma}
 
 \begin{proof} Lemma~\ref{lemma:round-synchronisation} defines a scenario in
     which all correct processes decide. We now prove that within a bounded
-    duration after GST such a scenario will unfold. Lets assume that at time
+    duration after GST such a scenario will unfold. Let's assume that at time
     $GST$ the highest round started by a correct process is $r_0$, and that
     there exists a correct process $p$ such that the following holds: for every
     correct process $c$, $lockedRound_c \le validRound_p$. Furthermore, we
@@ -270,7 +270,7 @@ Lemma~\ref{lemma:round-synchronisation}, so all correct processes decides in
 round $r_1$.  
 
 In the second case, a correct process locks a value $v$ in round $r_2$, where
-$r_2 \ge r_0$ and $r_2 < r_1$.  Lets assume that $r_2$ is the highest round
+$r_2 \ge r_0$ and $r_2 < r_1$.  Let's assume that $r_2$ is the highest round
 before $r_1$ in which some correct process $q$ locks a value. By Lemma
 \ref{lemma:validValue} at the end of round $r_2$ the following holds for all
 correct processes $c$: $validValue_c = lockedValue_q$ and $validRound_c = r_2$.
