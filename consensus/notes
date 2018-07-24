@@ -1,0 +1,103 @@
+Intro
+- we mention agreement/validity before defined
+
+Model
+- can messages really be dropped ?
+
+... if messages can be dropped, Gossip communication property isn't true!
+
+SMR section - should we mention atomic braodcast?
+
+Consensus
+- does proposer need subscript p?
+    - NO
+- introduce height sooner
+- "a new value only if validValue ̸= nil" ... should be equal nil !
+- "the corresponding PROPOSAL and the PREVOTE messages will be received by all correct processes before time t + ∆" - you mean prevotes from the polka?
+    - YES
+- explain timeouts better?
+    - 
+- e. A correct process will send PREVOTE message with nil value also in case timeoutPropose expired (it is started when a correct process starts a new round) and a process has not sent PREVOTE message in the current round yet (see the line 61).
+    - but 61 is about timeoutPrevote! not timeoutPropose
+        - right ...
+- and a process has not sent PRECOMMIT message in the current round yet (see the line 57)
+    - 57 is timeoutPropose ...
+        - right ...
+
+- cool for timeouts to grow linearly?
+    - no - they jump right away to precommit step
+
+Termination
+- improve intuition section ...
+
+DIAGRAMS!
+
+
+We should cite the tendermint whitepaper, my thesis, cosmos whitepaper, and the Markos paper that pointed out tendermints faults.
+
+Acknowledgements:
+- Tendermint Team
+
+
+Lemma 2
+- r1 comes from nowhere
+    - this is just how induction works!
+
+Lemma 3
+- at least f+1 ... should be "correct"
+    - yes
+- C is defined as set of messages but then used as set of processes ...
+    - lets be consistent - it should always be processes
+
+Lemma 5
+- timeoutP ropose > 2∆ + timeoutP recommit .... this is timeoutPropose for round r and timeoutPrecommit for r-1
+    - YES
+- timeoutP recommit does not expire before t + 4∆ + timeoutP recommit.
+
+Lemma 6
+- c not defined
+- see * (?)
+
+
+
+WE NEED ALL TIMEOUTS TO USE FUNCTION NOTAITON
+
+
+
+lemma 5
+- seems done, but have to consider timeouts expiring ...
+
+
+
+NOTE: rule for precommits is not conditioned by the step!
+    - prevote rule is conditioned by step... 
+        - will jump to round based on prevotes but not to prevote else we'd prevote nil ...
+
+
+
+Lemma 6 - t should be t0 until its defined!
+
+
+
+....
+
+
+lemma 7 - needs to include decisions before GST
+
+
+
+...
+ we have rounds like DLS
+ always proceed to next round
+ each has a proposer
+
+
+
+
+termination starts at 17
+
+
+
+locked value defines configuration
+if locked value changes - need to ensure valid value is updated before round ends
+
