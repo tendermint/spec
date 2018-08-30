@@ -32,7 +32,7 @@
 		\STATE $h_p := 0$  
 		\COMMENT{current height, or consensus instance we are currently executing} 
 		\STATE $round_p := 0$   \COMMENT{current round number}
-		\STATE $step_p  \in \set{\propose, \prevote, \prevoteWait, \precommit}$
+		\STATE $step_p  \in \set{\propose, \prevote, \precommit}$
 		\STATE $decision_p[] := nil$ 
 		\STATE $lockedValue_p := nil$ 
 		\STATE $lockedRound_p := -1$ 
@@ -54,49 +54,51 @@
 		\STATE \Broadcast\ $\li{\Proposal,h_p, round_p, proposal, validRound_p}$
 		\label{line:tab:send-proposal} 
 		\ELSE 
-		\STATE \textbf{after} $\timeoutPropose$ execute $OnTimeoutPropose(h_p,
-		round_p)$
+		\STATE \textbf{schedule} $OnTimeoutPropose(h_p,
+		round_p)$ to be executed \textbf{after} $\timeoutPropose(round_p)$ 
 		\ENDIF
 		\ENDFUNCTION
 		
 		\SPACE 
-		\UPON{$\li{\Proposal,h_p,round_p, v, vr}$ \From\ $\coord(h_p,round_p)$
+		\UPON{$\li{\Proposal,h_p,round_p, v, -1}$ \From\ $\coord(h_p,round_p)$
 			\With\ $step_p = \propose$} \label{line:tab:recvProposal}
-			\IF{$!valid(v) \vee (lockedRound_p > vr  \wedge lockedValue_p \neq v$)}
-			\label{line:tab:acceptProposal1}		
-				\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,\nil}$  
-				\label{line:tab:prevote-nil}	
-				\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote1} 
-			\ELSIF{$valid(v) \wedge (lockedRound_p = -1  \vee lockedValue_p = v$)}
+			\IF{$valid(v) \wedge (lockedRound_p = -1  \vee lockedValue_p = v$)}
 			\label{line:tab:accept-proposal-2} 
 				\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,id(v)}$  
 				\label{line:tab:prevote-proposal}	
-				\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote2} 
+			\ELSE
+			\label{line:tab:acceptProposal1}		
+				\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,\nil}$  
+				\label{line:tab:prevote-nil}	
 			\ENDIF
+				\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote1} 
 		\ENDUPON
 		
 		\SPACE 
 		\UPON{$\li{\Proposal,h_p,round_p, v, vr}$ \From\ $\coord(h_p,round_p)$
-			\textbf{AND} $2f+1$ $\li{\Prevote,h_p, vr,id(v)}$  \With\ $step_p = \propose$}
+			\textbf{AND} $2f+1$ $\li{\Prevote,h_p, vr,id(v)}$  \With\ $step_p = \propose \wedge (vr \ge 0 \wedge vr < round_p)$}
 		\label{line:tab:acceptProposal} 
-		\IF{$vr \ge lockedRound_p \wedge vr < round_p
-			\wedge valid(v)$} \label{line:tab:cond-prevote-higher-proposal}	
+		\IF{$valid(v) \wedge (lockedRound_p \le vr
+			\vee lockedValue_p = v)$} \label{line:tab:cond-prevote-higher-proposal}	
 			\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,id(v)}$
-		\label{line:tab:prevote-higher-proposal}	
-		\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote3} 		 
-		\ENDIF 
+			\label{line:tab:prevote-higher-proposal}		 
+		\ELSE
+			\label{line:tab:acceptProposal2}		
+			\STATE \Broadcast \ $\li{\Prevote,h_p,round_p,\nil}$  
+			\label{line:tab:prevote-nil2}	
+		\ENDIF
+		\STATE $step_p \assign \prevote$ \label{line:tab:setStateToPrevote3} 	 
 		\ENDUPON
 		
 		\SPACE 
-		\UPON{$2f+1$ $\li{\Prevote,h_p, round_p,*}$ \With\ $step_p = \prevote$}
+		\UPON{$2f+1$ $\li{\Prevote,h_p, round_p,*}$ \With\ $step_p = \prevote$ for the first time}
 		\label{line:tab:recvAny2/3Prevote} 
-		\STATE \textbf{after} $\timeoutPrevote$ execute $OnTimeoutPrevote(h_p, round_p)$ \label{line:tab:timeoutPrevote} 
-		\STATE $step_p \assign \prevoteWait$ \label{line:tab:setStateToPrevoteWait} 
+		\STATE \textbf{schedule} $OnTimeoutPrevote(h_p, round_p)$ to be executed \textbf{after}  $\timeoutPrevote(round_p)$ \label{line:tab:timeoutPrevote} 
 		\ENDUPON
 		
 		\SPACE 
 		\UPON{$\li{\Proposal,h_p,round_p, v, *}$ \From\ $\coord(h_p,round_p)$
-			\textbf{AND} $2f+1$ $\li{\Prevote,h_p, round_p,id(v)}$  \With\ $valid(v)$}
+			\textbf{AND} $2f+1$ $\li{\Prevote,h_p, round_p,id(v)}$  \With\ $valid(v) \wedge step_p \ge \prevote$ for the first time}
 		\label{line:tab:recvPrevote} 
 		\IF{$step_p = \prevote$}	
 			\STATE $lockedValue_p \assign v$                \label{line:tab:setLockedValue} 
@@ -120,8 +122,8 @@
 		\SPACE 
 		\UPON{$2f+1$ $\li{\Precommit,h_p,round_p,*}$ for the first time}
 		\label{line:tab:startTimeoutPrecommit} 
-			\STATE \textbf{after} $\timeoutPrecommit$ execute 
-			$OnTimeoutPrecommit(h_p, round_p)$ 
+			\STATE \textbf{schedule} $OnTimeoutPrecommit(h_p, round_p)$ to be executed \textbf{after} $\timeoutPrecommit(round_p)$ 
+			 
 		\ENDUPON 
 		
 		\SPACE 
@@ -131,7 +133,7 @@
 			\IF{$valid(v)$} \label{line:tab:validDecisionValue} 
 				\STATE $decision_p[h_p] = v$ \label{line:tab:decide} 
 				\STATE$h_p \assign h_p + 1$ \label{line:tab:increaseHeight} 
-				\STATE reset $lockedRound_p$, $lockedValue_p$ to init values 
+				\STATE reset $lockedRound_p$, $lockedValue_p$, $validRound_p$ and $validValue_p$ to initial values 
 				and empty message log 
 				\STATE $StartRound(0)$   	
 			\ENDIF 
@@ -154,7 +156,7 @@
 		
 		\SHORTSPACE 
 		\FUNCTION{$OnTimeoutPrevote(height,round)$} \label{line:tab:onTimeoutPrevote} 
-		\IF{$height = h_p \wedge round = round_p \wedge step_p = \prevoteWait$} 
+		\IF{$height = h_p \wedge round = round_p \wedge step_p = \prevote$} 
 			\STATE \Broadcast \ $\li{\Precommit,h_p,round_p,\nil}$   
 			\label{line:tab:precommit-nil-onTimeout}
 			\STATE $step_p \assign \precommit$ 
@@ -186,7 +188,11 @@ content denotes reception of messages whose senders have aggregate voting power 
 least equal to $X$. For example, the condition $2f+1$ $\li{\Precommit,h_p,r,id(v)}$,  
 evaluates to true upon reception of $\Precommit$ messages for height $h_p$, 
 a round $r$ and with value equal to $id(v)$ whose senders have aggregate voting 
-power at least equal to $2f+1$. The variables with index $p$ are process local state
+power at least equal to $2f+1$. Some of the rules ends with "for the first time" constraint 
+to denote that it is triggered only the first time a corresponding condition evaluates 
+to $\tt{true}$. This is because those rules do not always change the state of algorithm 
+variables so without this constraint, the algorithm could keep 
+executing those rules forever. The variables with index $p$ are process local state
 variables, while variables without index $p$ are value placeholders. The sign
 $*$ denotes any value.    
 
@@ -199,8 +205,8 @@ the case $n = 3f + 1$.
 
 The algorithm proceeds in rounds, where each round has a dedicated
 \emph{proposer}. The mapping of rounds to proposers is known to all processes
-and is given as a function $\coord_p(h_p, round_p)$, returning the proposer for
-the round $round_p$ in the consensus instance $h_p$ at the process $p$. We
+and is given as a function $\coord(h, round)$, returning the proposer for
+the round $round$ in the consensus instance $h$. We
 assume that the proposer selection function is weighted round-robin, where
 processes are rotated proportional to their voting power\footnote{A validator
 with more voting power is selected more frequently, proportional to its power.
@@ -296,17 +302,18 @@ A correct process $p$ accepts the proposal for a value $v$  (send $\Prevote$
 for $id(v)$) if an external \emph{valid} function returns $true$ for the value
 $v$, and if $p$ hasn't locked any value ($lockedRound = -1$) or $p$ has locked
 the value $v$ ($lockedValue = v$); see the line
-\ref{line:tab:accept-proposal-2}.  In case the proposed pair is $(v,vr)$ and a
-correct process $p$ has locked some other value ($v' \neq v$), it will accept
-$v$ only if $v$ was a more recent possible decision value\footnote{As
+\ref{line:tab:accept-proposal-2}.  In case the proposed pair is $(v,vr \ge 0)$ and a
+correct process $p$ has locked some value, it will accept
+$v$ if it is a more recent possible decision value\footnote{As
 explained above, the possible decision value in a round $r$ is the one for
 which $\Proposal$ and the corresponding $2f+1$ $\Prevote$ messages are received
-for the round $r$.} in a round $vr > lockedRound_p$.  Otherwise, a correct
+for the round $r$.}, $vr > lockedRound_p$,  or if $lockedValue = v$ 
+(see line~\ref{line:tab:cond-prevote-higher-proposal}).  Otherwise, a correct
 process will reject the proposal by sending $\Prevote$ message with $\nil$
 value. A correct process will send $\Prevote$ message with $\nil$ value also in
-case $\timeoutPropose$ expired (it is started when a correct process starts a
+case $\timeoutPropose$ expired (it is triggered when a correct process starts a
 new round) and a process has not sent $\Prevote$ message in the current round
-yet (see the line \ref{line:tab:onTimeoutPrevote}). 
+yet (see the line \ref{line:tab:onTimeoutPropose}). 
 
 If a correct process receives $\Proposal$ message for some value $v$ and $2f+1$
 $\Prevote$ messages for $\id(v)$, then it sends $\Precommit$ message with
@@ -314,7 +321,7 @@ $\id(v)$. Otherwise, it sends $\Precommit$ $\nil$. A correct process will send
 $\Precommit$ message with $\nil$ value also in case $\timeoutPrevote$ expired
 (it is started when a correct process sent $\Prevote$ message and received any
 $2f+1$ $\Prevote$ messages)  and a process has not sent $\Precommit$ message in
-the current round yet (see the line \ref{line:tab:onTimeoutPropose}).  A
+the current round yet (see the line \ref{line:tab:onTimeoutPrecommit}).  A
 correct process decides on some value $v$ if it receives in some round $r$
 $\Proposal$ message for $v$ and $2f+1$ $\Precommit$ messages with $\id(v)$ (see
 the line \ref{line:tab:decide}).  To prevent the algorithm from blocking and
@@ -339,29 +346,11 @@ by a correct process in a round $r$ when the process receives valid $\Proposal$
 message for the value $v$ and the corresponding $2f+1$ $\Prevote$ messages for
 $id(v)$ in the round $r$ (see the rule at line~\ref{line:tab:recvPrevote}).
 
-We now give briefly the intuition for how managing and proposing $validValue$
+We now give briefly the intuition how managing and proposing $validValue$
 and $validRound$ ensures termination. Formal treatment is left for
-Section~\ref{sec:proof}.  First thing to note is that at the beginning of every
-round there is at least a single correct process $c$ such that $validValue_c$
-and $validRound_c$ are acceptable by every correct process. This is true as
-there exists a correct process $c$ such that for every other correct process
-$p$, $validRound_c > lockedRound_p$ or $validValue_c = lockedValue_p$. This is
-true as $c$ is the process that has locked a value in the most recent round
-among all correct processes (or no correct process locked any value).
-Therefore, if we assume that at the beginning of round $r_0$ in the good period
-(after GST and timeouts are big enough so communication between correct
-processes is timely and reliable) $c$ is that process and we assume that $c$
-will be proposer in a round $r_1 \ge r_0$ (as proposer function is weighted
-round robin), and we assume that no correct process locks a value in rounds
-between, then the $validValue_c$ and $validRound_c$ will be acceptable by all
-correct processes. Note that we rely here on the \emph{Gossip communication}
-property that will ensure that $\Prevote$ messages that are received by $c$ at
-line~\ref{line:tab:recvPrevote} when $c$ updated $validValue_c$ in the round
-$validRound_c$ are received by all correct processes before $\timeoutPropose$
-expires in the round $r_1$ (see the rule at line
-\ref{line:tab:acceptProposal}).   
+Section~\ref{sec:proof}.  
 
-The second thing to note is that during good period, because of the
+The first thing to note is that during good period, because of the
 \emph{Gossip communication} property, if a correct process $p$ locks a value
 $v$ in some round $r$, all correct processes will update $validValue$ to $v$
 and $validRound$ to $r$ before the end of the round $r$ (we prove this formally
@@ -371,7 +360,7 @@ before the end of the round $r$, so it will update $validValue$ and
 $validRound$ (the line~\ref{line:tab:recvPrevote}). Therefore, if a correct
 process locks some value during good period, $validValue$ and $validRound$ are
 updated by all correct processes so that the value proposed in the following
-rounds will be acceptable by all correct processes. And last thing to note is
+rounds will be acceptable by all correct processes. Note 
 that it could happen that during good period, no correct process locks a value,
 but some correct process $q$ updates $validValue$ and $validRound$ during some
 round. As no correct process locks a value in this case, $validValue_q$ and
@@ -380,6 +369,21 @@ $validRound_q > lockedRound_c$ for every correct process $c$ and as the
 \emph{Gossip communication} property ensures that the corresponding $\Prevote$
 messages that $q$ received in the round $validRound_q$ are received by all
 correct processes $\Delta$ time later. 
+
+Finally, it could happen that after GST, there is a long sequence of rounds in which 
+no correct process neither locks a value nor update $validValue$ and $validRound$. 
+In this case, during this sequence of rounds, the proposed value suggested by correct
+processes was not accepted by all correct processes. Note that this sequence of rounds 
+is always finite as at the beginning of every
+round there is at least a single correct process $c$ such that $validValue_c$
+and $validRound_c$ are acceptable by every correct process. This is true as
+there exists a correct process $c$ such that for every other correct process
+$p$, $validRound_c > lockedRound_p$ or $validValue_c = lockedValue_p$. This is
+true as $c$ is the process that has locked a value in the most recent round
+among all correct processes (or no correct process locked any value). Therefore,
+eventually $c$ will be the proper in some round and the proposed value will be accepted
+by all correct processes, terminating therefore this sequence of 
+rounds. 
 
 Therefore, updating $validValue$ and $validRound$ variables, and the
 \emph{Gossip communication} property, together ensures that eventually, during
