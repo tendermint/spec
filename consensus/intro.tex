@@ -1,6 +1,6 @@
 \section{Introduction} \label{sec:tendermint}
 
-Consensus is one of the most fundamental problems in distributed computing. It
+Consensus is a fundamental problem in distributed computing. It
 is important because of it's role in State Machine Replication (SMR), a generic
 approach for replicating services that can be modeled as a deterministic state
 machine~\cite{Lam78:cacm, Sch90:survey}. The key idea of this approach is that
@@ -15,11 +15,11 @@ typically part of a single administration domain (e.g., Chubby
 general forms of failure (in particular, malicious or Byzantine faults) are
 considered to occur with only negligible probability.  
 
-The success of cryptocurrencies or blockchain systems in recent years (e.g.,
+The success of cryptocurrencies and blockchain systems in recent years (e.g.,
 \cite{Nak2012:bitcoin, But2014:ethereum}) pose a whole new set of challenges on
 the design and deployment of SMR based systems: reaching agreement over wide
 area network, among large number of nodes (hundreds or thousands) that are not
-part of the same administration domain, and where a subset of nodes can behave
+part of the same administrative domain, and where a subset of nodes can behave
 maliciously (Byzantine faults). Furthermore, contrary to the previous
 data-center deployments where nodes are fully connected to each other, in
 blockchain systems, a node is only connected to a subset of other nodes, so
