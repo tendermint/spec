@@ -174,13 +174,13 @@
 \end{algorithm}
 
 In this section we present the Tendermint Byzantine fault-tolerant consensus
-algorithm. The algorithm is specified by the pseudo-code listing in
+algorithm. The algorithm is specified by the pseudo-code shown in
 Algorithm~\ref{alg:tendermint}. We present the algorithm as a set of \emph{upon
 rules} that are executed atomically\footnote{In case several rules are active
 at the same time, the first rule to be executed is picked randomly. The
 correctness of the algorithm does not depend on the order in which rules are
 executed.}. We assume that processes exchange protocol messages using a gossip
-protocol and that both received and sent messages are stored in a local message
+protocol and that both sent and received messages are stored in a local message
 log for every process. An upon rule is triggered once the message log contains
 messages such that the corresponding condition evaluates to $\tt{true}$. The
 condition that assumes reception of $X$ messages of a particular type and

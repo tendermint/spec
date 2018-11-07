@@ -4,9 +4,9 @@
 
 We consider a system of processes that communicate by exchanging messages.
 Processes can be correct or faulty, where a faulty process can behave in an
-arbitrary way, i.e., we consider Byzantine faults. We assume that each process
+arbitrary way, i.e., Byzantine faults. We assume that each process
 has some amount of voting power (voting power of a process can be $0$).
-Processes in our model are not part of a single administration domain;
+Processes in our model are not part of a single administrative domain;
 therefore we cannot enforce a direct network connectivity between all
 processes. Instead, we assume that each process is connected to a subset of
 processes called peers, such that there is an indirect communication channel
@@ -33,7 +33,7 @@ weaker variant of the model where the system alternates between (long enough)
 good periods (corresponds to the \emph{after} GST period where system is
 reliable and $\Delta$-timely) and bad periods (corresponds to the period
 \emph{before} GST during which the system is asynchronous and messages can be
-lost), but considering the GST model simplifies the discussion.  
+lost), but consideration of the GST model simplifies the discussion.  
 
 We assume that process steps (which might include sending and receiving
 messages) take zero time.  Processes are equipped with clocks so they can
@@ -42,7 +42,7 @@ process $q$ receives a signed message $m$ from its peer, the process $q$ can
 verify who was the original sender of the message $m$.
 
 The details of the Tendermint gossip protocol will be discussed in a separate
-technical report. For the sake of this report it is sufficient to assume that
+technical report. For the sake of this paper it is sufficient to assume that
 messages are being gossiped between processes and the following property holds
 (in addition to the partial synchrony network assumptions):
 
