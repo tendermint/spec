@@ -1,6 +1,6 @@
 # Request for Comments (RFC)
 
-RFC stands for `Request for Comments. It is a social device use to float and polish an idea prior to the inclusion into an existing or new spec/paper/research topic.
+RFC stands for `Request for Comments`. It is a social device use to float and polish an idea prior to the inclusion into an existing or new spec/paper/research topic.
 
 An RFC should not be used for bug reports or trivial discussions - the overhead of compiling an RFC does not justify it.
 
