@@ -32,7 +32,7 @@ By stamping transactions we don't need to save the transactions inside a block a
 A stamped transaction easily can be verified off-chain.
 First we need to find the block with corresponding stamp (or block hash).
 If it doesn’t exist it means transaction is not valid (or probably not belong to this fork).
-If the block is found, we need to iterate over `N` block after to check if transaction hash is inside a block. Otherwise transaction is not valid.
+If the block is found at height S, we need to iterate over the txs in blocks [S, S + N] to find the transaction with this hash. Otherwise the transaction is invalid.
 
 ```
  Block M-1                             Block M                               Block M+1
