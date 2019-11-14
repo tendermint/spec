@@ -140,7 +140,13 @@
 		\ENDUPON
 		
 		\SHORTSPACE 
-		\UPON{$f+1$ $\li{*,h_p,round, *, *}$ \textbf{with} $round > round_p$} 
+		\UPON{$2f+1$ $\li{\Prevote,h_p,round, *}$ \textbf{with} $round > round_p$} 
+		\label{line:tab:skipRounds} 
+			\STATE $StartRound(round)$ \label{line:tab:nextRound2} 
+		\ENDUPON
+		
+		\SHORTSPACE 
+		\UPON{$2f+1$ $\li{\Precommit,h_p,round, *}$ \textbf{with} $round > round_p$} 
 		\label{line:tab:skipRounds} 
 			\STATE $StartRound(round)$ \label{line:tab:nextRound2} 
 		\ENDUPON
