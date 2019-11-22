@@ -129,7 +129,7 @@ type Commit struct {
 	Height     int64
 	Round      int
 	BlockID    BlockID
-	Precommits []CommitSig
+	Signatures []CommitSig
 }
 ```
 
@@ -143,7 +143,7 @@ to reconstruct the vote set given the validator set.
 type BlockIDFlag byte
 
 const (
-	// BlockIDFlagAbsent - vote is not included in the Commit.Precommits.
+	// BlockIDFlagAbsent - vote is not included in the Commit.Signatures.
 	BlockIDFlagAbsent BlockIDFlag = iota + 1
 	// BlockIDFlagCommit - voted for the Commit.BlockID.
 	BlockIDFlagCommit
@@ -277,7 +277,7 @@ block.Header.Timestamp == MedianTime(block.LastCommit, state.LastValidators)
 ```
 
 The block timestamp must be monotonic.
-It must equal the weighted median of the timestamps of the valid precommits in the block.LastCommit.
+It must equal the weighted median of the timestamps of the valid signatures in the block.LastCommit.
 
 Note: the timestamp of a vote must be greater by at least one millisecond than that of the
 block being voted on.
@@ -313,10 +313,10 @@ The first block has `block.Header.LastBlockID == BlockID{}`.
 ### LastCommitHash
 
 ```go
-block.Header.LastCommitHash == MerkleRoot(block.LastCommit.Precommits)
+block.Header.LastCommitHash == MerkleRoot(block.LastCommit.Signatures)
 ```
 
-MerkleRoot of the precommits included in the block.
+MerkleRoot of the signatures included in the block.
 These are the commit signatures of the validators that committed the previous
 block.
 
@@ -420,8 +420,8 @@ Otherwise, we require:
 len(block.LastCommit) == len(state.LastValidators)
 
 talliedVotingPower := 0
-for i, precommit := range block.LastCommit.Precommits {
-  if precommit.Absent() {
+for i, commitSig := range block.LastCommit.Signatures {
+  if commitSig.Absent() {
     continue
   }
 
