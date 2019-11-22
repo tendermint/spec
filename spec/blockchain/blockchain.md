@@ -29,7 +29,7 @@ type Block struct {
 }
 ```
 
-Note the `LastCommit` is the set of votes that committed the last block.
+Note the `LastCommit` is the set of signatures of validators that committed the last block.
 
 ## Header
 
@@ -121,7 +121,7 @@ type Data struct {
 
 ## Commit
 
-Commit is a simple wrapper for a list of commit signatures, with one for each
+Commit is a simple wrapper for a list of signatures, with one for each
 validator. It also contains the relevant BlockID, height and round:
 
 ```go
@@ -143,7 +143,7 @@ to reconstruct the vote set given the validator set.
 type BlockIDFlag byte
 
 const (
-	// BlockIDFlagAbsent - vote is not included in the Commit.Signatures.
+	// BlockIDFlagAbsent - no vote was received from a validator.
 	BlockIDFlagAbsent BlockIDFlag = iota + 1
 	// BlockIDFlagCommit - voted for the Commit.BlockID.
 	BlockIDFlagCommit
