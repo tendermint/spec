@@ -144,11 +144,11 @@ type BlockIDFlag byte
 
 const (
 	// BlockIDFlagAbsent - no vote was received from a validator.
-	BlockIDFlagAbsent BlockIDFlag = iota + 1
+	BlockIDFlagAbsent BlockIDFlag = 0x01
 	// BlockIDFlagCommit - voted for the Commit.BlockID.
-	BlockIDFlagCommit
+	BlockIDFlagCommit = 0x02
 	// BlockIDFlagNil - voted for nil.
-	BlockIDFlagNil
+	BlockIDFlagNil = 0x03
 )
 
 type CommitSig struct {
