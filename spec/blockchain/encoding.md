@@ -65,7 +65,7 @@ You can simply use below table and concatenate Prefix || Length (of raw bytes) |
 | PubKeySr25519           | tendermint/PubKeySr25519           | 0x0DFB1005 | 0x20     |       |
 | PubKeySecp256k1         | tendermint/PubKeySecp256k1         | 0xEB5AE987 | 0x21     |       |
 | PrivKeyEd25519          | tendermint/PrivKeyEd25519          | 0xA3288910 | 0x40     |       |
-| PrivKeyEd25519          | tendermint/PrivKeyEd25519          | 0x2F82D78B | 0x20     |       |
+| PrivKeySr25519          | tendermint/PrivKeySr25519          | 0x2F82D78B | 0x20     |       |
 | PrivKeySecp256k1        | tendermint/PrivKeySecp256k1        | 0xE1B0F79B | 0x20     |       |
 | PubKeyMultisigThreshold | tendermint/PubKeyMultisigThreshold | 0x22C1F7E2 | variable |       |
 
