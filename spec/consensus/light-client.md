@@ -8,7 +8,7 @@ In order to make sure that full nodes have the incentive to follow the protocol,
 
 1. The lite client needs a method to verify headers it obtains from full nodes according to trust assumptions -- this document.
 
-2. The lite client must be able to connect to one correct full node to detect and report on failures in the trust assumptions (i.e., conflicting headers) -- a future document.
+2. The lite client must be able to connect to one correct full node to detect and report on failures in the trust assumptions (i.e., conflicting headers) -- this document.
 
 3. In the event the trust assumption fails (i.e., a lite client is fooled by a conflicting header), the Tendermint fork accountability protocol must account for the evidence -- see #3840
 
@@ -217,7 +217,7 @@ We further use the function `signers(Commit)` that returns the set of validators
   }
 ```
 
-_Remark_: Basic header verification must be done for _h2_. Similar checks are done in:  
+_Remark_: Basic header verification must be done for _h2_. Similar checks are done in:
  https://github.com/tendermint/tendermint/blob/master/types/validator_set.go#L591-L633
 
 _Remark_: There are some sanity checks which are not in the code:
@@ -316,3 +316,27 @@ func Backwards(h1,h2) bool {
   return (hash(h2) == old.Header.hash)
  }
 ```
+
+### Failure Detection Module
+
+The light client must be able to detect failures in the trust assumptions.
+Ideally, it should never trust a header, which was forged by malicious
+validators.
+
+To meet the above requirement, it **must be connected to at least one honest
+full node**.
+
+In practice, this means connecting to one or more geographically distributed
+full nodes (called witness), which belong to different companies.
+
+After the light client verifies a new header (`H`), it should cross-check `H`
+with the headers from all witnesses. Cross-checking means comparing hashes of
+the headers. If any two hashes (or more) diverge, there's a fork.
+
+And since there is no way for the light client to detect who's lying to it
+(which full node - primary or one of the witnesses), it must form an evidence
+and send it to all connected full nodes. The evidence will typically contain
+a set of diverged headers (including commits for each of them).
+
+After doing so, the light client must stop its operation. The operator will be
+forced to reset the light client with a new trusted header.
