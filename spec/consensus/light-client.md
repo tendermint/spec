@@ -326,12 +326,15 @@ validators.
 To meet the above requirement, it **must be connected to at least one honest
 full node**.
 
-In practice, this means connecting to one or more geographically distributed
-full nodes (called witness), which belong to different companies.
+In practice, this means connecting to 1 or more geographically distributed full
+nodes (called witnesses), which belong to different companies. Note this number
+does not include the primary full node (called primary), which is used for obtaining new
+headers.
 
-After the light client verifies a new header (`H`), it should cross-check `H`
-with the headers from all witnesses. Cross-checking means comparing hashes of
-the headers. If any two hashes (or more) diverge, there's a fork.
+After the light client verifies a new header (`H`) it received from primary, it
+should cross-check `H` with the headers from all witnesses. Cross-checking
+means comparing hashes of the headers. If any two hashes (or more) diverge,
+there's a fork.
 
 And since there is no way for the light client to detect who's lying to it
 (which full node - primary or one of the witnesses), it must form an evidence
