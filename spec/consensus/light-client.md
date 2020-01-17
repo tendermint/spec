@@ -352,6 +352,11 @@ should cross-check `H` with the headers from all witnesses. Cross-checking
 means comparing hashes of the headers. If any two hashes (or more) diverge,
 there's a fork (on the main chain OR phantom fork targeting this light client).
 
+The light client will then need to validate the header it got from a witness
+(`H1`) and verify it's signed by +1/3 of the trusted validator set
+(`CheckSupport(trustedHeader, H1, 1/3)`). If either of these fails, it should
+disconnect from the offending witness.
+
 1. Equivocation
 
   If some validator double signed, the light client should form & submit a
