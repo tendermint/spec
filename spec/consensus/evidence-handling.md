@@ -18,20 +18,62 @@ observed two (valid) commits for different blocks at the same height of the bloc
     }
 
     type Commit struct {
-    	Height     int64
-    	Round      int
-    	BlockID    BlockID
-    	Signatures []CommitSig
+    	Height         int64
+    	Round          int
+    	BlockID        BlockID
+    	Signatures     []CommitSig
     }
+
+    type BlockID struct {
+        Hash           []byte
+        PartsHeader    PartSetHeader
+    }
+
+    type Validator struct {
+        Address        Address
+        PubKey         crypto.PubKey
+        VotingPower    int64
+    }
+
 ```
+
+The following invariants hold for every `valid` fork:
+
+```go
+
+func isValidFork(fork Fork) bool {
+    leftHeader := fork.Left.Header
+    rightHeader := fork.Right.Header
+
+    return leftHeader.Height == rightHeader.Height AND
+           leftHeader != rightHeader AND
+           isValid(fork.Left) AND isValid(fork.Right)
+}
+
+func isValid(shWithValset SignedHeaderWithValidatorSet) bool {
+    header := shWithValset.Header
+    commit := shWithValset.Commit
+    validators := shWithValset.Validators
+    vp := validators.TotalVotingPower
+
+    return hash(header) == commit.BlockID.Hash AND
+           header.ValidatorsHash == hash(validators) AND
+           votingPower(signers(commit, validators), validators) > 2/3 * vp
+}
+
+```
+
 
 For the purpose of this specification we assume the following auxiliary functions:
 ```go
 // returns true if vote contains valid signature (assume signature verification); otherwise false
-func isValid(vote Vote, blockId BlockID) bool
+func isValid(vote Vote, validator Validator) bool
 
 // returns Vote by validator that is part of the Commit; otherwise returns nil
 func getVote(commit Commit, validator Address) Vote
+
+// returns validator for a given address if exists; otherwise returns nil
+func getValidator(valset ValidatorSet, validator Address) Validator
 
 ```
 
@@ -121,34 +163,40 @@ We now define each of those evidence types.
 
 ### Equivocation evidence
 
-Given a fork `F` and assuming that left branch corresponds to the canonical chain, we define equivocation evidence as
-existence of valid signatures in the left and right commits for the same height and round but for a different block id.
-The function `createEquivocationEvidence` captures necessary checks in order to extract equivocation evidence for a given
-fork and a validator. This evidence corresponds to invalid protocol transition as according to the
-Tendermint consensus specification a process should create (and sign) at most one vote for a given height, round and vote type.
+Given a fork `F`, we define equivocation evidence as an existence of valid signatures in the left and right commits
+for the same height and round, but for a different value. The function `createEquivocationEvidence` captures
+necessary checks in order to extract equivocation evidence for a given fork and a validator. This evidence corresponds
+to an invalid protocol transition as according to the Tendermint consensus specification a process should create
+(and sign) at most one vote for a given height, round and vote type.
 
 ```go
     type EquivocationEvidence struct {
       LeftPrecommit          Vote
       RightPrecommit         Vote
+      Validator              Validator
     }
 
-func createEquivocationEvidence(fork Fork, validator Address) EquivocationEvidence {
-    canonicalCommit = fork.Left.Commit
-    suspectedCommit = fork.Right.Commit
+func createEquivocationEvidence(fork Fork, valAddress Address) EquivocationEvidence {
+    leftCommit = fork.Left.Commit
+    rightCommit = fork.Right.Commit
 
-    canonicalVote = getVote(canonicalCommit, validator)
-    suspectedVote = getVote(suspectedCommit, validator)
+    validator = getValidator(fork.Left.Validators, valAddress)
+    if validator == nil {
+        validator = getValidator(fork.Right.Validators, valAddress)
+    }
+    if validator == nil { panic("Validator does not exist") }
 
-    if canonicalVote != nil AND suspectedVote != nil AND
-       canonicalVote.Type == suspectedVote.Type AND
-       canonicalVote.Height == suspectedVote.Height AND
-       canonicalVote.Round == suspectedVote.Round AND
-       canonicalVote.BlockID != suspectedVote.BlockID AND
-       isValid(canonicalVote) AND
-       isValid(suspectedVote) {
+    leftVote = getVote(leftCommit, valAddress)
+    rightVote = getVote(rightCommit, valAddress)
 
-            return EquivocationEvidence(canonicalVote, suspectedVote)
+    if leftVote != nil AND rightVote != nil AND
+       leftVote.Height == rightVote.Height AND
+       leftVote.Round == rightVote.Round AND
+       leftVote.BlockID != rightVote.BlockID AND
+       isValid(leftVote, validator) AND
+       isValid(rightVote, validator) {
+
+          return EquivocationEvidence(leftVote, rightVote, valAddress)
     }
     return nil
 }
@@ -156,40 +204,89 @@ func createEquivocationEvidence(fork Fork, validator Address) EquivocationEviden
 
 ### Phantom validator evidence
 
-Given a fork F and assuming that left branch corresponds to the canonical chain, we define equivocation evidence as follows:
-- if exists a validator v such that v is part of F.Right.Validators but not part of F.Left.Validators, and v signed F.Right.Header,
-then phantom validator evidence consists of Precommit message signed by v.
+Given a fork `F` and assuming that left branch corresponds to the canonical chain, we define phantom validator
+evidence as follows: if exists a validator `v` such that `v` is not part of `F.Left.Validators` and `v`
+signed `F.Right.Commit`. The phantom validator evidence consists of `Precommit` message and a validator address of the
+validator that signed it; this is sufficient for every correct full node to check that a validator wasn't
+part of the validator set for the given height and that vote is indeed signed by this process. The function
+`createPhantomValidatorEvidence` captures necessary checks in order to extract phantom validator evidence
+for a given fork and a validator.
 
 ```go
     type PhantomValidatorEvidence struct {
       Precommit          Vote
+      Validator          Validator
     }
+
+func createPhantomValidatorEvidence(fork Fork, valAddress Address) PhantomValidatorEvidence {
+    canonicalValset = fork.Left.Validators
+    rightCommit = fork.Right.Commit
+
+    validator = getValidator(fork.Right.Validators, valAddress)
+    if validator == nil { panic("Validator does not exist") }
+
+    vote = getVote(rightCommit, valAddress)
+
+    if getValidator(fork.Left.Validators, valAddress) == nil AND
+       vote != nil AND isValid(vote, validator) {
+          return PhantomValidatorEvidence(vote, valAddress)
+    }
+    return nil
+}
 ```
 
-- LunaticValidatorEvidence:
+### Lunatic validator evidence
 
-Given a block B at height H which corresponds to application state S (execution of transactions from block B leads to application state S),
-lunatic validator evidence is a case when exists a validator v such that v is part of F.Left.Validators and F.Right.Validators, and v signed F.Right.Header,
-such that and F.Right.Header.AppHash != F.Left.Header.AppHash or F.Right.Header.Validators != F.Left.Header.Validators or
-F.Right.Header.NextValidators != F.Left.Header.NextValidators or F.Right.Header.ConsensusParams != F.Left.Header.ConsensusParams.
+Given a block `B` at height `H` at the canonical chain, which corresponds to the application state `S`
+(execution of transactions from the block `B` leads to the application state `S`), lunatic validator evidence
+is a case in which a validator `v` signed vote for a block `B' != B` such that
+`B.Header.AppHash != B'.Header.AppHash` or `B.Header.Validators != B'.Header.Validators` or
+`B.Header.NextValidators != B'.Header.NextValidators` or `B.Header.ConsensusParams != B'.Header.ConsensusParams`.
 
-Lunatic validator evidence consists of Precommit message signed by v.
+Lunatic validator evidence consists of `Precommit` message and the validator that has signed it. The function
+`createLunaticValidatorEvidence` captures necessary checks in order to extract lunatic validator evidence
+for a given fork and a validator.
 
 ```go
     type LunaticValidatorEvidence struct {
       Precommit          Vote
+      Validator          Validator
+      Header             Header
     }
+
+func createLunaticValidatorEvidence(fork Fork, valAddress Address) LunaticValidatorEvidence {
+    canonicalHeader = fork.Left.Header
+    otherHeader = fork.Right.Header
+
+    if canonicalHeader.AppHash == otherHeader.AppHash AND
+       canonicalHeader.Validators == otherHeader.Validators AND
+       canonicalHeader.NextValidators == otherHeader.NextValidators AND
+       canonicalHeader.ConsensusParams == otherHeader.ConsensusParams {
+
+            return nil
+    }
+
+    validator = getValidator(fork.Right.Validators, valAddress)
+    if validator == nil { panic("Validator does not exist") }
+
+    vote = getVote(rightCommit, valAddress)
+
+    if vote != nil AND isValid(vote, validator) {
+        return LunaticValidatorEvidence(vote, validator, otherHeader)
+    }
+    return nil
+}
 ```
 
-Processing of these three types of misbehavior does not require access to global system state: every correct full node can confirm that this is misbehavior just by
-looking at content of the evidence and its local state.
+Processing of these three types of misbehavior does not require access to the global system state: every correct full node
+can confirm that this is misbehavior just by looking at the content of the evidence and its local state.
 
 ## Global evidence
 
 By global evidence we refer to a misbehaviour that cannot be confirmed just by looking at the local full node state.
 
 Given a fork F and assuming that left branch corresponds to the canonical chain, we define global evidence as follows:
-- if exists a validator v such that v is part of F.Left.Validators and F.Right.Validators, and v signed F.Right.Header,
+if exists a validator v such that v is part of F.Left.Validators and F.Right.Validators, and v signed F.Right.Header,
 then either v signed F.Left.Header and F.Left.Header.Round != F.Right.Header.Round or v hasn't signed F.Left.Header.
 
 Note that in this case votes signed by v are not proof of misbehaviour as they can also correspond to a valid
@@ -203,7 +300,7 @@ fork accountability procedure.
 ```
 
 
-## Gossiping of evidences
+
 
 
 
