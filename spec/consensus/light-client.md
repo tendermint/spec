@@ -353,9 +353,8 @@ means comparing hashes of the headers. If any two hashes (or more) diverge,
 there's a fork (on the main chain OR phantom fork targeting this light client).
 
 The light client will then need to validate the header it got from a witness
-(`H1`) and verify it's signed by +1/3 of the trusted validator set
-(`CheckSupport(trustedHeader, H1, 1/3)`). If either of these fails, it should
-disconnect from the offending witness.
+(`H1`) and verify it's signed by at least one trusted validator. If either of
+these fails, it should disconnect from the offending witness.
 
 1. Equivocation
 
@@ -371,7 +370,7 @@ disconnect from the offending witness.
   If there's a vote from a validator outside of the validator set for that
   height, the light client should reject the header it came from. If it came
   from primary, it should select a new primary from the list of witnesses and
-  try to continue.
+  try to continue. If it came from a witness, it should simply disconnect.
 
 3. Other attacks (Flip-flopping Amnesia & Back to the past, Lunatic)
 
