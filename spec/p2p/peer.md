@@ -30,7 +30,7 @@ Tendermint implements the Station-to-Station protocol
 using X25519 keys for Diffie-Helman key-exchange and chacha20poly1305 for encryption.
 
 Previous versions of this protocol suffered from malleability attacks whereas an active man 
-in the middle attacker could compromise confidentiality as decribed in (Prime, Order Please!
+in the middle attacker could compromise confidentiality as decribed in [Prime, Order Please!
 Revisiting Small Subgroup and Invalid Curve Attacks on
 Protocols using Diffie-Hellman)[https://eprint.iacr.org/2019/526.pdf]. 
 
