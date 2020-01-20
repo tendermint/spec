@@ -32,7 +32,7 @@ using X25519 keys for Diffie-Helman key-exchange and chacha20poly1305 for encryp
 Previous versions of this protocol suffered from malleability attacks whereas an active man 
 in the middle attacker could compromise confidentiality as decribed in [Prime, Order Please!
 Revisiting Small Subgroup and Invalid Curve Attacks on
-Protocols using Diffie-Hellman)[https://eprint.iacr.org/2019/526.pdf]. 
+Protocols using Diffie-Hellman](https://eprint.iacr.org/2019/526.pdf). 
 
 We have added dependency on the Merlin a keccak based transcript hashing protocol to ensure non-malleability.
 
