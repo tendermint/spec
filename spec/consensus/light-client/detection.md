@@ -1,34 +1,34 @@
 # Failure Detection
 
-The light client must be able to detect failures in the trust assumptions.
-Ideally, it should never trust a header, which was forged by malicious
-validators.
+If there are more than 1/3 (or more) faulty validators, safety may be violated.
+This document describes how the light client can detect such violations (after
+the fact) and the next steps.
 
-## Connectivity requirement
+## 1. Detection
 
-To meet the above requirement, it must be connected to at least one honest
-full node. This is sufficient so long as there's no fork on the main chain.
+The bare minimum requirement is to be connected to at least one honest full
+node. This is sufficient so long as there's no fork on the main chain.
 
 If there is a fork on the main chain, it means that two full nodes have decided
 on two different headers for the same height. Then the requirement would at
-least require that the lite client is **connected to one honest full node on
-each branch of the fork**.
+least require that the lite client is connected to one honest full node on
+each branch of the fork.
 
 _Remark_: +1/3 of malicious validators can create an unlimited number of forks.
 
-However, if we assume that correct full node is going to halt in case of a fork
-on the main chain, then we only need to notice that fact.
-
 In practice, this means connecting to 1 or more geographically distributed full
-nodes (called witnesses), which belong to different companies. Note this number
-does not include the primary full node (called primary), which is used for
-obtaining new headers.
+nodes (called **witnesses**), which belong to different companies. Note this
+number does not include the primary full node (called primary), which is used
+for obtaining new headers.
 
 _Remark_: we can't guarantee all witnesses won't follow the same branch of a
 fork. to guarantee that, we'll need the light client to be connected to +1/3 of
-nodes, which is impractical.
+nodes, which is impossible (_the structure of the network where validators are
+hidden behind sentries makes this impossible_).
 
-## Evidence detection
+Full nodes are much more connected. And, if we assume a correct full node is
+going to halt in case of a fork on the main chain, then **we only need to
+notice that fact**.
 
 After the light client verifies a new header (`H`) it received from primary, it
 should cross-check `H` with the headers from all witnesses. Cross-checking
@@ -36,33 +36,35 @@ means comparing hashes of the headers. If any two hashes (or more) diverge,
 there's a fork (on the main chain OR phantom fork targeting this light client).
 
 The light client will then need to validate the header it got from a witness
-(`H1`) and verify it's signed by at least one trusted validator. If either of
-these fails, it should disconnect from the offending witness.
+(`H1`) and verify the signers account for +1/3 of the voting power.
 
-1. Equivocation
+- if verification fails, this is a faulty full node (2.1).
+- if verification succeeds, we have a successful +1/3 attack (2.2).
 
-  If some validator double signed, the light client should form & submit a
-  `DuplicateVoteEvidence`.
+## 2. Error modes
 
-  After doing so, the light client must stop its operation. The operator will be
-  forced to reset the light client (resetting does not imply deleting the data
-  here) with a new trusted header.
+1. Faulty full node: mark them as bad and stop talking to them, but otherwise
+   continue.
+2. Successful +1/3 attack: submit evidence and halt, wait for human
+   intervention.
 
-2. Phantom validators
+### 2.1 Faulty full node
 
-  If there's a vote from a validator outside of the validator set for that
-  height, the light client should reject the header it came from. If it came
-  from primary, it should select a new primary from the list of witnesses and
-  try to continue. If it came from a witness, it should simply disconnect.
+A faulty full node might send the light client a conflicting header (`H2`) that
+does not fully verify but does contain say a double sign from a validator.
+Technically there is a faulty validator in here, but they would just go
+unpunished (NOTE: subject to a change).
 
-3. Other attacks (Flip-flopping Amnesia & Back to the past, Lunatic)
+### 2.2 Successful +1/3 attack
 
-  Since there is no way for the light client to detect who's lying to it (which
-  full node - primary or one of the witnesses), it must form an evidence and
-  submit it to all connected full nodes (witnesses and primary). The evidence
-  will typically contain a set of diverged headers (including commits for each of
-  them).
+If a conflicting header (`H2`) is signed by +1/3 of the voting power, it means
+there's at least one correct validator on both branches (`H1` and `H2`).
 
-  After doing so, the light client must stop its operation. The operator will be
-  forced to reset the light client (resetting does not imply deleting the data
-  here) with a new trusted header.
+Since there is no way for the light client to detect who's lying to it (which
+full node - primary or one of the witnesses), it must form an evidence and
+submit it to all connected full nodes (witnesses and primary). The evidence
+will typically contain a set of diverged headers (including the commits).
+
+After doing so, the light client must stop its operation. The operator will be
+forced to reset the light client (resetting does not imply deleting the data
+here) with a new trusted header.
