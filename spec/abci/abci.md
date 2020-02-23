@@ -501,7 +501,7 @@ Commit are included in the header of the next block.
 ### EvidenceParams
 
 - **Fields**:
-  - `MaxAgeHeight (int64)`: Max age of evidence, in blocks.
+  - `MaxAgeNumBlocks (int64)`: Max age of evidence, in blocks.
   - `MaxAgeDuration (time.Duration)`: Max age of evidence, in time.
     Evidence older than this is considered stale and ignored.
     

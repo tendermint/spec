@@ -110,7 +110,7 @@ type BlockParams struct {
 }
 
 type EvidenceParams struct {
-    MaxAgeHeight    int64
+    MaxAgeNumBlocks    int64
     MaxAgeDuration  time.Duration
 }
 
@@ -136,7 +136,7 @@ The minimal time between consecutive blocks is controlled by the
 For evidence in a block to be valid, it must satisfy:
 
 ```
-block.Header.Height - evidence.Height < ConsensusParams.Evidence.MaxAgeHeight
+block.Header.Height - evidence.Height < ConsensusParams.Evidence.MaxAgeNumBlocks
 block.Header.Time - evidence.Time < ConsensusParams.Evidence.MaxAgeDuration
 ```
 
