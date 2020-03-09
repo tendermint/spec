@@ -141,7 +141,7 @@ If there is no fork at height *h*, and
  at height *h*.
 
 
-#### **[LCD-VC-LIFE-DONT-STOP]**
+#### **[LCD-VC-LIVE-DONT-STOP]**
 
 If there is no fork at height *h*, and
  the primary is correct, then the failure detector should eventually
