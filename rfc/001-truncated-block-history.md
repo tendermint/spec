@@ -46,7 +46,7 @@ The main configuration options involved are:
 
 * Block time (Tendermint): already implemented as a genesis parameter `consensus_params.block.time_iota_ms`.
 
-* Block retention (Tendermint): implement as a new genesis parameter `consensus_params.block.retention` (default 0, i.e. all), and add a local configuration option `consensus.prune_blocks` (default off) that allows node operators to either enable or disable block pruning on a per-node basis but not control the number of blocks to retain. Should be at least 2, since the current and previous blocks are required for progress.
+* Block retention (Tendermint): implement as a new genesis parameter `consensus_params.block.retention` (default 0, i.e. all), and add a local configuration option `consensus.prune_blocks` (default off) that allows node operators to either enable or disable block pruning on a per-node basis but not control the number of blocks to retain. Must be at minimum 2, since the current and previous blocks are required for progress, but should be longer than unbonding time.
 
 * Snapshot interval (SDK): implement as a new genesis parameter `app_state.snapshots.interval` (default 0, i.e. disabled). This should be lower than the block retention, to allow state synced nodes to catch up via block replay.
 
