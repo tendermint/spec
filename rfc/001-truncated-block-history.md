@@ -72,13 +72,11 @@ Proposed
 
 * Social coordination is required to run snapshot nodes, failure to do so may lead to inability to run state sync, and inability to bootstrap new nodes at all if no archival nodes are online.
 
+* Genesis parameter can only be changed by creating a new chain. This means that enabling block pruning or state sync, as well as modifying the settings, would be a non-trivial operation.
+
 * Chain-wide block retention sets a lower bound on disk space requirements for all nodes.
 
 * Chain-wide snapshot interval sets a lower bound on IO throughput requirements for all nodes (slower nodes will not be able to complete a snapshot before the next starts, in which case it will be skipped).
-
-### Neutral
-
-* Governance proposals are required to enable block pruning and state sync snapshotting.
 
 ## References
 
