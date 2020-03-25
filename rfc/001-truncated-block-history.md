@@ -27,15 +27,15 @@ To maintain the integrity of the chain, the use of these features must be coordi
 
 * Only a minority of nodes can be state synced within the unbonding period, for light client verification and to serve block histories for catch-up.
 
-However, it is unclear if and how we should enforce this. It may not be possible to technically enforce all of these without knowing the state of the entire network, but it may also be unrealistic to expect this to be enforced entirely through social consensus. This is especially unfortunate since the consequences of misconfiguration can be permanent chain-wide data loss.
+However, it is unclear if and how we should enforce this. It may not be possible to technically enforce all of these without knowing the state of the entire network, but it may also be unrealistic to expect this to be enforced entirely through social coordination. This is especially unfortunate since the consequences of misconfiguration can be permanent chain-wide data loss.
 
 The main configuration options involved are:
 
-* Unbonding time (SDK): the duration in which validators can be economically punished for misbehavior.
+* Block retention (Tendermint): the number of recent blocks (heights) to retain.
 
 * Block time (Tendermint): the minimum duration between consecutive blocks.
 
-* Block retention (Tendermint): the number of recent blocks (heights) to retain.
+* Unbonding time (SDK): the duration in which validators can be economically punished for misbehavior.
 
 * Snapshot interval (SDK): the interval (in heights) between taking state sync snapshots.
 
@@ -43,11 +43,11 @@ The main configuration options involved are:
 
 ## Proposal
 
-* Unbonding time (SDK): already implemented as a genesis parameter `app_state.staking.params.unbonding_time`. Must now satisfy `unbonding_time < 2 * block.retention * block.time_iota_ms` otherwise errors (factor of 2 since `block.time_iota_ms` does not take into account block execution time).
+* Block retention (Tendermint): implement as a new consensus parameter `block.retention` (default 0, i.e. retain all), and add a local config option `consensus.prune_blocks` (default off) that allows operators to enable or disable block pruning on a per-node basis. Must be at minimum 2, since the current and previous blocks are required for progress.
 
 * Block time (Tendermint): already implemented as a consensus parameter `block.time_iota_ms`.
 
-* Block retention (Tendermint): implement as a new consensus parameter `block.retention` (default 0, i.e. retain all), and add a local config option `consensus.prune_blocks` (default off) that allows operators to enable or disable block pruning on a per-node basis. Must be at minimum 2, since the current and previous blocks are required for progress.
+* Unbonding time (SDK): already implemented as a genesis parameter `app_state.staking.params.unbonding_time`. Must now satisfy `unbonding_time < 2 * block.retention * block.time_iota_ms` otherwise errors (factor of 2 since `block.time_iota_ms` does not take into account block execution time).
 
 * Snapshot interval (SDK): implement as a new config option `snapshot-interval` (default 0, i.e. disabled). Must satisfy `snapshot-interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
 
