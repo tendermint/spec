@@ -63,7 +63,7 @@ Proposed
 
 * Consensus and genesis parameters for block retention, block time, and unbonding time allows governance to control whether pruning should be allowed, and to ensure sufficient availability of recent blocks for light client verification and short-term auditability, with enforced sanity checks.
 
-* If allowed by consensus parameter, node operators can independently decide whether they want to provide complete block histories and snapshots.
+* Node operators can independently decide whether they want to provide complete block histories and snapshots, if allowed by consensus parameter `block.retention`.
 
 ### Negative
 
@@ -71,7 +71,7 @@ Proposed
 
 * Social coordination is required to run snapshot nodes, failure to do so may lead to inability to run state sync, and inability to bootstrap new nodes at all if no archival nodes are online.
 
-* Snapshot nodes will take snapshots at 
+* Snapshot nodes can take snapshots at different intervals, leading to a lower availability of peers for a given snapshot than if it was a genesis parameter.
 
 * Consensus parameter can't currently be changed in the SDK, requiring either implementing this or creating a new chain to enable block pruning.
 
