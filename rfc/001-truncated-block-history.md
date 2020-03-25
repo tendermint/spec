@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-03-23: Initial draft (@erikgrinaker)
+- 2020-03-25: Use local config for snapshot interval (@erikgrinaker)
 
 ## Author(s)
 
@@ -14,11 +15,11 @@ Currently, all Tendermint nodes contain the complete sequence of blocks from gen
 
 * [Block pruning](https://github.com/tendermint/tendermint/issues/3652): removes historical blocks and associated data (e.g. validator sets) up to some height, keeping only the most recent blocks.
 
-* [State sync](https://github.com/tendermint/tendermint/issues/828): bootstraps a new node by syncing the state machine at a given height, but not historical blocks and associated data.
+* [State sync](https://github.com/tendermint/tendermint/issues/828): bootstraps a new node by syncing state machine snapshots (note: not IAVL pruning snapshots) at a given height, but not historical blocks and associated data.
 
-To maintain the integrity of the chain, the use of these features must be coordinated such that necessary historical blocks will not be made unavailable or lost forever. In particular:
+To maintain the integrity of the chain, the use of these features must be coordinated such that necessary historical blocks will not become unavailable or lost forever. In particular:
 
-* Some nodes should have complete block histories, for auditability and querying.
+* Some nodes should have complete block histories, for auditability, querying, and bootstrapping.
 
 * The majority of nodes should retain blocks longer than the Cosmos SDK unbonding period, for light client verification.
 
@@ -44,13 +45,13 @@ The main configuration options involved are:
 
 * Unbonding time (SDK): already implemented as a genesis parameter `app_state.staking.params.unbonding_time`. Must now satisfy `unbonding_time < 2 * block.retention * block.time_iota_ms` otherwise errors (factor of 2 since `block.time_iota_ms` does not take into account block execution time).
 
-* Block time (Tendermint): already implemented as a genesis parameter `consensus_params.block.time_iota_ms`.
+* Block time (Tendermint): already implemented as a consensus parameter `block.time_iota_ms`.
 
-* Block retention (Tendermint): implement as a new genesis parameter `consensus_params.block.retention` (default 0, i.e. retain all), and add a local configuration option `consensus.prune_blocks` (default off) that allows node operators to either enable or disable block pruning on a per-node basis. Must be at minimum 2, since the current and previous blocks are required for progress.
+* Block retention (Tendermint): implement as a new consensus parameter `block.retention` (default 0, i.e. retain all), and add a local config option `consensus.prune_blocks` (default off) that allows operators to enable or disable block pruning on a per-node basis. Must be at minimum 2, since the current and previous blocks are required for progress.
 
-* Snapshot interval (SDK): implement as a new genesis parameter `app_state.snapshots.interval` (default 0, i.e. disabled). Must satisfy `interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
+* Snapshot interval (SDK): implement as a new config option `snapshot-interval` (default 0, i.e. disabled). Must satisfy `snapshot-interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
 
-* Snapshot retention (SDK): add a local configuration option `snapshot-enable` (default off) to enable/disable snapshots on a per-node basis, and `snapshot-retention` (default 2, 0 retains all) that specifies the number of snapshots to keep. Must be at least 2 to allow in-flight state syncs to complete as new snapshots are produced, but higher retention can be useful e.g. during mixed-version upgrades where old snapshots can be used by old-version nodes, or for state machine archives.
+* Snapshot retention (SDK): add a local config option `snapshot-retention` (default 2) that specifies the number of snapshots to keep. Must be at least 2 to allow in-flight state syncs to complete as new snapshots are produced, but higher retention can be useful e.g. during mixed-version upgrades where old snapshots can be used by old-version nodes, or for state machine archives.
 
 ## Status
 
@@ -60,11 +61,9 @@ Proposed
 
 ### Positive
 
-* Genesis parameters for block retention, block time, and unbonding time allows governance consensus to ensure availability and correctness of light client verification and short-term chain auditability, with enforced sanity checks.
+* Consensus and genesis parameters for block retention, block time, and unbonding time allows governance to control whether pruning should be allowed, and to ensure sufficient availability of recent blocks for light client verification and short-term auditability, with enforced sanity checks.
 
-* Genesis parameters for snapshot interval ensures uniform snapshot schedules across nodes, providing high availability of snapshots at a given height for parallel downloads and faster state syncing, with enforced sanity checks.
-
-* Node operators can independently decide whether they want to provide complete block histories and snapshots.
+* If allowed by consensus parameter, node operators can independently decide whether they want to provide complete block histories and snapshots.
 
 ### Negative
 
@@ -72,11 +71,11 @@ Proposed
 
 * Social coordination is required to run snapshot nodes, failure to do so may lead to inability to run state sync, and inability to bootstrap new nodes at all if no archival nodes are online.
 
-* Genesis parameter can only be changed by creating a new chain. This means that enabling block pruning or state sync, as well as modifying the settings, would be a non-trivial operation.
+* Snapshot nodes will take snapshots at 
+
+* Consensus parameter can't currently be changed in the SDK, requiring either implementing this or creating a new chain to enable block pruning.
 
 * Chain-wide block retention sets a lower bound on disk space requirements for all nodes.
-
-* Chain-wide snapshot interval sets a lower bound on IO throughput requirements for all nodes (slower nodes will not be able to complete a snapshot before the next starts, in which case it will be skipped).
 
 ## References
 
