@@ -49,7 +49,7 @@ The main configuration options involved are:
 
 * Unbonding time (SDK): already implemented as a genesis parameter `app_state.staking.params.unbonding_time`. Must now satisfy `unbonding_time < 2 * block.retention * block.time_iota_ms` otherwise errors (factor of 2 since `block.time_iota_ms` does not take into account block execution time).
 
-* Snapshot interval (SDK): implement as a new config option `snapshot-interval` (default 0, i.e. disabled). Must satisfy `snapshot-interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
+* Snapshot interval (SDK): add a local config option `snapshot-interval` (default 0, i.e. disabled). Must satisfy `snapshot-interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
 
 * Snapshot retention (SDK): add a local config option `snapshot-retention` (default 2) that specifies the number of snapshots to keep. Must be at least 2 to allow in-flight state syncs to complete as new snapshots are produced, but higher retention can be useful e.g. during mixed-version upgrades where old snapshots can be used by old-version nodes, or for state machine archives.
 
