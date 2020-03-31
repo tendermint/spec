@@ -1,4 +1,4 @@
-# RFC 001: Coordination and Configuration of Block Retention and State Sync
+# RFC 001: Configurable Block Retention
 
 ## Changelog
 
@@ -60,12 +60,12 @@ Since `retain_height` is dynamic, it is possible for it to refer to a height whi
 
 * Should we add a local config option for Tendermint to retain blocks beyond `retain_height`? This is needed e.g. for archive nodes. For example, an option `retain_blocks=100` would cause Tendermint to retain at minimum 100 most recent blocks, but possibly more if ABCI commit `retain_height` requires it. Alternatively, this could be configured in the application.
 
-    | Commit height | ABCI `retain_height` | Config `retain_blocks` | Deleted heights |
-    | ------------- | -------------------- | ---------------------- | --------------- |
-    | 1000          | 750                  | 200                    | 1-749           |
-    | 1000          | 900                  | 200                    | 1-799           |
-    | 1000          | 900                  | 0                      | 1-899           |
-    | 1000          | 900                  | all                    | None            |
+| Commit height | ABCI `retain_height` | Config `retain_blocks` | Deleted heights |
+|---------------|----------------------|------------------------|-----------------|
+| 1000          | 750                  | 200                    | 1-749           |
+| 1000          | 900                  | 200                    | 1-799           |
+| 1000          | 900                  | 0                      | 1-899           |
+| 1000          | 900                  | all                    | None            |
 
 * Should state sync backfill historical blocks, such that all nodes have an application-controlled minimum block history available? This could be done e.g. by state sync snapshots including a `backfill_height` field which specifies the height to backfill from, and could use the existing fast sync reactor with minor modifications.
 
