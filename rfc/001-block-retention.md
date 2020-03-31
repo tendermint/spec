@@ -83,6 +83,8 @@ The returned `retain_height` would be the lowest height that satisfies:
 
 There may be a need to vary this for certain nodes as well, e.g. sentry nodes may not need to retain any blocks. This will have to be discussed in an SDK specification.
 
+![Cosmos SDK block retention diagram](images/block-retention.png)
+
 ## Status
 
 Proposed
