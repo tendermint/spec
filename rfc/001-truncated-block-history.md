@@ -4,6 +4,7 @@
 
 - 2020-03-23: Initial draft (@erikgrinaker)
 - 2020-03-25: Use local config for snapshot interval (@erikgrinaker)
+- 2020-03-31: Use ABCI commit response for block retention hint
 
 ## Author(s)
 
@@ -15,7 +16,7 @@ Currently, all Tendermint nodes contain the complete sequence of blocks from gen
 
 * [Block pruning](https://github.com/tendermint/tendermint/issues/3652): removes historical blocks and associated data (e.g. validator sets) up to some height, keeping only the most recent blocks.
 
-* [State sync](https://github.com/tendermint/tendermint/issues/828): bootstraps a new node by syncing state machine snapshots (note: not IAVL pruning snapshots) at a given height, but not historical blocks and associated data.
+* [State sync](https://github.com/tendermint/tendermint/issues/828): bootstraps a new node by syncing state machine snapshots at a given height, but not historical blocks and associated data.
 
 To maintain the integrity of the chain, the use of these features must be coordinated such that necessary historical blocks will not become unavailable or lost forever. In particular:
 
@@ -25,33 +26,62 @@ To maintain the integrity of the chain, the use of these features must be coordi
 
 * Some nodes must take and serve state sync snapshots with snapshot intervals less than the block retention periods, to allow new nodes to state sync and then replay blocks to catch up.
 
+* Applications may not persist their state on commit, and require block replay on restart.
+
 * Only a minority of nodes can be state synced within the unbonding period, for light client verification and to serve block histories for catch-up.
 
 However, it is unclear if and how we should enforce this. It may not be possible to technically enforce all of these without knowing the state of the entire network, but it may also be unrealistic to expect this to be enforced entirely through social coordination. This is especially unfortunate since the consequences of misconfiguration can be permanent chain-wide data loss.
 
-The main configuration options involved are:
-
-* Block retention (Tendermint): the number of recent blocks (heights) to retain.
-
-* Block time (Tendermint): the minimum duration between consecutive blocks.
-
-* Unbonding time (SDK): the duration in which validators can be economically punished for misbehavior.
-
-* Snapshot interval (SDK): the interval (in heights) between taking state sync snapshots.
-
-* Snapshot retention (SDK): the number of recent state sync snapshots to retain.
-
 ## Proposal
 
-* Block retention (Tendermint): implement as a new consensus parameter `block.retention` (default 0, i.e. retain all), and add a local config option `consensus.prune_blocks` (default off) that allows operators to enable or disable block pruning on a per-node basis. Must be at minimum 2, since the current and previous blocks are required for progress.
+Add a new field `retain_height` to the ABCI `ResponseCommit` message:
 
-* Block time (Tendermint): already implemented as a consensus parameter `block.time_iota_ms`.
+```proto
+service ABCIApplication {
+  rpc Commit(RequestCommit) returns (ResponseCommit);
+}
 
-* Unbonding time (SDK): already implemented as a genesis parameter `app_state.staking.params.unbonding_time`. Must now satisfy `unbonding_time < 2 * block.retention * block.time_iota_ms` otherwise errors (factor of 2 since `block.time_iota_ms` does not take into account block execution time).
+message RequestCommit {}
 
-* Snapshot interval (SDK): add a local config option `snapshot-interval` (default 0, i.e. disabled). Must satisfy `snapshot-interval < 2 * block.retention` otherwise errors, to allow state synced nodes to catch up via block replay (factor of 2 to account for time spent taking a snapshot).
+message ResponseCommit {
+  // reserve 1
+  bytes  data          = 2; // the Merkle root hash
+  uint64 retain_height = 3; // the oldest block height to retain
+}
+```
 
-* Snapshot retention (SDK): add a local config option `snapshot-retention` (default 2) that specifies the number of snapshots to keep. Must be at least 2 to allow in-flight state syncs to complete as new snapshots are produced, but higher retention can be useful e.g. during mixed-version upgrades where old snapshots can be used by old-version nodes, or for state machine archives.
+Upon ABCI `Commit`, which finalizes execution of a block in the state machine, Tendermint removes all data for heights lower than `retain_height`. This allows the state machine to control block retention, which is preferable since only it can determine the significance of historical blocks. By default (i.e. with `retain_height=0`) all historical blocks are retained.
+
+Removed data includes not only blocks, but also headers, commit info, consensus params, validator sets, and so on. In the first iteration this will be done synchronously, since the number of heights to remove for each run is assumed to be small (often 1) in the typical case. It can be made asynchronous if this is shown to be necessary, but if we then add support for the state machine to query Tendermint (which is planned) then this will be a source of non-determinism.
+
+Since `retain_height` is dynamic, it is possible for it to refer to a height which has already been removed. For example, commit at height 100 may return `retain_height=90` while commit at height 101 may return `retain_height=80`. This is allowed, and will be ignored - it is the application's responsibility to return appropriate values.
+
+## Open Questions
+
+* Should we add a local config option for Tendermint to retain blocks beyond `retain_height`? This is needed e.g. for archive nodes. For example, an option `retain_blocks=100` would cause Tendermint to retain at minimum 100 most recent blocks, but possibly more if ABCI commit `retain_height` requires it. Alternatively, this could be configured in the application.
+
+    | Commit height | ABCI `retain_height` | Config `retain_blocks` | Deleted heights |
+    | ------------- | -------------------- | ---------------------- | --------------- |
+    | 1000          | 750                  | 200                    | 1-749           |
+    | 1000          | 900                  | 200                    | 1-799           |
+    | 1000          | 900                  | 0                      | 1-899           |
+    | 1000          | 900                  | all                    | None            |
+
+* Should state sync backfill historical blocks, such that all nodes have an application-controlled minimum block history available? This could be done e.g. by state sync snapshots including a `backfill_height` field which specifies the height to backfill from, and could use the existing fast sync reactor with minor modifications.
+
+## Cosmos SDK Example
+
+As a rough example of how applications would benefit from this, we'll consider the related issues in the Cosmos SDK. The details should be specified in a separate SDK proposal.
+
+The returned `retain_height` would be the lowest height that satisfies:
+
+* Unbonding time: the time interval in which validators can be economically punished for misbehavior. Blocks in this interval must be auditable e.g. by the light client.
+
+* IAVL snapshot interval: the block interval at which the underlying IAVL database is persisted to disk, e.g. every 10000 heights. Blocks since the last IAVL snapshot must be available for replay on application restart.
+
+* State sync snapshots: blocks since the _oldest_ available snapshot must be available for state sync nodes to catch up (oldest because a node may be restoring an old snapshot while a new snapshot was taken).
+
+There may be a need to vary this for certain nodes as well, e.g. sentry nodes may not need to retain any blocks. This will have to be discussed in an SDK specification.
 
 ## Status
 
@@ -61,9 +91,11 @@ Proposed
 
 ### Positive
 
-* Consensus and genesis parameters for block retention, block time, and unbonding time allows governance to control whether pruning should be allowed, and to ensure sufficient availability of recent blocks for light client verification and short-term auditability, with enforced sanity checks.
+* Application-specified minimum block retention allows the application to take all relevant factors into account and prevent necessary blocks from being accidentally removed.
 
-* Node operators can independently decide whether they want to provide complete block histories and snapshots, if allowed by consensus parameter `block.retention`.
+* Node operators can independently decide whether they want to provide complete block histories (if local configuration for this is provided) and snapshots.
+
+* Provided state sync backfills, minimum block retention will be invariant and deterministic across all nodes, allowing for deterministic state machine access to this data.
 
 ### Negative
 
@@ -71,11 +103,9 @@ Proposed
 
 * Social coordination is required to run snapshot nodes, failure to do so may lead to inability to run state sync, and inability to bootstrap new nodes at all if no archival nodes are online.
 
-* Snapshot nodes can take snapshots at different intervals, leading to a lower availability of peers for a given snapshot than if it was a genesis parameter.
+### Neutral
 
-* Consensus parameter can't currently be changed in the SDK, requiring either implementing this or creating a new chain to enable block pruning.
-
-* Chain-wide block retention sets a lower bound on disk space requirements for all nodes.
+* Minimum application-specified block retention sets a lower bound on disk space requirements for all nodes.
 
 ## References
 
