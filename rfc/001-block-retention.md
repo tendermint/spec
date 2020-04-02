@@ -5,6 +5,7 @@
 - 2020-03-23: Initial draft (@erikgrinaker)
 - 2020-03-25: Use local config for snapshot interval (@erikgrinaker)
 - 2020-03-31: Use ABCI commit response for block retention hint
+- 2020-04-02: Resolved open questions
 
 ## Author(s)
 
@@ -52,19 +53,15 @@ message ResponseCommit {
 
 Upon ABCI `Commit`, which finalizes execution of a block in the state machine, Tendermint removes all data for heights lower than `retain_height`. This allows the state machine to control block retention, which is preferable since only it can determine the significance of historical blocks. By default (i.e. with `retain_height=0`) all historical blocks are retained.
 
-Removed data includes not only blocks, but also headers, commit info, consensus params, validator sets, and so on. In the first iteration this will be done synchronously, since the number of heights to remove for each run is assumed to be small (often 1) in the typical case. It can be made asynchronous if this is shown to be necessary, but if we then add support for the state machine to query Tendermint (which is planned) then this will be a source of non-determinism.
+Removed data includes not only blocks, but also headers, commit info, consensus params, validator sets, and so on. In the first iteration this will be done synchronously, since the number of heights removed for each run is assumed to be small (often 1) in the typical case. It can be made asynchronous at a later time if this is shown to be necessary.
 
 Since `retain_height` is dynamic, it is possible for it to refer to a height which has already been removed. For example, commit at height 100 may return `retain_height=90` while commit at height 101 may return `retain_height=80`. This is allowed, and will be ignored - it is the application's responsibility to return appropriate values.
 
-## Open Questions
-
-* Should we add a local config option for Tendermint to retain blocks beyond ABCI `retain_height`? This is needed e.g. for archive nodes. For example, an option `retain_blocks=100` would cause Tendermint to retain at minimum the 100 most recent blocks, but more if ABCI commit `retain_height` requires it. Alternatively, this could be configured in the application.
-
-* Should state sync backfill historical blocks, such that all nodes have an application-controlled minimum block history available? This could be done e.g. by state sync snapshots including a `backfill_height` field which specifies the height to backfill from, and could use the existing fast sync reactor with minor modifications.
+State sync will eventually support backfilling heights, via e.g. a snapshot metadata field `backfill_height`, but in the initial version it will have a fully truncated block history.
 
 ## Cosmos SDK Example
 
-As a rough example of how applications would benefit from this, we'll consider the related issues in the Cosmos SDK. The details should be specified in a separate SDK proposal.
+As an example, we'll consider how the Cosmos SDK might make use of this. The specific details should be discussed in a separate SDK proposal.
 
 The returned `retain_height` would be the lowest height that satisfies:
 
@@ -74,7 +71,7 @@ The returned `retain_height` would be the lowest height that satisfies:
 
 * State sync snapshots: blocks since the _oldest_ available snapshot must be available for state sync nodes to catch up (oldest because a node may be restoring an old snapshot while a new snapshot was taken).
 
-There may be a need to vary this for certain nodes as well, e.g. sentry nodes may not need to retain any blocks. This will have to be discussed in an SDK specification.
+* Local config: archive nodes may want to retain more or all blocks, e.g. via a local config option `min-retain-blocks`. There may also be a need to vary rentention for other nodes, e.g. sentry nodes which do not need historical blocks.
 
 ![Cosmos SDK block retention diagram](images/block-retention.png)
 
@@ -86,11 +83,9 @@ Proposed
 
 ### Positive
 
-* Application-specified minimum block retention allows the application to take all relevant factors into account and prevent necessary blocks from being accidentally removed.
+* Application-specified block retention allows the application to take all relevant factors into account and prevent necessary blocks from being accidentally removed.
 
 * Node operators can independently decide whether they want to provide complete block histories (if local configuration for this is provided) and snapshots.
-
-* Provided state sync backfills, minimum block retention will be invariant and deterministic across all nodes, allowing for deterministic state machine access to this data.
 
 ### Negative
 
@@ -100,7 +95,9 @@ Proposed
 
 ### Neutral
 
-* Minimum application-specified block retention sets a lower bound on disk space requirements for all nodes.
+* Reduced block retention requires application changes, and cannot be controlled directly in Tendermint.
+
+* Application-specified block retention may set a lower bound on disk space requirements for all nodes.
 
 ## References
 
