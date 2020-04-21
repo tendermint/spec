@@ -513,8 +513,8 @@ Commit are included in the header of the next block.
 
     - Evidence older than `MaxAgeNumBlocks` && `MaxAgeDuration` is considered
       stale and ignored.
-    - This should correspond with an app's "unbonding period" or other similar
-      mechanism for handling [Nothing-At-Stake
+    - `MaxAgeDuration` should correspond with an app's "unbonding period" or
+      other similar mechanism for handling [Nothing-At-Stake
       attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
     - In Cosmos-SDK based blockchains, `MaxAgeDuration` is usually equal to the
       unbonding period. `MaxAgeNumBlocks` is calculated by dividing the unboding
