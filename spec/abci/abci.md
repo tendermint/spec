@@ -20,7 +20,7 @@ shared or included in a block.
 
 The info connection is for initialization and for queries from the user.
 
-The snapshot connection is for serving and restoring state sync snapshots.
+The snapshot connection is for serving and restoring [state sync snapshots](apps.md#state-sync).
 
 Additionally, there is a `Flush` method that is called on every connection,
 and an `Echo` method that is just for debugging.
@@ -173,7 +173,7 @@ local application with `ApplySnapshotChunk`. When all chunks have been applied, 
 `AppHash` is retrieved via an `Info` query and compared to the blockchain's `AppHash` verified via 
 light client. 
 
-For more information, see separate state sync section.
+For more information, see the [state sync section](apps.md#state-sync).
 
 ## Messages
 
@@ -445,8 +445,9 @@ For more information, see separate state sync section.
     `OfferSnapshot` calls.
   - Only `AppHash` can be trusted, as it has been verified by the light client. Any other data
     can be spoofed by adversaries, so applications should employ additional verification schemes
-    to avoid denial-of-service attacks.
-  - For more information, see `Snapshot` data type or the state sync section.
+    to avoid denial-of-service attacks. The verified `AppHash` is automatically checked against
+    the restored application at the end of snapshot restoration.
+  - For more information, see the `Snapshot` data type or the [state sync section](apps.md#state-sync).
 
 ### ApplySnapshotChunk
 
@@ -458,12 +459,12 @@ For more information, see separate state sync section.
   - `Result (Result)`: The result of applying this chunk.
     - `accept`: The chunk was accepted.
     - `abort`: Abort all snapshot restoration, including any other snapshots.
-    - `retry`: Reapply this chunk, combine with `RefetchChunks` and `RejectSender` as appropriate.
+    - `retry`: Reapply this chunk, combine with `RefetchChunks` and `RejectSenders` as appropriate.
     - `retry_snapshot`: Restart this snapshot from `OfferSnapshot`, reusing chunks unless 
       instructed otherwise.
     - `reject_snapshot`: Reject this snapshot, try a different one.
   - `RefetchChunks ([]uint32)`: Refetch and reapply the given chunks, regardless of `Result`. Only  
-    the listed chunks will be refetched, and applied in sequential order.
+    the listed chunks will be refetched, and reapplied in sequential order.
   - `RejectSenders ([]string)`: Reject the given P2P senders, regardless of `Result`. Any chunks 
     already applied will not be refetched unless explicitly requested, but queued chunks from these senders will be discarded, and new chunks or other snapshots rejected.
 - **Usage**:
@@ -477,8 +478,7 @@ For more information, see separate state sync section.
     network.
   - If Tendermint is unable to retrieve the next chunk after some time (e.g. because no suitable
     peers are available), it will reject the snapshot and try a different one via `OfferSnapshot`.
-    The application should be prepared to reset and accept this or respond with an abort as
-    appropriate.
+    The application should be prepared to reset and accept it or abort as appropriate.
 
 ### 
 
