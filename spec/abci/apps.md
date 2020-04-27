@@ -14,10 +14,11 @@ Here we cover the following components of ABCI applications:
   application state
 - [Crash Recovery](#crash-recovery) - handshake protocol to synchronize
   Tendermint and the application on startup.
+- [State Sync](#state-sync) - rapid bootstrapping of new nodes by restoring state machine snapshots
 
 ## State
 
-Since Tendermint maintains three concurrent ABCI connections, it is typical
+Since Tendermint maintains four concurrent ABCI connections, it is typical
 for an application to maintain a distinct state for each, and for the states to
 be synchronized during `Commit`.
 
@@ -91,6 +92,11 @@ latest committed block.
 QueryState should be set to the latest `DeliverTxState` at the end of every `Commit`,
 ie. after the full block has been processed and the state committed to disk.
 Otherwise it should never be modified.
+
+### Snapshot Connection
+
+The Snapshot Connection is optional, and is only used to serve state sync snapshots for other nodes
+and/or restore state sync snapshots to a local node being bootstrapped.
 
 ## Transaction Results
 
@@ -450,4 +456,69 @@ This happens if we crashed before the app finished Commit
 If `appBlockHeight == storeBlockHeight`
     update the state using the saved ABCI responses but dont run the block against the real app.
 This happens if we crashed after the app finished Commit but before Tendermint saved the state.
+
+## State Sync
+
+A new node joining the network can simply join consensus at the genesis height and replay all
+historical blocks until it is caught up. However, for large chains this can take a significant
+amount of time, often on the order of weeks or months.
+
+State sync is an alternative mechanism for bootstrapping a new node, where it fetches a snapshot
+of the state machine at a given height and restores it. Depending on the application, this can
+be several orders of magnitude faster than replaying blocks. However, state sync does not
+currently backfill historical blocks, so the node will have a truncated block history.
+
+### Taking Snapshots
+
+Applications that want to support state syncing must take state snapshots at regular intervals. How
+this is accomplished is entirely up to the application. A snapshot consists of some metadata and
+a set of binary chunks in an arbitrary format:
+
+* `Height (uint64)`: The height at which the snapshot is taken. It must be taken after the given 
+  height has been committed, and before the next height is processed.
+
+* `Format (uint32)`: An arbitrary snapshot format identifier. This can be used to version snapshot 
+  formats, e.g. to switch from Protobuf to MessagePack for serialization. The application can use 
+  this when restoring to choose whether to accept or reject a snapshot.
+
+* `Chunks (uint32)`: The number of chunks in the snapshot. Each chunk is an arbitrary binary byte 
+  stream, and should be less than 16 MB; 10 MB is a good starting point.
+
+* `Hash ([]byte)`: An arbitrary hash of the snapshot. This is used to check whether a snapshot is
+  the same across nodes when downloading chunks.
+
+* `Metadata ([]byte)`: Arbitrary snapshot metadata, e.g. chunk hashes for verification or any other
+  necessary info.
+
+For a snapshot to be considered the same across nodes, all of these fields must be identical.
+
+When a new node is running state sync and discovering snapshots, Tendermint will query an existing
+application via the ABCI `ListSnapshots` method to discover available snapshots, and load binary
+snapshot chunks via `LoadSnapshotChunk`. The application is free to choose how to implement this
+and which formats to use, but should provide the following guarantees:
+
+* **Consistent:** A snapshot should be taken at a single isolated height, unaffected by
+  concurrent writes. This can e.g. be accomplished by using a data store that supports ACID 
+  transactions with snapshot isolation.
+
+* **Asynchronous:** Taking a snapshot can be time-consuming, so it should not halt chain progress,
+  for example by running in a separate thread.
+
+* **Deterministic:** A snapshot taken at the same height in the same format should be identical
+  (at the byte level) across nodes, including all metadata. This ensures good availability of 
+  chunks, and that they fit together from different nodes.
+  
+A very basic approach might be to use a datastore with MVCC transactions (such as RocksDB), start a
+transaction immediately after block commit, and spawn a new thread which is passed the transaction 
+handle. This thread can then export all data items, serialize them using e.g. Protobuf, hash the 
+byte stream, split it into chunks, and store the chunks in the file system along with some metadata.
+
+A more advanced approach might include data necessary for incremental verification of individual
+chunks against the chain app hash (see verification section), parallel or batched exports,
+compression, and so on.
+
+Old snapshots should be removed after some time - generally only the last two snapshots are needed
+(to prevent the previous one from being removed while a node is fetching it).
+
+### Discovering Snapshots
 
