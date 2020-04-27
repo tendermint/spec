@@ -15,7 +15,7 @@ ABCI methods are split across four separate ABCI _connections_:
 The consensus connection is driven by a consensus protocol and is responsible
 for block execution.
 
-The mempool Connection is for validating new transactions, before they're
+The mempool connection is for validating new transactions, before they're
 shared or included in a block.
 
 The info connection is for initialization and for queries from the user.
@@ -158,22 +158,19 @@ Commit are included in the header of the next block.
 
 ## State Sync
 
-With state sync, ABCI applications take and serve state snapshots which new nodes can use to
-rapidly bootstrap instead of replaying historical blocks. Applications are free to choose how
-to take and restore snapshots, consisting of a set of binary chunks retrieved across multiple P2P 
-peers.
+State sync allows new nodes to rapidly bootstrap by discovering, fetching, and applying
+state machine snapshots instead of replaying historical blocks. For more details, see the
+[state sync section](apps.md#state-sync).
 
-When a new node attempts to discover snapshots in the P2P network, existing nodes will call
-`ListSnapshots` on the application to retrieve any state snapshots. The new node will offer
-these snapshots to its local application via `OfferSnapshot`.
+When a new node is discovering snapshots in the P2P network, existing nodes will call
+`ListSnapshots` on the application to retrieve any local state snapshots. The new node will
+offer these snapshots to its local application via `OfferSnapshot`.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
 chunks from existing nodes via `LoadSnapshotChunk` calls and apply them sequentially to the
 local application with `ApplySnapshotChunk`. When all chunks have been applied, the application
 `AppHash` is retrieved via an `Info` query and compared to the blockchain's `AppHash` verified via 
 light client. 
-
-For more information, see the [state sync section](apps.md#state-sync).
 
 ## Messages
 
