@@ -486,8 +486,8 @@ a set of binary chunks in an arbitrary format:
   formats, e.g. to switch from Protobuf to MessagePack for serialization. The application can use 
   this when restoring to choose whether to accept or reject a snapshot.
 
-* `Chunks (uint32)`: The number of chunks in the snapshot. Each chunk is an arbitrary binary byte 
-  stream, and should be less than 16 MB; 10 MB is a good starting point.
+* `Chunks (uint32)`: The number of chunks in the snapshot. Each chunk contains arbitrary binary
+  data, and should be less than 16 MB; 10 MB is a good starting point.
 
 * `Hash ([]byte)`: An arbitrary hash of the snapshot. This is used to check whether a snapshot is
   the same across nodes when downloading chunks.
@@ -495,7 +495,8 @@ a set of binary chunks in an arbitrary format:
 * `Metadata ([]byte)`: Arbitrary snapshot metadata, e.g. chunk hashes for verification or any other
   necessary info.
 
-For a snapshot to be considered the same across nodes, all of these fields must be identical.
+For a snapshot to be considered the same across nodes, all of these fields must be identical. When
+sent across the network, snapshot metadata messages are limited to 4 MB.
 
 When a new node is running state sync and discovering snapshots, Tendermint will query an existing
 application via the ABCI `ListSnapshots` method to discover available snapshots, and load binary

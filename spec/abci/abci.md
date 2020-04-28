@@ -167,10 +167,10 @@ When a new node is discovering snapshots in the P2P network, existing nodes will
 offer these snapshots to its local application via `OfferSnapshot`.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
-chunks from existing nodes via `LoadSnapshotChunk` calls and apply them sequentially to the
-local application with `ApplySnapshotChunk`. When all chunks have been applied, the application
-`AppHash` is retrieved via an `Info` query and compared to the blockchain's `AppHash` verified via 
-light client. 
+chunks from existing nodes via `LoadSnapshotChunk` and apply them sequentially to the local
+application with `ApplySnapshotChunk`. When all chunks have been applied, the application
+`AppHash` is retrieved via an `Info` query and compared to the blockchain's `AppHash` verified
+via light client.
 
 ## Messages
 
@@ -641,6 +641,7 @@ light client.
     verification data.
 
 - **Usage**:
-  - Used for state sync snapshots, see separate section for details.
+  - Used for state sync snapshots, see [separate section](apps.md#state-sync) for details.
   - A snapshot is considered identical across nodes only if _all_ fields are equal (including 
     `Metadata`). Chunks may be retrieved from all nodes that have the same snapshot.
+  - When sent across the network, a snapshot message can be at most 4 MB.
