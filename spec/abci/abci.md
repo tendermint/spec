@@ -430,15 +430,15 @@ via light client.
 - **Response**:
   - `Result (Result)`: The result of the snapshot offer.
     - `accept`: Snapshot is accepted, start applying chunks.
-    - `abort`: Abort all snapshot restoration, including other snapshots.
+    - `abort`: Abort snapshot restoration, and don't try any other snapshots.
     - `reject`: Reject this specific snapshot, try others.
     - `reject_format`: Reject all snapshots with this `format`, try others.
     - `reject_senders`: Reject all snapshots from all senders of this snapshot, try others.
 - **Usage**:
   - `OfferSnapshot` is called when bootstrapping a node using state sync. The application may
     accept or reject snapshots as appropriate. Upon accepting, Tendermint will retrieve and
-    apply snapshot chunks via `ApplySnapshotChunk`. The application may choose to reject a
-    snapshot while restoring it, in which case it should be prepared to accept further
+    apply snapshot chunks via `ApplySnapshotChunk`. The application may also choose to reject a
+    snapshot in the chunk response, in which case it should be prepared to accept further
     `OfferSnapshot` calls.
   - Only `AppHash` can be trusted, as it has been verified by the light client. Any other data
     can be spoofed by adversaries, so applications should employ additional verification schemes
@@ -455,7 +455,7 @@ via light client.
 - **Response**:
   - `Result (Result)`: The result of applying this chunk.
     - `accept`: The chunk was accepted.
-    - `abort`: Abort all snapshot restoration, including any other snapshots.
+    - `abort`: Abort snapshot restoration, and don't try any other snapshots.
     - `retry`: Reapply this chunk, combine with `RefetchChunks` and `RejectSenders` as appropriate.
     - `retry_snapshot`: Restart this snapshot from `OfferSnapshot`, reusing chunks unless 
       instructed otherwise.

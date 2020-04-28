@@ -480,7 +480,7 @@ this is accomplished is entirely up to the application. A snapshot consists of s
 a set of binary chunks in an arbitrary format:
 
 * `Height (uint64)`: The height at which the snapshot is taken. It must be taken after the given 
-  height has been committed, and before the next height is processed.
+  height has been committed, and must not contain data from any later heights.
 
 * `Format (uint32)`: An arbitrary snapshot format identifier. This can be used to version snapshot 
   formats, e.g. to switch from Protobuf to MessagePack for serialization. The application can use 
@@ -514,10 +514,11 @@ and which formats to use, but should provide the following guarantees:
   (at the byte level) across nodes, including all metadata. This ensures good availability of 
   chunks, and that they fit together across nodes.
   
-A very basic approach might be to use a datastore with MVCC transactions (such as RocksDB), start a
-transaction immediately after block commit, and spawn a new thread which is passed the transaction 
-handle. This thread can then export all data items, serialize them using e.g. Protobuf, hash the 
-byte stream, split it into chunks, and store the chunks in the file system along with some metadata.
+A very basic approach might be to use a datastore with MVCC transactions (such as RocksDB),
+start a transaction immediately after block commit, and spawn a new thread which is passed the
+transaction handle. This thread can then export all data items, serialize them using e.g.
+Protobuf, hash the byte stream, split it into chunks, and store the chunks in the file system
+along with some metadata - all while the blockchain is applying new blocks in parallel.
 
 A more advanced approach might include incremental verification of individual chunks against the
 chain app hash, parallel or batched exports, compression, and so on.
