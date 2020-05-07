@@ -436,11 +436,11 @@ via light client.
   - `AppHash ([]byte)`: The light client-verified app hash for this height, from the blockchain.
 - **Response**:
   - `Result (Result)`: The result of the snapshot offer.
-    - `accept`: Snapshot is accepted, start applying chunks.
-    - `abort`: Abort snapshot restoration, and don't try any other snapshots.
-    - `reject`: Reject this specific snapshot, try others.
-    - `reject_format`: Reject all snapshots with this `format`, try others.
-    - `reject_senders`: Reject all snapshots from all senders of this snapshot, try others.
+    - `ACCEPT`: Snapshot is accepted, start applying chunks.
+    - `ABORT`: Abort snapshot restoration, and don't try any other snapshots.
+    - `REJECT`: Reject this specific snapshot, try others.
+    - `REJECT_FORMAT`: Reject all snapshots with this `format`, try others.
+    - `REJECT_SENDERS`: Reject all snapshots from all senders of this snapshot, try others.
 - **Usage**:
   - `OfferSnapshot` is called when bootstrapping a node using state sync. The application may
     accept or reject snapshots as appropriate. Upon accepting, Tendermint will retrieve and
@@ -461,12 +461,12 @@ via light client.
   - `Sender (string)`: The P2P ID of the node who sent this chunk.
 - **Response**:
   - `Result (Result)`: The result of applying this chunk.
-    - `accept`: The chunk was accepted.
-    - `abort`: Abort snapshot restoration, and don't try any other snapshots.
-    - `retry`: Reapply this chunk, combine with `RefetchChunks` and `RejectSenders` as appropriate.
-    - `retry_snapshot`: Restart this snapshot from `OfferSnapshot`, reusing chunks unless 
+    - `ACCEPT`: The chunk was accepted.
+    - `ABORT`: Abort snapshot restoration, and don't try any other snapshots.
+    - `RETRY`: Reapply this chunk, combine with `RefetchChunks` and `RejectSenders` as appropriate.
+    - `RETRY_SNAPSHOT`: Restart this snapshot from `OfferSnapshot`, reusing chunks unless 
       instructed otherwise.
-    - `reject_snapshot`: Reject this snapshot, try a different one.
+    - `REJECT_SNAPSHOT`: Reject this snapshot, try a different one.
   - `RefetchChunks ([]uint32)`: Refetch and reapply the given chunks, regardless of `Result`. Only  
     the listed chunks will be refetched, and reapplied in sequential order.
   - `RejectSenders ([]string)`: Reject the given P2P senders, regardless of `Result`. Any chunks 
