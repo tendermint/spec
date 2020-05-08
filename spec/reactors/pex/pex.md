@@ -59,9 +59,9 @@ vetted and unvetted peers. Buckets provide randomization over peer selection.
 Peers are put in buckets according to their IP groups.
 
 IP group can be an IP block (e.g. `/16` for IPv4, `/32` for IPv6) or `local`
-for local addresses or `unroutable` for unroutable addresses. for  Each group
-  has a limited number of buckets to prevent DoS attacks coming from that group
-  (e.g. an attacker buying a `/16` block of IPs and launching a DoS attack).
+for local addresses or `unroutable` for unroutable addresses. Each group has a
+  limited number of buckets to prevent DoS attacks coming from that group (e.g.
+  an attacker buying a `/16` block of IPs and launching a DoS attack).
 
 [highwayhash](https://arxiv.org/abs/1612.06257) is used as a hashing function
 when calculating a bucket.
