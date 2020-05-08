@@ -64,6 +64,8 @@ each instance of the peer can have a different IP:PORT.
 If we're trying to add a new peer but there's no space in its bucket, we'll
 remove the worst peer from that bucket to make room.
 
+[highwayhash](https://arxiv.org/abs/1612.06257) is used as a hashing function.
+
 ## Vetting
 
 When a peer is first added, it is unvetted.
