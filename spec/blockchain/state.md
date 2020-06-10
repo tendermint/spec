@@ -112,7 +112,7 @@ type BlockParams struct {
 
 type EvidenceParams struct {
     MaxAgeNumBlocks   int64
-	MaxAgeDuration    time.Duration
+    MaxAgeDuration    time.Duration
     MaxNum            uint32
     ProofTrialPeriod  int64
 }
