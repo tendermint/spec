@@ -380,10 +380,10 @@ The first block has `block.Header.AppHash == []byte{}`.
 block.LastResultsHash == MerkleRoot(ResponseBeginBlock.Events, MerkleRoot([]ResponseDeliverTx), ResponseEndBlock.Events)
 ```
 
-`LastResultsHash` is the root hash of a Merkle tree w/ 3 leafs: amino-encoded
+`LastResultsHash` is the root hash of a Merkle tree w/ 3 leafs: proto-encoded
 `ResponseBeginBlock#Events`, root hash of a Merkle tree build from
 `ResponseDeliverTx` responses (Log, Info and Codespace fields are ignored), and
-amino-encoded `ResponseEndBlock#Events`.
+proto-encoded `ResponseEndBlock#Events`.
 
 The first block has `block.Header.ResultsHash == []byte{}`.
 

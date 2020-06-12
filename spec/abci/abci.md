@@ -516,9 +516,9 @@ via light client.
   - Provides the proposer of the current block, for use in proposer-based
     reward mechanisms.
   - `LastResultsHash` is the root hash of a Merkle tree w/ 3 leafs:
-    amino-encoded `ResponseBeginBlock#Events`, root hash of a Merkle tree build
+    proto-encoded `ResponseBeginBlock#Events`, root hash of a Merkle tree build
     from `ResponseDeliverTx` responses (Log, Info and Codespace fields are
-    ignored), and amino-encoded `ResponseEndBlock#Events`.
+    ignored), and proto-encoded `ResponseEndBlock#Events`.
 
 ### Version
 
