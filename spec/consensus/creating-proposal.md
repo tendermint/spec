@@ -10,14 +10,14 @@ We include no more than 1/10th of the maximum block size
 
 When we reap transactions from the mempool, we calculate maximum data
 size by subtracting maximum header size (`MaxHeaderBytes`), the maximum
-amino overhead for a block (`MaxAminoOverheadForBlock`), the size of
+overhead for a block (`MaxOverheadForBlock`), the size of
 the last commit (if present) and evidence (if present). While reaping
-we account for amino overhead for each transaction.
+we account for overhead for each transaction.
 
 ```go
 func MaxDataBytes(maxBytes int64, valsCount, evidenceCount int) int64 {
 	return maxBytes -
-		MaxAminoOverheadForBlock -
+		MaxOverheadForBlock -
 		MaxHeaderBytes -
 		int64(valsCount)*MaxVoteBytes -
 		int64(evidenceCount)*MaxEvidenceBytes
@@ -34,7 +34,7 @@ maximum evidence size (1/10th of the maximum block size).
 ```go
 func MaxDataBytesUnknownEvidence(maxBytes int64, valsCount int) int64 {
 	return maxBytes -
-		MaxAminoOverheadForBlock -
+		MaxOverheadForBlock -
 		MaxHeaderBytes -
 		int64(valsCount)*MaxVoteBytes -
 		MaxEvidenceBytesPerBlock(maxBytes)

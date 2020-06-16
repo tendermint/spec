@@ -241,7 +241,7 @@ evidence. They can be set in InitChain and updated in EndBlock.
 
 ### BlockParams.MaxBytes
 
-The maximum size of a complete Amino encoded block.
+The maximum size of a complete protobuf encoded block.
 This is enforced by Tendermint consensus.
 
 This implies a maximum tx size that is this MaxBytes, less the expected size of

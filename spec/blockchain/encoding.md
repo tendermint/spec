@@ -1,22 +1,11 @@
 # Encoding
 
-## Amino
+## Protocol Buffers
 
-Tendermint uses the proto3 derivative [Amino](https://github.com/tendermint/go-amino) for all data structures.
-Think of Amino as an object-oriented proto3 with native JSON support.
-The goal of the Amino encoding protocol is to bring parity between application
-logic objects and persistence objects.
+Tendermint uses the [Protocol Buffers](https://developers.google.com/protocol-buffers), specifically proto3, for all data structures.
 
-Please see the [Amino
-specification](https://github.com/tendermint/go-amino#amino-encoding-for-go) for
+Please see the [Proto3 language guide](https://developers.google.com/protocol-buffers/docs/proto3) for
 more details.
-
-Notably, every object that satisfies an interface (eg. a particular kind of p2p message,
-or a particular kind of pubkey) is registered with a global name, the hash of
-which is included in the object's encoding as the so-called "prefix bytes".
-
-We define the `func AminoEncode(obj interface{}) []byte` function to take an
-arbitrary object and return the Amino encoded bytes.
 
 ## Byte Arrays
 
@@ -34,47 +23,15 @@ be encoded as `0xAC020A0B...` where `0xAC02` is the UVarint encoding of 300.
 
 Tendermint uses `SHA256` as its hash function.
 Objects are always Amino encoded before being hashed.
-So `SHA256(obj)` is short for `SHA256(AminoEncode(obj))`.
+So `SHA256(obj)` is short for `SHA256(ProtoEncode(obj))`.
 
 ## Public Key Cryptography
 
-Tendermint uses Amino to distinguish between different types of private keys,
+Tendermint uses Protobuf [Oneof](https://developers.google.com/protocol-buffers/docs/proto3#oneof) 
+to distinguish between different types of private keys,
 public keys, and signatures. Additionally, for each public key, Tendermint
 defines an Address function that can be used as a more compact identifier in
-place of the public key. Here we list the concrete types, their names,
-and prefix bytes for public keys and signatures, as well as the address schemes
-for each PubKey. Note for brevity we don't
-include details of the private keys beyond their type and name, as they can be
-derived the same way as the others using Amino.
-
-All registered objects are encoded by Amino using a 4-byte PrefixBytes that
-uniquely identifies the object and includes information about its underlying
-type. For details on how PrefixBytes are computed, see the [Amino
-spec](https://github.com/tendermint/go-amino#computing-the-prefix-and-disambiguation-bytes).
-
-In what follows, we provide the type names and prefix bytes directly.
-Notice that when encoding byte-arrays, the length of the byte-array is appended
-to the PrefixBytes. Thus the encoding of a byte array becomes `<PrefixBytes> <Length> <ByteArray>`. In other words, to encode any type listed below you do not need to be
-familiar with amino encoding.
-You can simply use below table and concatenate Prefix || Length (of raw bytes) || raw bytes
-( while || stands for byte concatenation here).
-
-| Type                    | Name                               | Prefix     | Length   | Notes |
-| ----------------------- | ---------------------------------- | ---------- | -------- | ----- |
-| PubKeyEd25519           | tendermint/PubKeyEd25519           | 0x1624DE64 | 0x20     |       |
-| PubKeySr25519           | tendermint/PubKeySr25519           | 0x0DFB1005 | 0x20     |       |
-| PubKeySecp256k1         | tendermint/PubKeySecp256k1         | 0xEB5AE987 | 0x21     |       |
-| PrivKeyEd25519          | tendermint/PrivKeyEd25519          | 0xA3288910 | 0x40     |       |
-| PrivKeySr25519          | tendermint/PrivKeySr25519          | 0x2F82D78B | 0x20     |       |
-| PrivKeySecp256k1        | tendermint/PrivKeySecp256k1        | 0xE1B0F79B | 0x20     |       |
-| PubKeyMultisigThreshold | tendermint/PubKeyMultisigThreshold | 0x22C1F7E2 | variable |       |
-
-### Example
-
-For example, the 33-byte (or 0x21-byte in hex) Secp256k1 pubkey
-`020BD40F225A57ED383B440CF073BC5539D0341F5767D2BF2D78406D00475A2EE9`
-would be encoded as
-`EB5AE98721020BD40F225A57ED383B440CF073BC5539D0341F5767D2BF2D78406D00475A2EE9`
+place of the public key.
 
 ### Key Types
 
@@ -314,9 +271,7 @@ Because Tendermint only uses a Simple Merkle Tree, application developers are ex
 
 ## JSON
 
-### Amino
-
-Amino also supports JSON encoding - registered types are simply encoded as:
+Tendermint-go has an internal library that handles JSON encoding - registered types are simply encoded as:
 
 ```
 {
@@ -339,21 +294,21 @@ Where the `"value"` is the base64 encoding of the raw pubkey bytes, and the
 
 ### Signed Messages
 
-Signed messages (eg. votes, proposals) in the consensus are encoded using Amino.
+Signed messages (eg. votes, proposals) in the consensus are encoded using the internal JSON library.
 
 When signing, the elements of a message are re-ordered so the fixed-length fields
 are first, making it easy to quickly check the type, height, and round.
 The `ChainID` is also appended to the end.
 We call this encoding the SignBytes. For instance, SignBytes for a vote is the Amino encoding of the following struct:
 
-```go
-type CanonicalVote struct {
-	Type      byte
-	Height    int64            `binary:"fixed64"`
-	Round     int64            `binary:"fixed64"`
-	BlockID   CanonicalBlockID
-	Timestamp time.Time
-	ChainID   string
+```proto
+message CanonicalVote {
+  SignedMsgType             type      = 1;  
+  sfixed64                  height    = 2;  // canonicalization requires fixed size encoding here
+  sfixed64                  round     = 3;  // canonicalization requires fixed size encoding here
+  CanonicalBlockID          block_id  = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string                    chain_id  = 6;
 }
 ```
 

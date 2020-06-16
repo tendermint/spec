@@ -238,7 +238,7 @@ via light client.
   - `ChainID (string)`: ID of the blockchain.
   - `ConsensusParams (ConsensusParams)`: Initial consensus-critical parameters.
   - `Validators ([]ValidatorUpdate)`: Initial genesis validators, sorted by voting power.
-  - `AppStateBytes ([]byte)`: Serialized initial application state. Amino-encoded JSON bytes.
+  - `AppStateBytes ([]byte)`: Serialized initial application state. Proto-encoded JSON bytes.
 - **Response**:
   - `ConsensusParams (ConsensusParams)`: Initial
     consensus-critical parameters (optional).
@@ -303,7 +303,7 @@ via light client.
   - `ByzantineValidators ([]Evidence)`: List of evidence of
     validators that acted maliciously.
 - **Response**:
-  - `Tags ([]kv.Pair)`: Key-Value tags for filtering and indexing
+  - `Events ([]abci.Event)`: Key and multiple events for filtering.
 - **Usage**:
   - Signals the beginning of a new block. Called prior to
     any DeliverTxs.
@@ -330,7 +330,7 @@ via light client.
     be non-deterministic.
   - `GasWanted (int64)`: Amount of gas requested for transaction.
   - `GasUsed (int64)`: Amount of gas consumed by transaction.
-  - `Tags ([]kv.Pair)`: Key-Value tags for filtering and indexing
+  - `Events ([]abci.Event)`: Key and multiple events for filtering.
     transactions (eg. by account).
   - `Codespace (string)`: Namespace for the `Code`.
 - **Usage**:
@@ -358,7 +358,7 @@ via light client.
     be non-deterministic.
   - `GasWanted (int64)`: Amount of gas requested for transaction.
   - `GasUsed (int64)`: Amount of gas consumed by transaction.
-  - `Tags ([]kv.Pair)`: Key-Value tags for filtering and indexing
+  - `Events ([]abci.Event)`: Key and multiple events for filtering.
     transactions (eg. by account).
   - `Codespace (string)`: Namespace for the `Code`.
 - **Usage**:
@@ -375,7 +375,7 @@ via light client.
     voting power to 0 to remove).
   - `ConsensusParamUpdates (ConsensusParams)`: Changes to
     consensus-critical time, size, and other parameters.
-  - `Tags ([]kv.Pair)`: Key-Value tags for filtering and indexing
+  - `Events ([]abci.Event)`: Key and multiple events for filtering.
 - **Usage**:
   - Signals the end of a block.
   - Called after all transactions, prior to each Commit.
@@ -539,7 +539,7 @@ via light client.
 ### ValidatorUpdate
 
 - **Fields**:
-  - `PubKey (PubKey)`: Public key of the validator
+  - `PubKey (PublicKey)`: Public key of the validator
   - `Power (int64)`: Voting power of the validator
 - **Usage**:
   - Validator identified by PubKey
@@ -555,15 +555,11 @@ via light client.
   - Indicates whether a validator signed the last block, allowing for rewards
     based on validator availability
 
-### PubKey
+### PublicKey
 
 - **Fields**:
-  - `Type (string)`: Type of the public key. A simple string like `"ed25519"`.
-    In the future, may indicate a serialization algorithm to parse the `Data`,
-    for instance `"amino"`.
-  - `Data ([]byte)`: Public key data. For a simple public key, it's just the
-    raw bytes. If the `Type` indicates an encoding algorithm, this is the
-    encoded public key.
+  - `Sum` - this field is a Protobuf `oneof` of the supported keys for validators. 
+      - Currently only `ed25519` is supported as a validator key
 - **Usage**:
   - A generic and extensible typed public key
 
@@ -624,10 +620,10 @@ via light client.
 ### ValidatorParams
 
 - **Fields**:
-  - `PubKeyTypes ([]string)`: List of accepted pubkey types. Uses same
-    naming as `PubKey.Type`.
+  - `PubKeyTypes ([]string)`: List of accepted pubkey types. 
+    - This uses the out put of the `Type()` method available on the `crypto.PubKey` interface.
 
-### Proof
+### ProofOps
 
 - **Fields**:
   - `Ops ([]ProofOp)`: List of chained Merkle proofs, of possibly different types

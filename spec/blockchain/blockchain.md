@@ -203,14 +203,10 @@ type EvidenceData struct {
 
 ## Evidence
 
-Evidence in Tendermint is implemented as an interface.
-This means any evidence is encoded using its Amino prefix.
-There is currently only a single type, the `DuplicateVoteEvidence`.
+Evidence in Tendermint is implemented as a protobuf [oneof](https://developers.google.com/protocol-buffers/docs/proto3#oneof).
 
 ```
-// amino name: "tendermint/DuplicateVoteEvidence"
 type DuplicateVoteEvidence struct {
-	PubKey PubKey
 	VoteA  Vote
 	VoteB  Vote
 }

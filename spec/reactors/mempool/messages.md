@@ -13,13 +13,7 @@ type TxMessage struct {
 }
 ```
 
-TxMessage is go-amino encoded and prepended with `0x1` as a
-"type byte". This is followed by a go-amino encoded byte-slice.
-Prefix of 40=0x28 byte tx is: `0x010128...` followed by
-the actual 40-byte tx. Prefix of 350=0x015e byte tx is:
-`0x0102015e...` followed by the actual 350 byte tx.
-
-(Please see the [go-amino repo](https://github.com/tendermint/go-amino#an-interface-example) for more information)
+TxMessage is encoded using [google.protobuf.BytesValue](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/bytes-value). 
 
 ## RPC Messages
 
