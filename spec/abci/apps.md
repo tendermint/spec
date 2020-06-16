@@ -205,19 +205,20 @@ Updates to the Tendermint validator set can be made by returning
 
 ```
 message ValidatorUpdate {
-  PubKey pub_key
+  tendermint.crypto.keys.PublicKey pub_key
   int64 power
 }
 
-message PubKey {
-  string type
-  bytes  data
+message PublicKey {
+  oneof {
+    ed25519 bytes = 1;
+  }
 }
 ```
 
 The `pub_key` currently supports only one type:
 
-- `type = "ed25519"` and `data = <raw 32-byte public key>`
+- `type = "ed25519"`
 
 The `power` is the new voting power for the validator, with the
 following rules:
@@ -262,10 +263,14 @@ If `MaxGas == -1`, no limit is enforced.
 
 ### BlockParams.TimeIotaMs
 
+<!-- //TODO: this is here for apps but not elsewhere, its not exposed to application so why is it in abci? -->
+
 The minimum time between consecutive blocks (in milliseconds).
 This is enforced by Tendermint consensus.
 
 Must have `TimeIotaMs > 0` to ensure time monotonicity.
+
+*Note: This is not exposed to the application*
 
 ### EvidenceParams.MaxAgeDuration
 
@@ -363,9 +368,9 @@ While some applications keep all relevant state in the transactions themselves
 (like Bitcoin and its UTXOs), others maintain a separated state that is
 computed deterministically *from* transactions, but is not contained directly in
 the transactions themselves (like Ethereum contracts and accounts).
-For such applications, the `AppHash` provides a much more efficient way to verify lite-client proofs.
+For such applications, the `AppHash` provides a much more efficient way to verify light-client proofs.
 
-ABCI applications can take advantage of more efficient lite-client proofs for
+ABCI applications can take advantage of more efficient light-client proofs for
 their state as follows:
 
 - return the Merkle root of the deterministic application state in
@@ -374,15 +379,15 @@ their state as follows:
 - return efficient Merkle proofs about that application state in `ResponseQuery.Proof`
   that can be verified using the `AppHash` of the corresponding block.
 
-For instance, this allows an application's lite-client to verify proofs of
+For instance, this allows an application's light-client to verify proofs of
 absence in the application state, something which is much less efficient to do using the block hash.
 
 Some applications (eg. Ethereum, Cosmos-SDK) have multiple "levels" of Merkle trees,
 where the leaves of one tree are the root hashes of others. To support this, and
-the general variability in Merkle proofs, the `ResponseQuery.Proof` has some minimal structure:
+the general variability in Merkle proofs, the `ResponseQuery.ProofOps` has some minimal structure:
 
 ```
-message Proof {
+message ProofOps {
   repeated ProofOp ops
 }
 
