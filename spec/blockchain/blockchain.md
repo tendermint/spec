@@ -91,11 +91,11 @@ parts (ie. `len(MakeParts(block))`)
 ```go
 type BlockID struct {
     Hash []byte
-    PartsHeader PartSetHeader
+    PartSetHeader PartSetHeader
 }
 
 type PartSetHeader struct {
-    Total int32
+    Total uint32
     Hash []byte
 }
 ```
@@ -170,7 +170,7 @@ The vote includes information about the validator signing it.
 
 ```go
 type Vote struct {
-	Type             byte
+	Type             SignedMsgType
 	Height           int64
 	Round            int
 	BlockID          BlockID
@@ -178,6 +178,18 @@ type Vote struct {
 	ValidatorAddress []byte
 	ValidatorIndex   int
 	Signature        []byte
+}
+```
+
+```proto
+enum SignedMsgType {
+  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  // Votes
+  PREVOTE_TYPE   = 1;
+  PRECOMMIT_TYPE = 2;
+
+  // Proposals
+  PROPOSAL_TYPE = 32;
 }
 ```
 
@@ -355,10 +367,10 @@ Note the validators are sorted by their voting power before computing the Merkle
 ### ConsensusHash
 
 ```go
-block.ConsensusHash == state.ConsensusParams.Hash()
+block.ConsensusHash == sm.HashConsensusParams(state.ConsensusParams)
 ```
 
-Hash of the amino-encoding of a subset of the consensus parameters.
+Hash of the proto-encoding of a subset of the consensus parameters.
 
 ### AppHash
 
@@ -447,8 +459,7 @@ The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
 
 A vote is a signed message broadcast in the consensus for a particular block at a particular height and round.
 When stored in the blockchain or propagated over the network, votes are encoded in Amino.
-For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
-`Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
+Protobuf for signing, votes are represented via `CanonicalVote` and also encoded using protobuf via `VoteSignBytes` which includes the `ChainID`, and uses a different ordering of
 the fields.
 
 We define a method `Verify` that returns `true` if the signature verifies against the pubkey for the `SignBytes`
