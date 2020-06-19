@@ -7,7 +7,7 @@ necessary for validating new blocks. For instance, the validators set and the re
 transactions are never included in blocks, but their Merkle roots are - the state keeps track of them.
 
 Note that the `State` object itself is an implementation detail, since it is never
-included in a block or gossipped over the network, and we never compute
+included in a block or gossiped over the network, and we never compute
 its hash. Thus we do not include here details of how the `State` object is
 persisted or queried. That said, the types it contains are part of the specification, since
 their Merkle roots are included in blocks and their values are used in
@@ -33,18 +33,20 @@ limit on the number of votes in a commit.
 ### Result
 
 ```go
-type Result struct {
-    Code uint32
-    Data []byte
+type ResponseDeliverTx struct {
+	Code      uint32  
+	Data      []byte  
+	Log       string  
+	Info      string  
+	GasWanted int64   
+	GasUsed   int64   
+	Events    []Event 
+	Codespace string  
 }
 ```
 
-`Result` is the result of executing a transaction against the application.
-It returns a result code and an arbitrary byte array (ie. a return value).
-
-NOTE: the Result needs to be updated to include more fields returned from
-processing transactions, like gas variables and tags - see
-[issue 1007](https://github.com/tendermint/tendermint/issues/1007).
+`ResponseDeliverTx` is the result of executing a transaction against the application.
+It returns a result code (`uint32`), an arbitrary byte array (`[]byte`) (ie. a return value), Log (`string`), Info (`string`), GasWanted (`int64`), GasUsed (`int64`), Events (`[]Events`) and a Codespace (`string`).
 
 ### Validator
 
@@ -147,3 +149,8 @@ block.Header.Time-evidence.Time < ConsensusParams.Evidence.MaxAgeDuration &&
 
 Validators from genesis file and `ResponseEndBlock` must have pubkeys of type ∈
 `ConsensusParams.Validator.PubKeyTypes`.
+
+Currently Tendermint only supports Ed25519 keys. 
+
+*NOTE: We are planning on supporting a way for applications to inject their custom validator key*
+<!-- TODO: add link to issue about injecting keys -->

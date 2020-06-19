@@ -78,10 +78,6 @@ where `s` is lexicographically less than its inverse, to prevent malleability.
 This is like Ethereum, but without the extra byte for pubkey recovery, since
 Tendermint assumes the pubkey is always provided anyway.
 
-#### Multisig
-
-TODO
-
 ## Other Common Types
 
 ### BitArray
@@ -93,12 +89,10 @@ encoded in base64 (`Elems`).
 
 ```go
 type BitArray struct {
-    Bits  int
+    Bits  int64
     Elems []uint64
 }
 ```
-
-This type is easily encoded directly by Amino.
 
 Note BitArray receives a special JSON encoding in the form of `x` and `_`
 representing `1` and `0`. Ie. the BitArray `10110` would be JSON encoded as
@@ -115,7 +109,7 @@ the set (`Proof`).
 
 ```go
 type Part struct {
-    Index int
+    Index uint32
     Bytes []byte
     Proof SimpleProof
 }
@@ -125,7 +119,7 @@ See details of SimpleProof, below.
 
 ### MakeParts
 
-Encode an object using Amino and slice it into parts.
+Encode an object using Protobuf and slice it into parts.
 Tendermint uses a part size of 65536 bytes, and allows a maximum of 1601 parts
 (see `types.MaxBlockPartsCount`). This corresponds to the hard-coded block size
 limit of 100MB.
@@ -212,16 +206,16 @@ func Hashes(items [][]byte) [][]byte {
 ```
 
 Note: we will abuse notion and invoke `MerkleRoot` with arguments of type `struct` or type `[]struct`.
-For `struct` arguments, we compute a `[][]byte` containing the amino encoding of each
+For `struct` arguments, we compute a `[][]byte` containing the protobuf encoding of each
 field in the struct, in the same order the fields appear in the struct.
-For `[]struct` arguments, we compute a `[][]byte` by amino encoding the individual `struct` elements.
+For `[]struct` arguments, we compute a `[][]byte` by protobug encoding the individual `struct` elements.
 
-### Simple Merkle Proof
+### Merkle Proof
 
 Proof that a leaf is in a Merkle tree is composed as follows:
 
 ```golang
-type SimpleProof struct {
+type Proof struct {
         Total int
         Index int
         LeafHash []byte
@@ -232,7 +226,7 @@ type SimpleProof struct {
 Which is verified as follows:
 
 ```golang
-func (proof SimpleProof) Verify(rootHash []byte, leaf []byte) bool {
+func (proof Proof) Verify(rootHash []byte, leaf []byte) bool {
 	assert(proof.LeafHash, leafHash(leaf)
 
 	computedHash := computeHashFromAunts(proof.Index, proof.Total, proof.LeafHash, proof.Aunts)
@@ -275,7 +269,7 @@ Tendermint-go has an internal library that handles JSON encoding - registered ty
 
 ```
 {
-  "type": "<amino type name>",
+  "type": "<registered type name>",
   "value": <JSON>
 }
 ```
@@ -290,7 +284,7 @@ For instance, an ED25519 PubKey would look like:
 ```
 
 Where the `"value"` is the base64 encoding of the raw pubkey bytes, and the
-`"type"` is the amino name for Ed25519 pubkeys.
+`"type"` is the registered name for Ed25519 pubkeys.
 
 ### Signed Messages
 
@@ -299,7 +293,7 @@ Signed messages (eg. votes, proposals) in the consensus are encoded using the in
 When signing, the elements of a message are re-ordered so the fixed-length fields
 are first, making it easy to quickly check the type, height, and round.
 The `ChainID` is also appended to the end.
-We call this encoding the SignBytes. For instance, SignBytes for a vote is the Amino encoding of the following struct:
+We call this encoding the SignBytes. For instance, SignBytes for a vote is the Protobuf encoding of the following struct, prefixed with the length:
 
 ```proto
 message CanonicalVote {
