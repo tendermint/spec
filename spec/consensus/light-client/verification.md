@@ -318,8 +318,8 @@ from `trustedState` to `newTrustedState` happened during the trusted period of
 
 In case `VerifyHeaderAtHeight` returns with an error, then either (i) the full node we are talking to is faulty
 or (ii) the trusted header has expired (it is outside its trusted period). In case (i) the full node is faulty so
-light client should disconnect and reinitialise with new peer. In the case (ii) as the trusted header has expired,
-we need to reinitialise light client with a new trusted header (that is within its trusted period),
+light client should disconnect and reinitialize with new peer. In the case (ii) as the trusted header has expired,
+we need to reinitialize light client with a new trusted header (that is within its trusted period),
 but we don't necessarily need to disconnect from the full node we are talking to (as we haven't observed full node misbehavior in this case).
 
 **VerifyBisection.** The function `VerifyBisection` implements
@@ -453,27 +453,27 @@ func VerifyHeaderBackwards(trustedHeader Header,
 *Assumption*: In the following, we assume that *untrusted_h.Header.height > trusted_h.Header.height*. We will quickly discuss the other case in the next section.
 
 We consider the following set-up:
+
 - the light client communicates with one full node
 - the light client locally stores all the headers that has passed basic verification and that are within light client trust period. In the pseudo code below we
 write *Store.Add(header)* for this. If a header failed to verify, then
-the full node we are talking to is faulty and we should disconnect from it and reinitialise with new peer.
+the full node we are talking to is faulty and we should disconnect from it and reinitialize with new peer.
 - If `CanTrust` returns *error*, then the light client has seen a forged header or the trusted header has expired (it is outside its trusted period).
-  * In case of forged header, the full node is faulty so light client should disconnect and reinitialise with new peer. If the trusted header has expired,
-  we need to reinitialise light client with new trusted header (that is within its trusted period), but we don't necessarily need to disconnect from the full node
+  - In case of forged header, the full node is faulty so light client should disconnect and reinitialize with new peer. If the trusted header has expired,
+  we need to reinitialize light client with new trusted header (that is within its trusted period), but we don't necessarily need to disconnect from the full node
   we are talking to (as we haven't observed full node misbehavior in this case).
-
 
 ## Correctness of the Light Client Protocols
 
 ### Definitions
 
-* `TRUSTED_PERIOD`: trusted period
-* for realtime `t`, the predicate `correct(v,t)` is true if the validator `v`
+- `TRUSTED_PERIOD`: trusted period
+- for realtime `t`, the predicate `correct(v,t)` is true if the validator `v`
   follows the protocol until time `t` (we will see about recovery later).
-* Validator fields. We will write a validator as a tuple `(v,p)` such that
-    + `v` is the identifier (i.e., validator address; we assume identifiers are unique in each validator set)
-    + `p` is its voting power
-* For each header `h`, we write `trust(h) = true` if the light client trusts `h`.
+- Validator fields. We will write a validator as a tuple `(v,p)` such that
+  - `v` is the identifier (i.e., validator address; we assume identifiers are unique in each validator set)
+  - `p` is its voting power
+- For each header `h`, we write `trust(h) = true` if the light client trusts `h`.
 
 ### Failure Model
 
@@ -486,7 +486,6 @@ Formally,
 \sum_{(v,p) \in validators(h.NextValidatorsHash) \wedge correct(v,h.Time + TRUSTED_PERIOD)} p >
 2/3 \sum_{(v,p) \in validators(h.NextValidatorsHash)} p
 \]
-
 
 The light client communicates with a full node and learns new headers. The goal is to locally decide whether to trust a header. Our implementation needs to ensure the following two properties:
 
@@ -532,14 +531,15 @@ is correct, but we only trust the fact that less than `1/3` of them are faulty (
 *`VerifySingle` correctness arguments*
 
 Light Client Accuracy:
+
 - Assume by contradiction that `untrustedHeader` was not generated correctly and the light client sets trust to true because `verifySingle` returns without error.
 - `trustedState` is trusted and sufficiently new
 - by the Failure Model, less than `1/3` of the voting power held by faulty validators => at least one correct validator `v` has signed `untrustedHeader`.
 - as `v` is correct up to now, it followed the Tendermint consensus protocol at least up to signing `untrustedHeader` => `untrustedHeader` was correctly generated.
 We arrive at the required contradiction.
 
-
 Light Client Completeness:
+
 - The check is successful if sufficiently many validators of `trustedState` are still validators in the height `untrustedHeader.Height` and signed `untrustedHeader`.
 - If `untrustedHeader.Height = trustedHeader.Height + 1`, and both headers were generated correctly, the test passes.
 
@@ -550,10 +550,10 @@ Light Client Completeness:
 However, in case of (frequent) changes in the validator set, the higher the `trustThreshold` is chosen, the more unlikely it becomes that
 `verifySingle` returns with an error for non-adjacent headers.
 
-
-* `VerifyBisection` correctness arguments (sketch)*
+- `VerifyBisection` correctness arguments (sketch)*
 
 Light Client Accuracy:
+
 - Assume by contradiction that the header at `untrustedHeight` obtained from the full node was not generated correctly and
 the light client sets trust to true because `VerifyBisection` returns without an error.
 - `VerifyBisection` returns without error only if all calls to `verifySingle` in the recursion return without error (return `nil`).
@@ -568,12 +568,8 @@ This is only ensured if upon `Commit(pivot)` the light client is always provided
 
 With `VerifyBisection`, a faulty full node could stall a light client by creating a long sequence of headers that are queried one-by-one by the light client and look OK,
 before the light client eventually detects a problem. There are several ways to address this:
-* Each call to `Commit` could be issued to a different full node
-* Instead of querying header by header, the light client tells a full node which header it trusts, and the height of the header it needs. The full node responds with
+
+- Each call to `Commit` could be issued to a different full node
+- Instead of querying header by header, the light client tells a full node which header it trusts, and the height of the header it needs. The full node responds with
 the header along with a proof consisting of intermediate headers that the light client can use to verify. Roughly, `VerifyBisection` would then be executed at the full node.
-* We may set a timeout how long `VerifyBisection` may take.
-
-
-
-
-
+- We may set a timeout how long `VerifyBisection` may take.

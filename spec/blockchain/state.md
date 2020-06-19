@@ -109,7 +109,7 @@ func (params ConsensusParams) Hash() []byte {
 type BlockParams struct {
 	MaxBytes        int64
 	MaxGas          int64
-	TimeIotaMs      int64
+	TimeIotaMs      int64 // not exposed to the application
 }
 
 type EvidenceParams struct {
@@ -152,5 +152,4 @@ Validators from genesis file and `ResponseEndBlock` must have pubkeys of type âˆ
 
 Currently Tendermint only supports Ed25519 keys. 
 
-*NOTE: We are planning on supporting a way for applications to inject their custom validator key*
-<!-- TODO: add link to issue about injecting keys -->
+*NOTE: We are planning on supporting a way for applications to inject their custom validator key. See (https://github.com/tendermint/tendermint/issues/2358) for more information.*

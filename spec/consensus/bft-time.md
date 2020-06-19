@@ -1,19 +1,19 @@
 # BFT Time
 
-Tendermint provides a deterministic, Byzantine fault-tolerant, source of time. 
-Time in Tendermint is defined with the Time field of the block header. 
+Tendermint provides a deterministic, Byzantine fault-tolerant, source of time.
+Time in Tendermint is defined with the Time field of the block header.
 
 It satisfies the following properties:
 
-- Time Monotonicity: Time is monotonically increasing, i.e., given 
-a header H1 for height h1 and a header H2 for height `h2 = h1 + 1`, `H1.Time < H2.Time`. 
-- Time Validity: Given a set of Commit votes that forms the `block.LastCommit` field, a range of 
+- Time Monotonicity: Time is monotonically increasing, i.e., given
+a header H1 for height h1 and a header H2 for height `h2 = h1 + 1`, `H1.Time < H2.Time`.
+- Time Validity: Given a set of Commit votes that forms the `block.LastCommit` field, a range of
 valid values for the Time field of the block header is defined only by  
 Precommit messages (from the LastCommit field) sent by correct processes, i.e., 
 a faulty process cannot arbitrarily increase the Time value.  
 
-In the context of Tendermint, time is of type int64 and denotes UNIX time in milliseconds, i.e., 
-corresponds to the number of milliseconds since January 1, 1970. Before defining rules that need to be enforced by the 
+In the context of Tendermint, time is of type int64 and denotes UNIX time in milliseconds, i.e.,
+corresponds to the number of milliseconds since January 1, 1970. Before defining rules that need to be enforced by the
 Tendermint consensus protocol, so the properties above holds, we introduce the following definition:
 
 - median of a Commit is equal to the median of `Vote.Time` fields of the `Vote` messages,
@@ -50,5 +50,3 @@ rs.Proposal.Timestamp == rs.ProposalBlock.Header.Time`.
     
     - otherwise, `vote.Time = time.Now())`. In this case vote is for `nil` so it is not taken into account for 
     the timestamp of the next block. 
-
-
