@@ -295,7 +295,7 @@ are first, making it easy to quickly check the type, height, and round.
 The `ChainID` is also appended to the end.
 We call this encoding the SignBytes. For instance, SignBytes for a vote is the Protobuf encoding of the following struct, prefixed with the length:
 
-```proto
+```protobuf
 message CanonicalVote {
   SignedMsgType             type      = 1;  
   sfixed64                  height    = 2;  // canonicalization requires fixed size encoding here

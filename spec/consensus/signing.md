@@ -9,18 +9,17 @@ We then provide specific validation rules for each. Finally, we include validati
 The `SignedMsgType` is a single byte that refers to the type of the message
 being signed. It is defined in Go as follows:
 
-```go
+```protobuf
 // SignedMsgType is a type of signed message in the consensus.
-type SignedMsgType byte
+enum SignedMsgType {
+  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  // Votes
+  PREVOTE_TYPE   = 1;
+  PRECOMMIT_TYPE = 2;
 
-const (
-	// Votes
-	PrevoteType   SignedMsgType = 0x01
-	PrecommitType SignedMsgType = 0x02
-
-	// Proposals
-	ProposalType SignedMsgType = 0x20
-)
+  // Proposals
+  PROPOSAL_TYPE = 32;
+}
 ```
 
 All signed messages must correspond to one of these types.
@@ -53,8 +52,8 @@ type BlockID struct {
 }
 
 type PartSetHeader struct {
+	Total uint32
 	Hash  []byte
-	Total int
 }
 ```
 
@@ -64,7 +63,7 @@ We introduce two methods, `BlockID.IsZero()` and `BlockID.IsComplete()` for thes
 `BlockID.IsZero()` returns true for BlockID `b` if each of the following
 are true:
 
-```
+```go
 b.Hash == nil
 b.PartsHeader.Total == 0
 b.PartsHeader.Hash == nil
@@ -73,7 +72,7 @@ b.PartsHeader.Hash == nil
 `BlockID.IsComplete()` returns true for BlockID `b` if each of the following
 are true:
 
-```
+```go
 len(b.Hash) == 32
 b.PartsHeader.Total > 0
 len(b.PartsHeader.Hash) == 32
@@ -83,15 +82,15 @@ len(b.PartsHeader.Hash) == 32
 
 The structure of a proposal for signing looks like:
 
-```go
+```protobuf
 type CanonicalProposal struct {
-	Type      SignedMsgType // type alias for byte
-	Height    int64         `binary:"fixed64"`
-	Round     int64         `binary:"fixed64"`
-	POLRound  int64         `binary:"fixed64"`
-	BlockID   BlockID
-	Timestamp time.Time
-	ChainID   string
+  SignedMsgType             type    = 1;
+  sfixed64                  height    = 2;
+  sfixed64                  round     = 3;
+  int64                     pol_round = 4;
+  CanonicalBlockID          block_id  = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  string                    chain_id  = 7;
 }
 ```
 
@@ -113,20 +112,20 @@ non-negative round, a POLRound not less than -1, and a complete BlockID.
 
 The structure of a vote for signing looks like:
 
-```go
+```protobuf
 type CanonicalVote struct {
-	Type      SignedMsgType // type alias for byte
-	Height    int64         `binary:"fixed64"`
-	Round     int64         `binary:"fixed64"`
-	BlockID   BlockID
-	Timestamp time.Time
-	ChainID   string
+  Type      SignedMsgType // type alias for byte
+  Height    int64         `binary:"fixed64"`
+  Round     int64         `binary:"fixed64"`
+  BlockID   BlockID
+  Timestamp time.Time
+  ChainID   string
 }
 ```
 
 A vote is valid if each of the following lines evaluates to true for vote `v`:
 
-```
+```go
 v.Type == 0x1 || v.Type == 0x2
 v.Height > 0
 v.Round >= 0
@@ -148,7 +147,7 @@ these basic validation rules.
 
 Signers must be careful not to sign conflicting messages, also known as "double signing" or "equivocating".
 Tendermint has mechanisms to publish evidence of validators that signed conflicting votes, so they can be punished
-by the application. Note Tendermint does not currently handle evidence of conflciting proposals, though it may in the future.
+by the application. Note Tendermint does not currently handle evidence of conflicting proposals, though it may in the future.
 
 ### State
 
@@ -157,9 +156,9 @@ Assume the signer keeps the following state, `s`:
 
 ```go
 type LastSigned struct {
-	Height	int64
-	Round	int64
-	Type	SignedMsgType // byte
+  Height  int64
+  Round  int64
+  Type   SignedMsgType // byte
 }
 ```
 
@@ -175,7 +174,7 @@ s.Type = m.Type
 
 A signer should only sign a proposal `p` if any of the following lines are true:
 
-```
+```go
 p.Height > s.Height
 p.Height == s.Height && p.Round > s.Round
 ```
@@ -187,7 +186,7 @@ Once a proposal or vote has been signed for a given height and round, a proposal
 
 A signer should only sign a vote `v` if any of the following lines are true:
 
-```
+```go
 v.Height > s.Height
 v.Height == s.Height && v.Round > s.Round
 v.Height == s.Height && v.Round == s.Round && v.Step == 0x1 && s.Step == 0x20

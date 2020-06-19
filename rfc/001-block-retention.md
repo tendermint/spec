@@ -37,7 +37,7 @@ However, it is unclear if and how we should enforce this. It may not be possible
 
 Add a new field `retain_height` to the ABCI `ResponseCommit` message:
 
-```proto
+```protobuf
 service ABCIApplication {
   rpc Commit(RequestCommit) returns (ResponseCommit);
 }

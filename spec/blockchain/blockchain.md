@@ -169,19 +169,17 @@ A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it.
 
 ```go
-type Vote struct {
-	Type             SignedMsgType
-	Height           int64
-	Round            int
-	BlockID          BlockID
-	Timestamp        Time
-	ValidatorAddress []byte
-	ValidatorIndex   int
-	Signature        []byte
+message CanonicalVote {
+  SignedMsgType             type      = 1;  
+  sfixed64                  height    = 2;  // canonicalization requires fixed size encoding here
+  sfixed64                  round     = 3;  // canonicalization requires fixed size encoding here
+  CanonicalBlockID          block_id  = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string                    chain_id  = 6;
 }
 ```
 
-```proto
+```protobuf
 enum SignedMsgType {
   SIGNED_MSG_TYPE_UNKNOWN = 0;
   // Votes

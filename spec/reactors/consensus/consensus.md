@@ -16,7 +16,7 @@ explained in a forthcoming document.
 For efficiency reasons, validators in Tendermint consensus protocol do not agree directly on the
 block as the block size is big, i.e., they don't embed the block inside `Proposal` and
 `VoteMessage`. Instead, they reach agreement on the `BlockID` (see `BlockID` definition in
-[Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockid) section) 
+[Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockid) section)
 that uniquely identifies each block. The block itself is
 disseminated to validator processes using peer-to-peer gossiping protocol. It starts by having a
 proposer first splitting a block into a number of block parts, that are then gossiped between
@@ -49,14 +49,14 @@ type ProposalMessage struct {
 
 Proposal contains height and round for which this proposal is made, BlockID as a unique identifier
 of proposed block, timestamp, and POLRound (a so-called Proof-of-Lock (POL) round) that is needed for
-termination of the consensus. If POLRound >= 0, then BlockID corresponds to the block that 
+termination of the consensus. If POLRound >= 0, then BlockID corresponds to the block that
 is locked in POLRound. The message is signed by the validator private key.
 
 ```go
 type Proposal struct {
     Height           int64
-    Round            int
-    POLRound         int
+    Round            int32
+    POLRound         int32
     BlockID          BlockID
     Timestamp        Time
     Signature        Signature
@@ -81,7 +81,7 @@ type VoteMessage struct {
 
 ## BlockPartMessage
 
-BlockPartMessage is sent when gossipping a piece of the proposed block. It contains height, round
+BlockPartMessage is sent when gossiping a piece of the proposed block. It contains height, round
 and the block part.
 
 ```go
