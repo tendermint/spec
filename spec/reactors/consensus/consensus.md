@@ -34,14 +34,14 @@ protocol to determine what messages a process should send to its peers.
 
 We now describe the content of each message exchanged during Tendermint consensus protocol.
 
-## ProposalMessage
+## Proposal Message
 
-ProposalMessage is sent when a new block is proposed. It is a suggestion of what the
+`Proposal` Message is sent when a new block is proposed. It is a suggestion of what the
 next block in the blockchain should be.
 
-```go
-type ProposalMessage struct {
-    Proposal Proposal
+```protobuf
+message Proposal {
+  tendermint.types.Proposal proposal = 1 ;
 }
 ```
 
@@ -63,125 +63,125 @@ type Proposal struct {
 }
 ```
 
-## VoteMessage
+## Vote Message
 
-VoteMessage is sent to vote for some block (or to inform others that a process does not vote in the
+`Vote` Message is sent to vote for some block (or to inform others that a process does not vote in the
 current round). Vote is defined in the
-[Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockidd) 
+[Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockidd)
 section and contains validator's
 information (validator address and index), height and round for which the vote is sent, vote type,
 blockID if process vote for some block (`nil` otherwise) and a timestamp when the vote is sent. The
 message is signed by the validator private key.
 
-```go
-type VoteMessage struct {
-    Vote Vote
+```protobuf
+message Vote {
+  tendermint.types.Vote vote = 1;
 }
 ```
 
-## BlockPartMessage
+## BlockPart Message
 
-BlockPartMessage is sent when gossiping a piece of the proposed block. It contains height, round
+`BlockPart` Message is sent when gossiping a piece of the proposed block. It contains height, round
 and the block part.
 
-```go
-type BlockPartMessage struct {
-    Height int64
-    Round  int
-    Part   Part
+```protobuf
+message BlockPart {
+  int64                 height = 1;
+  int32                 round  = 2;
+  tendermint.types.Part part   = 3;
 }
 ```
 
-## NewRoundStepMessage
+## NewRoundStep Message
 
-NewRoundStepMessage is sent for every step transition during the core consensus algorithm execution.
+`NewRoundStep` Message is sent for every step transition during the core consensus algorithm execution.
 It is used in the gossip part of the Tendermint protocol to inform peers about a current
 height/round/step a process is in.
 
-```go
-type NewRoundStepMessage struct {
-    Height                int64
-    Round                 int
-    Step                  RoundStepType
-    SecondsSinceStartTime int
-    LastCommitRound       int
+```protobuf
+message NewRoundStep {
+  int64  height                   = 1;
+  int32  round                    = 2;
+  uint32 step                     = 3;
+  int64  seconds_since_start_time = 4;
+  int32  last_commit_round        = 5;
 }
 ```
 
-## NewValidBlockMessage
+## NewValidBlock Message
 
-NewValidBlockMessage is sent when a validator observes a valid block B in some round r, 
+`NewValidBlock` Message is sent when a validator observes a valid block B in some round r,
 i.e., there is a Proposal for block B and 2/3+ prevotes for the block B in the round r.
-It contains height and round in which valid block is observed, block parts header that describes 
+It contains height and round in which valid block is observed, block parts header that describes
 the valid block and is used to obtain all
 block parts, and a bit array of the block parts a process currently has, so its peers can know what
 parts it is missing so they can send them.
 In case the block is also committed, then IsCommit flag is set to true.
 
-```go
-type NewValidBlockMessage struct {
-    Height           int64
-    Round            int32
-    BlockPartsHeader PartSetHeader
-    BlockParts       BitArray
-    IsCommit         bool
+```protobuf
+message NewValidBlock {
+  int64                          height             = 1;
+  int32                          round              = 2;
+  tendermint.types.PartSetHeader block_parts_header = 3;
+  tendermint.libs.bits.BitArray  block_parts        = 4;
+  bool                           is_commit          = 5;
 }
 ```
 
-## ProposalPOLMessage
+## ProposalPOL Message
 
-ProposalPOLMessage is sent when a previous block is re-proposed.
+`ProposalPOL` Message is sent when a previous block is re-proposed.
 It is used to inform peers in what round the process learned for this block (ProposalPOLRound),
 and what prevotes for the re-proposed block the process has.
 
 ```go
-type ProposalPOLMessage struct {
-    Height           int64
-    ProposalPOLRound int32
-    ProposalPOL      BitArray
+message ProposalPOL {
+  int64                         height             = 1;
+  int32                         proposal_pol_round = 2;
+  tendermint.libs.bits.BitArray proposal_pol       = 3;
 }
 ```
 
-## HasVoteMessage
+## HasVote Message
 
-HasVoteMessage is sent to indicate that a particular vote has been received. It contains height,
+`HasVote` Message is sent to indicate that a particular vote has been received. It contains height,
 round, vote type and the index of the validator that is the originator of the corresponding vote.
 
-```go
-type HasVoteMessage struct {
-    Height int64
-    Round  int32
-    Type   byte
-    Index  int32
+```protobuf
+message HasVote {
+  int64                          height = 1;
+  int32                          round  = 2;
+  tendermint.types.SignedMsgType type   = 3;
+  int32                          index  = 4;
 }
 ```
 
-## VoteSetMaj23Message
+## VoteSetMaj23 Message
 
-VoteSetMaj23Message is sent to indicate that a process has seen +2/3 votes for some BlockID.
+`VoteSetMaj23` Message is sent to indicate that a process has seen +2/3 votes for some BlockID.
 It contains height, round, vote type and the BlockID.
 
-```go
-type VoteSetMaj23Message struct {
-    Height  int64
-    Round   int32
-    Type    byte
-    BlockID BlockID
+```protobuf
+message VoteSetMaj23 {
+  int64                          height   = 1;
+  int32                          round    = 2;
+  tendermint.types.SignedMsgType type     = 3;
+  tendermint.types.BlockID       block_id = 4;
 }
 ```
 
-## VoteSetBitsMessage
+## VoteSetBits Message
 
-VoteSetBitsMessage is sent to communicate the bit-array of votes a process has seen for a given
+`VoteSetBits` Message is sent to communicate the bit-array of votes a process has seen for a given
 BlockID. It contains height, round, vote type, BlockID and a bit array of
 the votes a process has.
 
-```go
-type VoteSetBitsMessage struct {
-    Height  int64
-    Round   int32
-    Type    byte
-    BlockID BlockID
-    Votes   BitArray
+```protobuf
+message VoteSetBits {
+  int64                          height   = 1;
+  int32                          round    = 2;
+  tendermint.types.SignedMsgType type     = 3;
+  tendermint.types.BlockID       block_id = 4;
+  tendermint.libs.bits.BitArray  votes    = 5;
 }
 ```
