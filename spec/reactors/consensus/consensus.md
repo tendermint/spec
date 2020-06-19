@@ -66,7 +66,7 @@ type Proposal struct {
 ## VoteMessage
 
 VoteMessage is sent to vote for some block (or to inform others that a process does not vote in the
-current round). Vote is defined in the 
+current round). Vote is defined in the
 [Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockidd) 
 section and contains validator's
 information (validator address and index), height and round for which the vote is sent, vote type,
@@ -121,7 +121,7 @@ In case the block is also committed, then IsCommit flag is set to true.
 ```go
 type NewValidBlockMessage struct {
     Height           int64
-    Round            int    
+    Round            int32
     BlockPartsHeader PartSetHeader
     BlockParts       BitArray
     IsCommit         bool
@@ -137,7 +137,7 @@ and what prevotes for the re-proposed block the process has.
 ```go
 type ProposalPOLMessage struct {
     Height           int64
-    ProposalPOLRound int
+    ProposalPOLRound int32
     ProposalPOL      BitArray
 }
 ```
@@ -150,9 +150,9 @@ round, vote type and the index of the validator that is the originator of the co
 ```go
 type HasVoteMessage struct {
     Height int64
-    Round  int
+    Round  int32
     Type   byte
-    Index  int
+    Index  int32
 }
 ```
 
@@ -164,7 +164,7 @@ It contains height, round, vote type and the BlockID.
 ```go
 type VoteSetMaj23Message struct {
     Height  int64
-    Round   int
+    Round   int32
     Type    byte
     BlockID BlockID
 }
@@ -179,7 +179,7 @@ the votes a process has.
 ```go
 type VoteSetBitsMessage struct {
     Height  int64
-    Round   int
+    Round   int32
     Type    byte
     BlockID BlockID
     Votes   BitArray
