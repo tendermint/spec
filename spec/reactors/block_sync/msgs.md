@@ -1,6 +1,6 @@
 # Block Sync Messages
 
-The Blockchain reactor has 5 distinct messages and one `oneof` message that groups all the messages. They are defined in Protocol Buffers because this is the encoding format we use throughout the clients.
+The Blockchain reactor has 5 distinct messages and one `oneof` message that groups all the messages.
 
 `BlockRequest` requests a block for a specific height.
 
@@ -28,7 +28,7 @@ message BlockResponse {
 
 `StatusRequest` requests the status of a node (Height & Base).
 
-- `Height` requests the current height of a peer
+- `Height` requests the highest block a node has
 - `Base`  requests the lowest block height a node has
 
 ```protobuf
@@ -40,8 +40,8 @@ message StatusRequest {
 
 `StatusResponse` is a peer response to inform their status
 
-- `Height` provides the peer with the nodes height block height
-- `Base` provides the peer with the nodes lowest block height
+- `Height` provides the nodes height block height
+- `Base` provides the nodes lowest block height
 
 ```protobuf
 message StatusResponse {
