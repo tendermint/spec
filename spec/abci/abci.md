@@ -238,7 +238,7 @@ via light client.
   - `ChainID (string)`: ID of the blockchain.
   - `ConsensusParams (ConsensusParams)`: Initial consensus-critical parameters.
   - `Validators ([]ValidatorUpdate)`: Initial genesis validators, sorted by voting power.
-  - `AppStateBytes ([]byte)`: Serialized initial application state. Proto-encoded JSON bytes.
+  - `AppStateBytes ([]byte)`: Serialized initial application state. (JSON bytes)
 - **Response**:
   - `ConsensusParams (ConsensusParams)`: Initial
     consensus-critical parameters (optional).
