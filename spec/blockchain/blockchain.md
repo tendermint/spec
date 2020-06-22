@@ -216,18 +216,72 @@ type EvidenceData struct {
 
 ## Evidence
 
-Evidence in Tendermint is implemented as a protobuf [oneof](https://developers.google.com/protocol-buffers/docs/proto3#oneof).
+Evidence in Tendermint is used to indicate breaches in the consensus by a validator. 
+It is implemented as the following interface.
 
 ```go
-type DuplicateVoteEvidence struct {
-  VoteA  Vote
-  VoteB  Vote
+type Evidence interface {
+	Height() int64                                     // height of the equivocation
+	Time() time.Time                                   // time of the equivocation
+	Address() []byte                                   // address of the equivocating validator
+	Bytes() []byte                                     // bytes which comprise the evidence
+	Hash() []byte                                      // hash of the evidence
+	Verify(chainID string, pubKey crypto.PubKey) error // verify the evidence
+	Equal(Evidence) bool                               // check equality of evidence
+
+	ValidateBasic() error
+	String() string
 }
 ```
 
-Votes are lexicographically sorted on `BlockID`.
+All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()` 
+and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md) 
+document provides a good overview for the types of evidence and how they occur.
 
-See the [pubkey spec](./encoding.md#key-types) for more.
+`DuplicateVoteEvidence` represents a validator that has voted for two different blocks 
+in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
+
+```go
+type DuplicateVoteEvidence struct {
+	VoteA  *Vote
+	VoteB  *Vote
+}
+```
+
+`AmnesiaEvidence` represents a validator that has incorrectly voted for another block in a 
+different round to the the block that the validator was previously locked on. This form
+of evidence is generated differently from the rest. See this 
+[ADR](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-056-proving-amnesia-attacks.md).
+
+```go
+type AmnesiaEvidence struct {
+	*PotentialAmnesiaEvidence
+	Polc *ProofOfLockChange
+}
+```
+
+`LunaticValidatorEvidence` represents a validator that has signed for an arbitrary application state. 
+This attack only applies to Light clients.
+
+```go
+type LunaticValidatorEvidence struct {
+	Header             *Header 
+	Vote               *Vote  
+	InvalidHeaderField string
+}
+```
+
+`PhantomValidatorEvidence` represents a validator that has signed for a block where it was not part of the validator set. 
+This attack also only applies to Light clients. Phantom validators must still be staked. `LastHeightValidatorWasInSet` 
+indicated the height that they last voted.
+
+
+```go
+type PhantomValidatorEvidence struct {
+	Vote                        *Vote 
+	LastHeightValidatorWasInSet int64
+}
+```
 
 ## Validation
 
