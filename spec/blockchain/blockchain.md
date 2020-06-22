@@ -170,8 +170,7 @@ The vote includes information about the validator signing it.
 
 ```go
 type Vote struct {
-message CanonicalVote {
-  Type             byte
+  Type             SignedMsgType
   Height           int64
   Round            int
   BlockID          BlockID
@@ -208,15 +207,17 @@ See the [signature spec](./encoding.md#key-types) for more.
 
 EvidenceData is a simple wrapper for a list of evidence:
 
-```go
-type EvidenceData struct {
-  Evidence []Evidence
+```protobuf
+// EvidenceData contains any evidence of malicious wrong-doing by validators
+message EvidenceData {
+  repeated Evidence evidence = 1;
+  bytes             hash     = 2;
 }
 ```
 
 ## Evidence
 
-Evidence in Tendermint is used to indicate breaches in the consensus by a validator. 
+Evidence is used to indicate breaches in the consensus by a validator.
 It is implemented as the following interface.
 
 ```go
@@ -241,33 +242,33 @@ document provides a good overview for the types of evidence and how they occur.
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
 
-```go
-type DuplicateVoteEvidence struct {
-  VoteA  *Vote
-  VoteB  *Vote
+```protobuf
+message DuplicateVoteEvidence {
+  Vote vote_a = 1;
+  Vote vote_b = 2;
 }
 ```
 
-`AmnesiaEvidence` represents a validator that has incorrectly voted for another block in a 
+`AmnesiaEvidence` represents a validator that has incorrectly voted for another block in a
 different round to the the block that the validator was previously locked on. This form
-of evidence is generated differently from the rest. See this 
+of evidence is generated differently from the rest. See this
 [ADR](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-056-proving-amnesia-attacks.md).
 
-```go
-type AmnesiaEvidence struct {
-  *PotentialAmnesiaEvidence
-  Polc *ProofOfLockChange
+```protobuf
+message AmnesiaEvidence {
+  PotentialAmnesiaEvidence potential_amnesia_evidence = 1;
+  ProofOfLockChange        polc                       = 2;
 }
 ```
 
 `LunaticValidatorEvidence` represents a validator that has signed for an arbitrary application state.
 This attack only applies to Light clients.
 
-```go
-type LunaticValidatorEvidence struct {
-  Header             *Header
-  Vote               *Vote  
-  InvalidHeaderField string
+```protobuf
+message LunaticValidatorEvidence {
+  Header header               = 1;
+  Vote   vote                 = 2;
+  string invalid_header_field = 3;
 }
 ```
 
@@ -275,10 +276,10 @@ type LunaticValidatorEvidence struct {
 This attack also only applies to Light clients. Phantom validators must still be staked. `LastHeightValidatorWasInSet`
 indicated the height that they last voted.
 
-```go
-type PhantomValidatorEvidence struct {
-  Vote                        *Vote
-  LastHeightValidatorWasInSet int64
+```protobuf
+message PhantomValidatorEvidence {
+  Vote  vote                             = 1;
+  int64 last_height_validator_was_in_set = 2;
 }
 ```
 
