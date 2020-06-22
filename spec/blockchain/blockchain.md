@@ -113,7 +113,7 @@ format, which uses two integers, one for Seconds and for Nanoseconds.
 Data is just a wrapper for a list of transactions, where transactions are
 arbitrary byte arrays:
 
-```
+```go
 type Data struct {
     Txs [][]byte
 }
@@ -126,10 +126,10 @@ validator. It also contains the relevant BlockID, height and round:
 
 ```go
 type Commit struct {
-	Height     int64
-	Round      int
-	BlockID    BlockID
-	Signatures []CommitSig
+  Height     int64
+  Round      int
+  BlockID    BlockID
+  Signatures []CommitSig
 }
 ```
 
@@ -143,19 +143,19 @@ to reconstruct the vote set given the validator set.
 type BlockIDFlag byte
 
 const (
-	// BlockIDFlagAbsent - no vote was received from a validator.
-	BlockIDFlagAbsent BlockIDFlag = 0x01
-	// BlockIDFlagCommit - voted for the Commit.BlockID.
-	BlockIDFlagCommit = 0x02
-	// BlockIDFlagNil - voted for nil.
-	BlockIDFlagNil = 0x03
+  // BlockIDFlagAbsent - no vote was received from a validator.
+  BlockIDFlagAbsent BlockIDFlag = 0x01
+  // BlockIDFlagCommit - voted for the Commit.BlockID.
+  BlockIDFlagCommit = 0x02
+  // BlockIDFlagNil - voted for nil.
+  BlockIDFlagNil = 0x03
 )
 
 type CommitSig struct {
-	BlockIDFlag      BlockIDFlag
-	ValidatorAddress Address
-	Timestamp        time.Time
-	Signature        []byte
+  BlockIDFlag      BlockIDFlag
+  ValidatorAddress Address
+  Timestamp        time.Time
+  Signature        []byte
 }
 ```
 
@@ -169,13 +169,16 @@ A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it.
 
 ```go
+type Vote struct {
 message CanonicalVote {
-  SignedMsgType             type      = 1;  
-  sfixed64                  height    = 2;  // canonicalization requires fixed size encoding here
-  sfixed64                  round     = 3;  // canonicalization requires fixed size encoding here
-  CanonicalBlockID          block_id  = 4;
-  google.protobuf.Timestamp timestamp = 5;
-  string                    chain_id  = 6;
+  Type             byte
+  Height           int64
+  Round            int
+  BlockID          BlockID
+  Timestamp        Time
+  ValidatorAddress []byte
+  ValidatorIndex   int
+  Signature        []byte
 }
 ```
 
@@ -205,9 +208,9 @@ See the [signature spec](./encoding.md#key-types) for more.
 
 EvidenceData is a simple wrapper for a list of evidence:
 
-```
+```go
 type EvidenceData struct {
-    Evidence []Evidence
+  Evidence []Evidence
 }
 ```
 
@@ -215,10 +218,10 @@ type EvidenceData struct {
 
 Evidence in Tendermint is implemented as a protobuf [oneof](https://developers.google.com/protocol-buffers/docs/proto3#oneof).
 
-```
+```go
 type DuplicateVoteEvidence struct {
-	VoteA  Vote
-	VoteB  Vote
+  VoteA  Vote
+  VoteB  Vote
 }
 ```
 

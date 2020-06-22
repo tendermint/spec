@@ -203,7 +203,7 @@ blockchain.
 Updates to the Tendermint validator set can be made by returning
 `ValidatorUpdate` objects in the `ResponseEndBlock`:
 
-```
+```protobuf
 message ValidatorUpdate {
   tendermint.crypto.keys.PublicKey pub_key
   int64 power
@@ -262,8 +262,6 @@ Must have `MaxGas >= -1`.
 If `MaxGas == -1`, no limit is enforced.
 
 ### BlockParams.TimeIotaMs
-
-<!-- //TODO: this is here for apps but not elsewhere, its not exposed to application so why is it in abci? -->
 
 The minimum time between consecutive blocks (in milliseconds).
 This is enforced by Tendermint consensus.
@@ -386,7 +384,7 @@ Some applications (eg. Ethereum, Cosmos-SDK) have multiple "levels" of Merkle tr
 where the leaves of one tree are the root hashes of others. To support this, and
 the general variability in Merkle proofs, the `ResponseQuery.ProofOps` has some minimal structure:
 
-```
+```protobuf
 message ProofOps {
   repeated ProofOp ops
 }
