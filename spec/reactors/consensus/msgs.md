@@ -9,7 +9,9 @@ respectively.
 
 ## NewRoundStep Message
 
-`NewRoundState` is sent for every step taken in the ConsensusState.
+`NewRoundStep` Message is sent for every step transition during the core consensus algorithm execution.
+It is used in the gossip part of the Tendermint protocol to inform peers about a current
+height/round/step a process is in.
 
 ```protobuf
 message NewRoundStep {
@@ -50,8 +52,12 @@ handleMessage(msg):
 
 ## NewValidBlock Message
 
-`NewValidBlock` is sent when a validator observes a valid block B in some round r,
+`NewValidBlock` Message is sent when a validator observes a valid block B in some round r,
 i.e., there is a Proposal for block B and 2/3+ prevotes for the block B in the round r.
+It contains height and round in which valid block is observed, block parts header that describes
+the valid block and is used to obtain all
+block parts, and a bit array of the block parts a process currently has, so its peers can know what
+parts it is missing so they can send them.
 In case the block is also committed, then IsCommit flag is set to true.
 
 ```protobuf
@@ -81,11 +87,30 @@ protect the node against DOS attacks.
 
 ## Proposal Message
 
-`ProposalMessage` is sent when a new block is proposed.
+`Proposal` Message is sent when a new block is proposed. It is a suggestion of what the
+next block in the blockchain should be.
 
 ```protobuf
 message Proposal {
   tendermint.types.Proposal proposal = 1;
+}
+```
+
+### Proposal
+
+Proposal contains height and round for which this proposal is made, BlockID as a unique identifier
+of proposed block, timestamp, and POLRound (a so-called Proof-of-Lock (POL) round) that is needed for termination of the consensus. If POLRound >= 0, then BlockID corresponds to the block that
+is locked in POLRound. The message is signed by the validator private key.
+
+```protobuf
+message Proposal {
+  SignedMsgType             type      = 1;
+  int64                     height    = 2;
+  int32                     round     = 3;
+  int32                     pol_round = 4;
+  BlockID                   block_id  = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  bytes signature                     = 7;
 }
 ```
 
@@ -104,7 +129,9 @@ handleMessage(msg):
 
 ## ProposalPOL Message
 
-`ProposalPOLMessage` is sent when a previous proposal is re-proposed.
+`ProposalPOL` Message is sent when a previous block is re-proposed.
+It is used to inform peers in what round the process learned for this block (ProposalPOLRound),
+and what prevotes for the re-proposed block the process has.
 
 ```protobuf
 message ProposalPOL {
@@ -124,7 +151,8 @@ handleMessage(msg):
 
 ## BlockPart Message
 
-`BlockPart` is sent when gossiping a piece of the proposed block.
+`BlockPart` Message is sent when gossiping a piece of the proposed block. It contains height, round
+and the block part.
 
 ```protobuf
 message BlockPart {
@@ -145,7 +173,12 @@ handleMessage(msg):
 
 ## Vote Message
 
-`Vote` is sent when voting for a proposal (or lack thereof).
+`Vote` Message is sent to vote for some block (or to inform others that a process does not vote in the current round). Vote is defined in the
+[Blockchain](https://github.com/tendermint/spec/blob/master/spec/blockchain/blockchain.md#blockidd)
+section and contains validator's
+information (validator address and index), height and round for which the vote is sent, vote type,
+blockID if process vote for some block (`nil` otherwise) and a timestamp when the vote is sent. The
+message is signed by the validator private key.
 
 ```protobuf
 message Vote {
@@ -166,7 +199,8 @@ node against DOS attacks.
 
 ## HasVote Message
 
-`HasVote` is sent to indicate that a particular vote has been received.
+`HasVote` Message is sent to indicate that a particular vote has been received. It contains height,
+round, vote type and the index of the validator that is the originator of the corresponding vote.
 
 ```protobuf
 message HasVote {
@@ -187,7 +221,8 @@ handleMessage(msg):
 
 ## VoteSetMaj23 Message
 
-`VoteSetMaj23` is sent to indicate that a given BlockID has seen +2/3 votes.
+`VoteSetMaj23` Message is sent to indicate that a process has seen +2/3 votes for some BlockID.
+It contains height, round, vote type and the BlockID.
 
 ```protobuf
 message VoteSetMaj23 {
@@ -209,7 +244,9 @@ handleMessage(msg):
 
 ## VoteSetBits Message
 
-`VoteSetBits` is sent to communicate the bit-array of votes seen for the BlockID.
+`VoteSetBits` Message is sent to communicate the bit-array of votes a process has seen for a given
+BlockID. It contains height, round, vote type, BlockID and a bit array of
+the votes a process has.
 
 ```protobuf
 message VoteSetBits {

@@ -1,4 +1,4 @@
-# State
+# Blockchain State
 
 ## State
 
@@ -30,18 +30,19 @@ type State struct {
 Note there is a hard-coded limit of 10000 validators. This is inherited from the
 limit on the number of votes in a commit.
 
-### Result
+### ResponseDeliverTx
 
-```go
-type ResponseDeliverTx struct {
-	Code      uint32  
-	Data      []byte  
-	Log       string  
-	Info      string  
-	GasWanted int64   
-	GasUsed   int64   
-	Events    []Event 
-	Codespace string  
+```protobuf
+message ResponseDeliverTx {
+  uint32         code       = 1;
+  bytes          data       = 2;
+  string         log        = 3;  // nondeterministic
+  string         info       = 4;  // nondeterministic
+  int64          gas_wanted = 5;
+  int64          gas_used   = 6;
+  repeated Event events     = 7
+      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+  string codespace = 8;
 }
 ```
 
@@ -87,13 +88,15 @@ Like validator sets, they are set during genesis and can be updated by the appli
 When hashed, only a subset of the params are included, to allow the params to
 evolve without breaking the header.
 
-```go
-type ConsensusParams struct {
-	Block
-	Evidence
-	Validator
+```protobuf
+message ConsensusParams {
+  BlockParams     block     = 1;
+  EvidenceParams  evidence  = 2;
+  ValidatorParams validator = 3;
 }
+```
 
+```go
 type hashedParams struct {
     BlockMaxBytes int64
     BlockMaxGas   int64

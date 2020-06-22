@@ -1,8 +1,8 @@
 # Pex Messages
 
-As you have read earlier [here](./pex.md) the job the pex reactor is to handle peer exchange. The Pex reactor consists of two distinct messages.
+As you have read earlier [here](./pex.md) the job the Pex reactor is to handle peer exchange. The Pex reactor consists of two distinct messages.
 
-## PexRequest Message 
+## PexRequest Message
 
 When a node is requesting peers from a node they will indicate this by sending a `PexRequest` message.
 
