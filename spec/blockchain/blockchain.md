@@ -221,30 +221,30 @@ It is implemented as the following interface.
 
 ```go
 type Evidence interface {
-	Height() int64                                     // height of the equivocation
-	Time() time.Time                                   // time of the equivocation
-	Address() []byte                                   // address of the equivocating validator
-	Bytes() []byte                                     // bytes which comprise the evidence
-	Hash() []byte                                      // hash of the evidence
-	Verify(chainID string, pubKey crypto.PubKey) error // verify the evidence
-	Equal(Evidence) bool                               // check equality of evidence
+  Height() int64                                     // height of the equivocation
+  Time() time.Time                                   // time of the equivocation
+  Address() []byte                                   // address of the equivocating validator
+  Bytes() []byte                                     // bytes which comprise the evidence
+  Hash() []byte                                      // hash of the evidence
+  Verify(chainID string, pubKey crypto.PubKey) error // verify the evidence
+  Equal(Evidence) bool                               // check equality of evidence
 
-	ValidateBasic() error
-	String() string
+  ValidateBasic() error
+  String() string
 }
 ```
 
-All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()` 
-and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md) 
+All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()`
+and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md)
 document provides a good overview for the types of evidence and how they occur.
 
-`DuplicateVoteEvidence` represents a validator that has voted for two different blocks 
+`DuplicateVoteEvidence` represents a validator that has voted for two different blocks
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
 
 ```go
 type DuplicateVoteEvidence struct {
-	VoteA  *Vote
-	VoteB  *Vote
+  VoteA  *Vote
+  VoteB  *Vote
 }
 ```
 
@@ -255,31 +255,30 @@ of evidence is generated differently from the rest. See this
 
 ```go
 type AmnesiaEvidence struct {
-	*PotentialAmnesiaEvidence
-	Polc *ProofOfLockChange
+  *PotentialAmnesiaEvidence
+  Polc *ProofOfLockChange
 }
 ```
 
-`LunaticValidatorEvidence` represents a validator that has signed for an arbitrary application state. 
+`LunaticValidatorEvidence` represents a validator that has signed for an arbitrary application state.
 This attack only applies to Light clients.
 
 ```go
 type LunaticValidatorEvidence struct {
-	Header             *Header 
-	Vote               *Vote  
-	InvalidHeaderField string
+  Header             *Header
+  Vote               *Vote  
+  InvalidHeaderField string
 }
 ```
 
-`PhantomValidatorEvidence` represents a validator that has signed for a block where it was not part of the validator set. 
-This attack also only applies to Light clients. Phantom validators must still be staked. `LastHeightValidatorWasInSet` 
+`PhantomValidatorEvidence` represents a validator that has signed for a block where it was not part of the validator set.
+This attack also only applies to Light clients. Phantom validators must still be staked. `LastHeightValidatorWasInSet`
 indicated the height that they last voted.
-
 
 ```go
 type PhantomValidatorEvidence struct {
-	Vote                        *Vote 
-	LastHeightValidatorWasInSet int64
+  Vote                        *Vote
+  LastHeightValidatorWasInSet int64
 }
 ```
 
@@ -317,7 +316,7 @@ The block version must match the state version.
 
 ### ChainID
 
-```
+```go
 len(block.ChainID) < 50
 ```
 
@@ -334,7 +333,7 @@ The height is an incrementing integer. The first block has `block.Header.Height 
 
 ### Time
 
-```
+```go
 block.Header.Timestamp >= prevBlock.Header.Timestamp + state.consensusParams.Block.TimeIotaMs
 block.Header.Timestamp == MedianTime(block.LastCommit, state.LastValidators)
 ```
@@ -348,7 +347,7 @@ block being voted on.
 The timestamp of the first block must be equal to the genesis time (since
 there's no votes to compute the median).
 
-```
+```go
 if block.Header.Height == 1 {
     block.Header.Timestamp == genesisTime
 }
@@ -535,17 +534,6 @@ func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
 
 where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
 against the given signature and message bytes.
-
-## Evidence
-
-There is currently only one kind of evidence, `DuplicateVoteEvidence`.
-
-DuplicateVoteEvidence `ev` is valid if
-
-- `ev.VoteA` and `ev.VoteB` can be verified with `ev.PubKey`
-- `ev.VoteA` and `ev.VoteB` have the same `Height, Round, Address, Index, Type`
-- `ev.VoteA.BlockID != ev.VoteB.BlockID`
-- `(block.Height - ev.VoteA.Height) < MAX_EVIDENCE_AGE`
 
 # Execution
 
