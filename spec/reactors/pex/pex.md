@@ -142,7 +142,7 @@ Send the selected peers. Note we select peers for sending without bias for vette
 There are various cases where we decide a peer has misbehaved and we disconnect from them.
 When this happens, the peer is removed from the address book and black listed for
 some amount of time. We call this "Disconnect and Mark".
-Note that the bad behaviour may be detected outside the PEX reactor itself
+Note that the bad behavior may be detected outside the PEX reactor itself
 (for instance, in the mconnection, or another reactor), but it must be communicated to the PEX reactor
 so it can remove and mark the peer.
 

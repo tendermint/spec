@@ -99,120 +99,7 @@ type PeerRoundState struct {
 The entry point of the Consensus reactor is a receive method. When a message is
 received from a peer p, normally the peer round state is updated
 correspondingly, and some messages are passed for further processing, for
-example to ConsensusState service. We now specify the processing of messages in
-the receive method of Consensus reactor for each message type. In the following
-message handler, `rs` and `prs` denote `RoundState` and `PeerRoundState`,
-respectively.
-
-### NewRoundStepMessage handler
-
-```go
-handleMessage(msg):
-    if msg is from smaller height/round/step then return
-    // Just remember these values.
-    prsHeight = prs.Height
-    prsRound = prs.Round
-    prsCatchupCommitRound = prs.CatchupCommitRound
-    prsCatchupCommit = prs.CatchupCommit
-
-    Update prs with values from msg
-    if prs.Height or prs.Round has been updated then
-        reset Proposal related fields of the peer state
-    if prs.Round has been updated and msg.Round == prsCatchupCommitRound then
-        prs.Precommits = psCatchupCommit
-    if prs.Height has been updated then
-        if prsHeight+1 == msg.Height && prsRound == msg.LastCommitRound then
-          prs.LastCommitRound = msg.LastCommitRound
-          prs.LastCommit = prs.Precommits
-        } else {
-          prs.LastCommitRound = msg.LastCommitRound
-          prs.LastCommit = nil
-        }
-        Reset prs.CatchupCommitRound and prs.CatchupCommit
-```
-
-### NewValidBlockMessage handler
-
-```go
-handleMessage(msg):
-    if prs.Height != msg.Height then return
-
-    if prs.Round != msg.Round && !msg.IsCommit then return
-
-    prs.ProposalBlockPartsHeader = msg.BlockPartsHeader
-    prs.ProposalBlockParts = msg.BlockParts
-```
-
-The number of block parts is limited to 1601 (`types.MaxBlockPartsCount`) to
-protect the node against DOS attacks.
-
-### HasVote Message handler
-
-```go
-handleMessage(msg):
-    if prs.Height == msg.Height then
-        prs.setHasVote(msg.Height, msg.Round, msg.Type, msg.Index)
-```
-
-### VoteSetMaj23 Message handler
-
-```go
-handleMessage(msg):
-    if prs.Height == msg.Height then
-        Record in rs that a peer claim to have ⅔ majority for msg.BlockID
-        Send VoteSetBitsMessage showing votes node has for that BlockId
-```
-
-### Proposal Message handler
-
-```go
-handleMessage(msg):
-    if prs.Height != msg.Height || prs.Round != msg.Round || prs.Proposal then return
-    prs.Proposal = true
-    if prs.ProposalBlockParts == empty set then // otherwise it is set in NewValidBlockMessage handler
-      prs.ProposalBlockPartsHeader = msg.BlockPartsHeader
-    prs.ProposalPOLRound = msg.POLRound
-    prs.ProposalPOL = nil
-    Send msg through internal peerMsgQueue to ConsensusState service
-```
-
-### ProposalPOL Message handler
-
-```go
-handleMessage(msg):
-    if prs.Height != msg.Height or prs.ProposalPOLRound != msg.ProposalPOLRound then return
-    prs.ProposalPOL = msg.ProposalPOL
-```
-
-The number of votes is limited to 10000 (`types.MaxVotesCount`) to protect the
-node against DOS attacks.
-
-### BlockPart Message handler
-
-```go
-handleMessage(msg):
-    if prs.Height != msg.Height || prs.Round != msg.Round then return
-    Record in prs that peer has block part msg.Part.Index
-    Send msg trough internal peerMsgQueue to ConsensusState service
-```
-
-### Vote Message handler
-
-```go
-handleMessage(msg):
-    Record in prs that a peer knows vote with index msg.vote.ValidatorIndex for particular height and round
-    Send msg trough internal peerMsgQueue to ConsensusState service
-```
-
-### VoteSetBits Message handler
-
-```go
-handleMessage(msg):
-    Update prs for the bit-array of votes peer claims to have for the msg.BlockID
-```
-
-The number of votes is limited to 10000 (`types.MaxVotesCount`) to protect the
-node against DOS attacks.
+example to ConsensusState service. Read more on consensus msg types and how they are handled [here](./msgs.md)
 
 ## Gossip Data Routine
 
@@ -286,7 +173,7 @@ and the known PeerRoundState (`prs`). The routine repeats forever the logic show
             if send returns true, continue
 
         if prs.Step <= RoundStepPrecommit and prs.Round != -1 and prs.Round <= rs.Round then
-     	    Precommits = rs.Votes.Precommits(prs.Round)
+            Precommits = rs.Votes.Precommits(prs.Round)
             vote = random vote from Precommits the peer does not have
             Send VoteMessage(vote) to the peer
             if send returns true, continue

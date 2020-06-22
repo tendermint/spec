@@ -4,16 +4,14 @@
 
 There is currently only one message that Mempool broadcasts
 and receives over the p2p gossip network (via the reactor):
-`TxMessage`
 
-```go
-// TxMessage is a MempoolMessage containing a transaction.
-type TxMessage struct {
-    Tx types.Tx
+```protobuf
+message BytesValue {
+  bytes Values = 1;
 }
 ```
 
-TxMessage is encoded using [google.protobuf.BytesValue](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/bytes-value). 
+This is a [wellknown type](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf) from protobuf ([google.protobuf.BytesValue](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.BytesValue)).
 
 ## RPC Messages
 

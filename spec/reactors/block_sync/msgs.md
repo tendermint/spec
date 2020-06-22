@@ -64,4 +64,4 @@ message Message {
 }
 ```
 
-The protobuf file with these messages are located [here](./msgs.proto)
+The protobuf file with these messages are located [here](https://github.com/tendermint/tendermint/blob/dedf0d2350d561fffcb181c22e861914e7457619/proto/tendermint/blockchain/msgs.proto)

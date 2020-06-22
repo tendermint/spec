@@ -11,39 +11,6 @@ where they actively make requests for more blocks until they sync up.
 Once caught up, "fast_sync" mode is disabled and the node switches to
 using (and turns on) the Consensus Reactor.
 
-## Message Types
-
-```go
-const (
-    msgTypeBlockRequest    = byte(0x10)
-    msgTypeBlockResponse   = byte(0x11)
-    msgTypeNoBlockResponse = byte(0x12)
-    msgTypeStatusResponse  = byte(0x20)
-    msgTypeStatusRequest   = byte(0x21)
-)
-```
-
-```go
-type bcBlockRequestMessage struct {
-    Height int64
-}
-
-type bcNoBlockResponseMessage struct {
-    Height int64
-}
-
-type bcBlockResponseMessage struct {
-    Block Block
-}
-
-type bcStatusRequestMessage struct {
-    Height int64
-
-type bcStatusResponseMessage struct {
-    Height int64
-}
-```
-
 ## Architecture and algorithm
 
 The Blockchain reactor is organized as a set of concurrent tasks:
@@ -65,7 +32,7 @@ type Requester {
   mtx          Mutex
   block        Block
   height       int64
-   peerID       p2p.ID
+  peerID       p2p.ID
   redoChannel  chan p2p.ID //redo may send multi-time; peerId is used to identify repeat
 }
 ```
