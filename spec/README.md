@@ -37,10 +37,11 @@ please submit them to our [bug bounty](https://tendermint.com/security)!
 
 - [The Base P2P Layer](./p2p/node.md): multiplex the protocols ("reactors") on authenticated and encrypted TCP connections
 - [Peer Exchange (PEX)](./reactors/pex/reactor.md): gossip known peer addresses so peers can find each other
-- [Block Sync](./reactors/block_sync/reactor.md): gossip blocks so peers can catch up quickly
-- [Consensus](./reactors/consensus/consensus.md): gossip votes and block parts so new blocks can be committed
-- [Mempool](./reactors/mempool/reactor.md): gossip transactions so they get included in blocks
-- [Evidence](./reactors/evidence/reactor.md): sending invalid evidence will stop the peer
+- [Block Sync](./block_sync/readme.md): gossip blocks so peers can catch up quickly
+- [State Sync](./state_sync/readme.md): gossip application data so peers can catch up quickly
+- [Consensus](./consensus/messages.md): gossip votes and block parts so new blocks can be committed
+- [Mempool](./mempool/readme.md): gossip transactions so they get included in blocks
+- [Evidence](./evidence/readme.md): sending invalid evidence will stop the peer
 
 ### Software
 
