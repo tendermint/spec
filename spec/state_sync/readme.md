@@ -2,8 +2,18 @@
 
 <!-- TODO: add descriptions of state_sync -->
 
+## Channel
 
-## State Sync P2P Protocol
+```go
+const (
+  // SnapshotChannel exchanges snapshot metadata
+  SnapshotChannel = byte(0x60) 96 
+  // ChunkChannel exchanges chunk contents
+  ChunkChannel = byte(0x61) 97
+)
+```
+
+## Messages
 
 When a new node begin state syncing, it will ask all peers it encounters if it has any
 available snapshots:

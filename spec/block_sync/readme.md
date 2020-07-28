@@ -4,7 +4,7 @@ The block sync, or as you may have seen in various documentation Fast Sync, prot
 
 ## Channel
 
-Tendermint implements a multiplexed connection, you can read more about this [here](../p2p/connection.md#mconnection), meaning that communication between reactors happens on a separate channel. The channel the communication takes place for the block sync protocol is 64 or 0x40.
+Tendermint implements a multiplexed connection, you can read more about this [here](../p2p/connection.md#mconnection), meaning that communication between nodes for specific protocols happens on separate channels. The channel the communication takes place for the block sync protocol is `64` or `0x40`.
 
 ```go
 // BlockchainChannel is a channel for blocks and status updates (`BlockStore` height)

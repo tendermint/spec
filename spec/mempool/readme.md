@@ -2,9 +2,15 @@
 
 <!-- Add minor description of a mempool -->
 
-## Mempool Messages
+## Channel
 
-### P2P Messages
+
+
+```go
+MempoolChannel = byte(0x30) 48
+```
+
+## Messages
 
 There is currently only one message that Mempool broadcasts
 and receives over the p2p gossip network (via the reactor):
