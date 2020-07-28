@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-07-26: Initial draft (@erikgrinaker)
+- 2020-07-28: Use weak chain linking, i.e. `predecessor` field (@erikgrinaker)
 
 ## Author(s)
 
@@ -29,28 +30,16 @@ work that is not viable for the planned Stargate release (Tendermint 0.34), and 
 restrictive for future development.
 
 As a first step, allowing the new chain to start from an initial height specified in the genesis
-file would at least provide monotonically increasing heights. It may also be useful to include the 
-latest block header from the previous chain, to link them.
+file would at least provide monotonically increasing heights. Information about the previous chain
+(ID and last block header) is also included, for informational purposes.
 
 External tooling would be required to map historical heights onto e.g. archive nodes that contain 
 blocks from previous chain version. Tendermint will not include any such functionality.
 
 ## Proposal
 
-There are two main approaches that can be taken:
-
-* **Initial height:** the genesis file specifies an arbitrary initial height that the chain starts 
-from.
-
-* **Chain linking:** the genesis file includes e.g. the last block header and chain ID from the
-previous chain, and possibly uses this as the basis for the initial block.
-
-ABCI applications will have to be updated to handle arbitrary initial heights.
-
-### Initial Height
-
-This approach allows a chain to start from an arbitrary height, with the least amount of changes
-to existing code and protocols. Social consensus is necessary to link it to the previous chain.
+Tendermint will allow chains to start from an arbitrary initial height, with the minimum amount of
+changes to existing code and protocols:
 
 * A new field `initial_height` is added to the genesis file, defaulting to `1`. It can be set to any
 non-negative integer, and `0` is considered equivalent to `1`.
@@ -58,28 +47,34 @@ non-negative integer, and `0` is considered equivalent to `1`.
 * A new field `InitialHeight` is added to the ABCI `RequestInitChain` message, with the same value 
 and semantics as the genesis field.
 
+Additionally, the genesis file will be extended with a new `predecessor` field containing 
+information about the previous chain, specifically the final block header:
+
+```json
+{
+    "predecessor": {
+        "version": {"block": "10", "app": "0"},
+        "chain_id": "chain-1",
+        "height": 1000000,
+        "time": "2020-07-28T15:42:48.000Z",
+        "last_block_id": {
+            "hash": "2D7F34765B312A46BC551F9B3E0535D91CBA9513AAFDBB3458D17D7FD89FBEF0",
+            "parts": {"total": "1", "hash": "4D347E9C22E4C7EA15DB0B5AFF6799BC0A85B854443C3BA6E3B81A7BB7163931"},
+        },
+        "app_hash": "123AC50B458A998EB481D7E17A423C8C0ED238813518B55FAF57510F73F76DFC",
+        ...
+    }
+}
+```
+
+This field will be ignored by Tendermint, but may be helpful to integrators and users.
+
 If possible, no further changes will be made to any data structures. In particular, the initial
 height will not be added to the node state, and will instead be passed explicitly to any logic that 
 relies on it.
 
-### Chain Linking
-
-This approach includes an explicit link to the previous chain in the genesis file. This can take 
-several forms, e.g.:
-
-* Weak: an advisory chain ID and last block header or hash. This will not be used by Tendermint at 
-all, and is only there to guide users and integrators to the previous chain and block.
-
-* Strong: the chain ID, last block header, and last commit. This will be verified by Tendermint 
-(requiring support for the previous chain's data structures and hashing algorithms) when processing 
-the initial height on the new chain, which e.g. ensures that the same validator set is used.
-
-In these cases, the initial height can either be derived from the last block header, or combined
-with a separate `initial_height` field.
-
-Strong linking will require additional spec and engineering work that may delay Stargate, but gives
-stronger guarantees of chain continuity, which may be particularly important to IBC and light
-clients (where validator set continuity is essential to punish misbehavior on the old chain).
+ABCI applications may have to be updated to handle arbitrary initial heights, otherwise the initial
+block may fail.
 
 ## Status
 
@@ -98,6 +93,9 @@ Proposed
 * Integrators will have to map height ranges to specific archive nodes/networks to query history.
 
 ### Neutral
+
+* The predecessor block header is not verified by Tendermint at all, and must be verified by
+  network governors.
 
 ## References
 
