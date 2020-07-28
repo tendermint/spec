@@ -506,7 +506,7 @@ via light client.
   - `AppHash ([]byte)`: Data returned by the last call to `Commit` - typically the
     Merkle root of the application state after executing the previous block's
     transactions
-  - `LastResultsHash ([]byte)`: Root hash of `BeginBlock` events, root hash of all results from the txs from the previous block, and `EndBlock` events
+  - `LastResultsHash ([]byte)`: root hash of all results from the txs from the previous block
   - `EvidenceHash ([]byte)`: Hash of the evidence included in this block
   - `ProposerAddress ([]byte)`: Original proposer for the block
 - **Usage**:
@@ -515,10 +515,9 @@ via light client.
     especially height and time.
   - Provides the proposer of the current block, for use in proposer-based
     reward mechanisms.
-  - `LastResultsHash` is the root hash of a Merkle tree w/ 3 leafs:
-    proto-encoded `ResponseBeginBlock#Events`, root hash of a Merkle tree build
-    from `ResponseDeliverTx` responses (Log, Info and Codespace fields are
-    ignored), and proto-encoded `ResponseEndBlock#Events`.
+  - `LastResultsHash` is the root hash of a Merkle tree build from
+    `ResponseDeliverTx` responses (Log, Info, Codespace and Events fields are
+    ignored).
 
 ### Version
 
@@ -624,7 +623,7 @@ via light client.
       period by the average block time (e.g. 2 weeks / 6s per block = 2d8h).
   - `MaxNum (uint32)`: The maximum number of evidence that can be committed to a single block
   - `ProofTrialPeriod (int64)`: The duration in terms of blocks that an indicted node has to
-      provide proof of correctly executing a lock change in the event of amnesia evidence. 
+      provide proof of correctly executing a lock change in the event of amnesia evidence.
 
 ### ValidatorParams
 
