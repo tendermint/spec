@@ -1,10 +1,10 @@
 # Block Sync Protocol
 
-The block sync, or as you may have seen in various documentation Fast Sync, protocol's job is to facilitate a quick way to catch up the block chains most recent block.
+The block sync, or as you may have seen in various documentation Fast Sync, protocol's job is to facilitate a quick way to catch up to the block chains most recent block.
 
 ## Channel
 
-Tendermint implements a multiplexed connection, you can read more about this [here](../p2p/connection.md#mconnection), meaning that communication between reactors happens on a separate channel. The channel the communication takes place for the block sync protocol is 64 or 0x40.
+Tendermint implements a multiplexed connection, you can read more about this [here](../p2p/connection.md#mconnection), meaning that communication between nodes for specific protocols happens on separate channels. The channel the communication takes place for the block sync protocol is `64` or `0x40`.
 
 ```go
 // BlockchainChannel is a channel for blocks and status updates (`BlockStore` height)
@@ -17,15 +17,15 @@ There are five distinct message types used by the block sync protocol.
 
 ```go
 const (
-    msgTypeBlockRequest    = byte(0x10)
-    msgTypeBlockResponse   = byte(0x11)
-    msgTypeNoBlockResponse = byte(0x12)
-    msgTypeStatusResponse  = byte(0x20)
-    msgTypeStatusRequest   = byte(0x21)
+    TypeBlockRequest    = byte(0x10)
+    TypeBlockResponse   = byte(0x11)
+    TypeNoBlockResponse = byte(0x12)
+    TypeStatusResponse  = byte(0x20)
+    TypeStatusRequest   = byte(0x21)
 )
 ```
 
-`BlockRequest` - Request a block that is missing from the nodes database
+A node that is missing a block will request it from a number of peers.
 
 ```go
 type BlockRequest struct {
@@ -33,7 +33,7 @@ type BlockRequest struct {
 }
 ```
 
-`NoBlockResponse` - Response from a node that does not have the requested block
+If the peer does not have the block requested it will respond with the height that was requested.
 
 ```go
 type NoBlockResponse struct {
@@ -41,7 +41,7 @@ type NoBlockResponse struct {
 }
 ```
 
-`BlockResponse` - A node responds with the block for the requested height.
+If a peer has the block that was requested, it will respond with that block.
 
 ```go
 type BlockResponse struct {
@@ -49,15 +49,13 @@ type BlockResponse struct {
 }
 ```
 
-`StatusRequest` - Request the status of a peer.
+Request the Height of a peers blockstore.
 
 ```go
-type StatusRequest struct {
-    Height int64
-}
+type StatusRequest struct {}
 ```
 
-`StatusResponse` - Responding to a request from a peer with our current height
+Respond with the highest block in the nodes blockstore.
 
 ```go
 type StatusResponse struct {
