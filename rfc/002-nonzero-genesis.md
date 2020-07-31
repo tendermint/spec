@@ -4,6 +4,7 @@
 
 - 2020-07-26: Initial draft (@erikgrinaker)
 - 2020-07-28: Use weak chain linking, i.e. `predecessor` field (@erikgrinaker)
+- 2020-07-31: Drop chain linking (@erikgrinaker)
 
 ## Author(s)
 
@@ -30,10 +31,11 @@ work that is not viable for the planned Stargate release (Tendermint 0.34), and 
 restrictive for future development.
 
 As a first step, allowing the new chain to start from an initial height specified in the genesis
-file would at least provide monotonically increasing heights. Information about the previous chain
-(ID and last block header) is also included, for informational purposes.
+file would at least provide monotonically increasing heights. There was a proposal to include the
+last block header of the previous chain as well, but since the genesis file is not verified and
+hashed (only specific fields are) this would not be trustworthy.
 
-External tooling would be required to map historical heights onto e.g. archive nodes that contain 
+External tooling will be required to map historical heights onto e.g. archive nodes that contain 
 blocks from previous chain version. Tendermint will not include any such functionality.
 
 ## Proposal
@@ -46,28 +48,6 @@ non-negative integer, and `0` is considered equivalent to `1`.
 
 * A new field `InitialHeight` is added to the ABCI `RequestInitChain` message, with the same value 
 and semantics as the genesis field.
-
-Additionally, the genesis file will be extended with a new `predecessor` field containing 
-information about the previous chain, specifically the final block header:
-
-```json
-{
-    "predecessor": {
-        "version": {"block": "10", "app": "0"},
-        "chain_id": "chain-1",
-        "height": 1000000,
-        "time": "2020-07-28T15:42:48.000Z",
-        "last_block_id": {
-            "hash": "2D7F34765B312A46BC551F9B3E0535D91CBA9513AAFDBB3458D17D7FD89FBEF0",
-            "parts": {"total": "1", "hash": "4D347E9C22E4C7EA15DB0B5AFF6799BC0A85B854443C3BA6E3B81A7BB7163931"},
-        },
-        "app_hash": "123AC50B458A998EB481D7E17A423C8C0ED238813518B55FAF57510F73F76DFC",
-        ...
-    }
-}
-```
-
-This field will be ignored by Tendermint, but may be helpful to integrators and users.
 
 If possible, no further changes will be made to any data structures. In particular, the initial
 height will not be added to the node state, and will instead be passed explicitly to any logic that 
@@ -84,7 +64,7 @@ Proposed
 
 ### Positive
 
-* Heights will be unique throughout the history of a "logical" chain, across hard fork upgrades.
+* Heights can be unique throughout the history of a "logical" chain, across hard fork upgrades.
 
 ### Negative
 
@@ -94,8 +74,7 @@ Proposed
 
 ### Neutral
 
-* The predecessor block header is not verified by Tendermint at all, and must be verified by
-  network governors.
+* There is no explicit link to the last block of the previous chain.
 
 ## References
 
