@@ -5,6 +5,7 @@
 - 2020-07-26: Initial draft (@erikgrinaker)
 - 2020-07-28: Use weak chain linking, i.e. `predecessor` field (@erikgrinaker)
 - 2020-07-31: Drop chain linking (@erikgrinaker)
+- 2020-08-03: Add `State.InitialHeight` (@erikgrinaker)
 
 ## Author(s)
 
