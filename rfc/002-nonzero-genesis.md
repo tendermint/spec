@@ -40,8 +40,7 @@ blocks from previous chain version. Tendermint will not include any such functio
 
 ## Proposal
 
-Tendermint will allow chains to start from an arbitrary initial height, with the minimum amount of
-changes to existing code and protocols:
+Tendermint will allow chains to start from an arbitrary initial height:
 
 * A new field `initial_height` is added to the genesis file, defaulting to `1`. It can be set to any
 non-negative integer, and `0` is considered equivalent to `1`.
@@ -49,9 +48,9 @@ non-negative integer, and `0` is considered equivalent to `1`.
 * A new field `InitialHeight` is added to the ABCI `RequestInitChain` message, with the same value 
 and semantics as the genesis field.
 
-If possible, no further changes will be made to any data structures. In particular, the initial
-height will not be added to the node state, and will instead be passed explicitly to any logic that 
-relies on it.
+* A new field `InitialHeight` is added to the `state.State` struct, where `0` is considered invalid.
+  Including the field here simplifies implementation, since the genesis value does not have to be
+  propagated throughout the code base separately, but it is not strictly necessary.
 
 ABCI applications may have to be updated to handle arbitrary initial heights, otherwise the initial
 block may fail.
