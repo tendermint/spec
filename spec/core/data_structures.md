@@ -531,8 +531,8 @@ func Execute(s State, app ABCIApp, block Block) State {
 	nextConsensusParams := UpdateConsensusParams(state.ConsensusParams, ConsensusParamChanges)
 	return State{
 		LastResults:     abciResponses.DeliverTxResults,
-        AppHash:         AppHash,
-        InitialHeight:   state.InitialHeight,
+		AppHash:         AppHash,
+		InitialHeight:   state.InitialHeight,
 		LastValidators:  state.Validators,
 		Validators:      state.NextValidators,
 		NextValidators:  UpdateValidators(state.NextValidators, ValidatorChanges),
