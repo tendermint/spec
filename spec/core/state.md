@@ -18,6 +18,7 @@ type State struct {
     Version     Version
     LastResults []Result
     AppHash []byte
+    InitialHeight int64
 
     LastValidators []Validator
     Validators []Validator
@@ -29,6 +30,9 @@ type State struct {
 
 Note there is a hard-coded limit of 10000 validators. This is inherited from the
 limit on the number of votes in a commit.
+
+The initial height is recorded from the genesis file when the chain is started, and does not
+change afterwards.
 
 ### Version
 

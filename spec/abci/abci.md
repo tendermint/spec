@@ -239,6 +239,7 @@ via light client.
   - `ConsensusParams (ConsensusParams)`: Initial consensus-critical parameters.
   - `Validators ([]ValidatorUpdate)`: Initial genesis validators, sorted by voting power.
   - `AppStateBytes ([]byte)`: Serialized initial application state. Amino-encoded JSON bytes.
+  - `InitialHeight (int64)`: Initial block height (normally 1).
 - **Response**:
   - `ConsensusParams (ConsensusParams)`: Initial
     consensus-critical parameters (optional).
