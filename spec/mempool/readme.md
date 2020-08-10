@@ -4,8 +4,6 @@
 
 ## Channel
 
-
-
 ```go
 MempoolChannel = byte(0x30) 48
 ```
