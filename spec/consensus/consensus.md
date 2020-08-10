@@ -17,7 +17,7 @@
   vote](https://godoc.org/github.com/tendermint/tendermint/types#FirstPrecommit)
   for something.
 - A vote _at_ `(H,R)` is a vote signed with the bytes for `H` and `R`
-  included in its [sign-bytes](../blockchain/blockchain.md#vote).
+  included in its [sign-bytes](../core/data_structures.md#vote).
 - _+2/3_ is short for "more than 2/3"
 - _1/3+_ is short for "1/3 or more"
 - A set of +2/3 of prevotes for a particular block or `<nil>` at
@@ -251,7 +251,7 @@ commit-set) are each justified in the JSet with no duplicitous vote
 signatures (by the committers).
 
 - **Lemma**: When a fork is detected by the existence of two
-  conflicting [commits](../blockchain/blockchain.md#commit), the
+  conflicting [commits](../core/data_structures.md#commit), the
   union of the JSets for both commits (if they can be compiled) must
   include double-signing by at least 1/3+ of the validator set.
   **Proof**: The commit cannot be at the same round, because that
@@ -337,3 +337,13 @@ where two conflicting reorg-proposals are signed.
 Assuming that the external coordination medium and protocol is robust,
 it follows that forks are less of a concern than [censorship
 attacks](#censorship-attacks).
+
+### Canonical vs subjective commit
+
+We distinguish between "canonical" and "subjective" commits. A subjective commit is what
+each validator sees locally when they decide to commit a block. The canonical commit is
+what is included by the proposer of the next block in the `LastCommit` field of
+the block. This is what makes it canonical and ensures every validator agrees on the canonical commit,
+even if it is different from the +2/3 votes a validator has seen, which caused the validator to
+commit the respective block. Each block contains a canonical +2/3 commit for the previous
+block.
