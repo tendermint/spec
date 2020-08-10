@@ -222,7 +222,7 @@ type Evidence interface {
 All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()` 
 and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md) 
 document provides a good overview for the types of evidence and how they occur. Each evidence uses
-the timestamp of the block of the height that the evidence occured at to indicate the age of the evidence. 
+the timestamp of the block that the evidence occured at to indicate the age of the evidence. 
 
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks 
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
