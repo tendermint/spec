@@ -221,9 +221,10 @@ type Evidence interface {
 
 All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()` 
 and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md) 
-document provides a good overview for the types of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`.
+document provides a good overview for the types of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`. Each evidence uses
+the timestamp of the block that the evidence occured at to indicate the age of the evidence. 
 
-### DuplicateVoteEvidence
+### DuplicateVoteEvidence 
 
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks 
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
@@ -232,6 +233,8 @@ in the same round of the same height. Votes are lexicographically sorted on `Blo
 type DuplicateVoteEvidence struct {
 	VoteA  *Vote
 	VoteB  *Vote
+	
+	Timestamp time.Time
 }
 ```
 
@@ -285,6 +288,8 @@ type LunaticValidatorEvidence struct {
 	Header             *Header 
 	Vote               *Vote  
 	InvalidHeaderField string
+	
+	Timestamp time.Time
 }
 ```
 
