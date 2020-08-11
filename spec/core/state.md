@@ -15,24 +15,26 @@ validation.
 
 ```go
 type State struct {
+    ChainID        string
+    InitialHeight  int64
+
     Version     Version
     LastResults []Result
-    AppHash []byte
-    InitialHeight int64
+    AppHash     []byte
 
     LastValidators []Validator
-    Validators []Validator
+    Validators     []Validator
     NextValidators []Validator
 
     ConsensusParams ConsensusParams
 }
 ```
 
+The chain ID and initial height are taken from the genesis file, and not changed again. The
+initial height will be `1` in the typical case, `0` is an invalid value.
+
 Note there is a hard-coded limit of 10000 validators. This is inherited from the
 limit on the number of votes in a commit.
-
-The initial height is recorded from the genesis file when the chain is started, and does not
-change afterwards.
 
 ### Version
 
