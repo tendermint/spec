@@ -101,8 +101,8 @@ Accepted
 
 ## References
 
-- State sync ADR: https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-053-state-sync-prototype.md
+- State sync ADR: <https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-053-state-sync-prototype.md>
 
-- State sync issue: https://github.com/tendermint/tendermint/issues/828
+- State sync issue: <https://github.com/tendermint/tendermint/issues/828>
 
-- Block pruning issue: https://github.com/tendermint/tendermint/issues/3652
+- Block pruning issue: <https://github.com/tendermint/tendermint/issues/3652>
