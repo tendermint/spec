@@ -186,7 +186,7 @@ fetchBlock(height, pool):
             mtx.Lock()
             pool.numPending++
             redo = true
-            mtx.UnLock() 
+            mtx.UnLock()
           }
       }
     }

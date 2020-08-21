@@ -486,8 +486,6 @@ via light client.
     peers are available), it will reject the snapshot and try a different one via `OfferSnapshot`.
     The application should be prepared to reset and accept it or abort as appropriate.
 
-###
-
 ## Data Types
 
 ### Header

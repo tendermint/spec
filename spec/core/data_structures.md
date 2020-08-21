@@ -557,7 +557,7 @@ func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
 where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
 against the given signature and message bytes.
 
-# Execution
+## Execution
 
 Once a block is validated, it can be executed against the state.
 

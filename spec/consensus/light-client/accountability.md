@@ -84,9 +84,9 @@ Similarly, without actually interfering with the main chain, we can have the fol
 
 We consider three types of potential attack victims:
 
-- FN: full node
-- LCS: light client with sequential header verification
-- LCB: light client with bisection based header verification
+* FN: full node
+* LCS: light client with sequential header verification
+* LCB: light client with bisection based header verification
 
 F1 and F2 can be used by faulty validators to actually create multiple branches on the blockchain. That means that correctly operating full nodes decide on different blocks for the same height. Until a fork is detected locally by a full node (by receiving evidence from others or by some other local check that fails), the full node can spread corrupted blocks to light clients.
 
@@ -139,8 +139,8 @@ Execution:
 * Validators from the set CA and CB prevote for A and B, respectively.
 * Faulty validators from the set F prevote both for A and B.
 * The faulty prevote messages
-    - for A arrive at CA long before the B messages
-    - for B arrive at CB long before the A messages
+    * for A arrive at CA long before the B messages
+    * for B arrive at CB long before the A messages
 * Therefore correct validators from set CA and CB will observe
 more than 2/3 of prevotes for A and B and precommit for A and B, respectively.
 * Faulty validators from the set F precommit both values A and B.
@@ -274,8 +274,8 @@ Validators:
 Execution:
 
 * There is a fork, and there exist two different headers for height *h + k*, with different validator sets:
-    - VS2 on the main chain
-    - forged header VS2', signed by F (and others)
+    * VS2 on the main chain
+    * forged header VS2', signed by F (and others)
 
 * a light client has a trust in a header for height *h* (and the corresponding validator set VS1).
 * As part of bisection header verification, it verifies the header at height *h + k* with new validator set VS2'.

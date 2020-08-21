@@ -138,8 +138,6 @@ Furthermore, we assume the following auxiliary functions:
     func hash(v2 ValidatorSet) []byte
 ```
 
-### Functions
-
 In the functions below we will be using `trustThreshold` as a parameter. For simplicity
 we assume that `trustThreshold` is a float between `1/3` and `2/3` and we will not be checking it
 in the pseudo-code.
@@ -457,7 +455,7 @@ We consider the following set-up:
 write *Store.Add(header)* for this. If a header failed to verify, then
 the full node we are talking to is faulty and we should disconnect from it and reinitialise with new peer.
 - If `CanTrust` returns *error*, then the light client has seen a forged header or the trusted header has expired (it is outside its trusted period).
-    * In case of forged header, the full node is faulty so light client should disconnect and reinitialise with new peer. If the trusted header has expired,
+    - In case of forged header, the full node is faulty so light client should disconnect and reinitialise with new peer. If the trusted header has expired,
   we need to reinitialise light client with new trusted header (that is within its trusted period), but we don't necessarily need to disconnect from the full node
   we are talking to (as we haven't observed full node misbehavior in this case).
 
@@ -465,13 +463,13 @@ the full node we are talking to is faulty and we should disconnect from it and r
 
 ### Definitions
 
-* `TRUSTED_PERIOD`: trusted period
-* for realtime `t`, the predicate `correct(v,t)` is true if the validator `v`
+- `TRUSTED_PERIOD`: trusted period
+- for realtime `t`, the predicate `correct(v,t)` is true if the validator `v`
   follows the protocol until time `t` (we will see about recovery later).
-* Validator fields. We will write a validator as a tuple `(v,p)` such that
-    + `v` is the identifier (i.e., validator address; we assume identifiers are unique in each validator set)
-    + `p` is its voting power
-* For each header `h`, we write `trust(h) = true` if the light client trusts `h`.
+- Validator fields. We will write a validator as a tuple `(v,p)` such that
+    - `v` is the identifier (i.e., validator address; we assume identifiers are unique in each validator set)
+    - `p` is its voting power
+- For each header `h`, we write `trust(h) = true` if the light client trusts `h`.
 
 ### Failure Model
 
@@ -548,7 +546,7 @@ Light Client Completeness:
 However, in case of (frequent) changes in the validator set, the higher the `trustThreshold` is chosen, the more unlikely it becomes that
 `verifySingle` returns with an error for non-adjacent headers.
 
-* `VerifyBisection` correctness arguments (sketch)*
+- `VerifyBisection` correctness arguments (sketch)*
 
 Light Client Accuracy:
 
@@ -567,7 +565,7 @@ This is only ensured if upon `Commit(pivot)` the light client is always provided
 With `VerifyBisection`, a faulty full node could stall a light client by creating a long sequence of headers that are queried one-by-one by the light client and look OK,
 before the light client eventually detects a problem. There are several ways to address this:
 
-* Each call to `Commit` could be issued to a different full node
-* Instead of querying header by header, the light client tells a full node which header it trusts, and the height of the header it needs. The full node responds with
+- Each call to `Commit` could be issued to a different full node
+- Instead of querying header by header, the light client tells a full node which header it trusts, and the height of the header it needs. The full node responds with
 the header along with a proof consisting of intermediate headers that the light client can use to verify. Roughly, `VerifyBisection` would then be executed at the full node.
-* We may set a timeout how long `VerifyBisection` may take.
+- We may set a timeout how long `VerifyBisection` may take.

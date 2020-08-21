@@ -11,7 +11,7 @@ Between heights, an updated validator set may be specified by the application as
 This sections covers the requirements with Rx being mandatory and Ox optional requirements.
 The following requirements must be met by the Proposer Selection procedure:
 
-#### R1: Determinism
+### R1: Determinism
 
 Given a validator set `V`, and two honest validators `p` and `q`, for each height `h` and each round `r` the following must hold:
 
@@ -19,7 +19,7 @@ Given a validator set `V`, and two honest validators `p` and `q`, for each heigh
 
 where `proposer_p(h,r)` is the proposer returned by the Proposer Selection Procedure at process `p`, at height `h` and round `r`.
 
-#### R2: Fairness
+### R2: Fairness
 
 Given a validator set with total voting power P and a sequence S of elections. In any sub-sequence of S with length C*P, a validator v must be elected as proposer P/VP(v) times, i.e. with frequency:
 
@@ -32,7 +32,7 @@ where C is a tolerance factor for validator set changes with following values:
 
 *[this needs more work]*
 
-### Basic Algorithm
+## Basic Algorithm
 
 At its core, the proposer selection procedure uses a weighted round-robin algorithm.
 
@@ -54,7 +54,7 @@ Notation:
 
 Simple view at the Selection Algorithm:
 
-```
+```md
     def ProposerSelection (vset):
 
         // compute priorities and elect proposer
@@ -64,7 +64,7 @@ Simple view at the Selection Algorithm:
         A(prop) -= P
 ```
 
-### Stable Set
+## Stable Set
 
 Consider the validator set:
 
@@ -92,11 +92,11 @@ It can be shown that:
 - At the end of each run k+1 the sum of the priorities is the same as at end of run k. If a new set's priorities are initialized to 0 then the sum of priorities will be 0 at each run while there are no changes.
 - The max distance between priorites is (n-1) *P.*[formal proof not finished]*
 
-### Validator Set Changes
+## Validator Set Changes
 
 Between proposer selection runs the validator set may change. Some changes have implications on the proposer election.
 
-#### Voting Power Change
+### Voting Power Change
 
 Consider again the earlier example and assume that the voting power of p1 is changed to 4:
 
@@ -119,7 +119,7 @@ As before:
 - At the end of each run k+1 the sum of the priorities is the same as at run k.
 - The max distance between priorites is (n-1) * P.
 
-#### Validator Removal
+### Validator Removal
 
 Consider a new example with set:
 
@@ -142,6 +142,7 @@ For this reason, the selection procedure adds another __new step__ that centers 
 
 The modified selection algorithm is:
 
+```md
     def ProposerSelection (vset):
 
         // center priorities around zero
@@ -154,12 +155,13 @@ The modified selection algorithm is:
             A(i) += VP(i)
         prop = max(A)
         A(prop) -= P
+```
 
 Observations:
 
 - The sum of priorities is now close to 0. Due to integer division the sum is an integer in (-n, n), where n is the number of validators.
 
-#### New Validator
+### New Validator
 
 When a new validator is added, same problem as the one described for removal appears, the sum of priorities in the new set is not zero. This is fixed with the centering step introduced above.
 
@@ -167,7 +169,9 @@ One other issue that needs to be addressed is the following. A validator V that 
 
 In order to prevent this, when a new validator is added, its initial priority is set to:
 
+```md
     A(V) = -1.125 *  P
+```
 
 where P is the total voting power of the set including V.
 
@@ -181,7 +185,9 @@ VP        | 1  | 3  | 8
 
 then p3 will start with proposer priority:
 
+```md
     A(p3) = -1.125 * (1 + 3 + 8) ~ -13
+```
 
 Note that since current computation uses integer division there is penalty loss when sum of the voting power is less than 8.
 
@@ -195,7 +201,7 @@ In the next run, p3 will still be ahead in the queue, elected as proposer and mo
 |               |    |    |    |    | p3 |    |   |   | p2|   | p1|A(i)+=VP(i)
 |               |    |    | p1 |    | p3 |    |   |   | p2|   |   |A(p1)-=P
 
-### Proposer Priority Range
+## Proposer Priority Range
 
 With the introduction of centering, some interesting cases occur. Low power validators that bind early in a set that includes high power validator(s) benefit from subsequent additions to the set. This is because these early validators run through more right shift operations during centering, operations that increase their priority.
 
@@ -211,27 +217,27 @@ Then execute the following steps:
 
 1. Add a new validator p3:
 
-Validator | p1  | p2 | p3
-----------|-----|--- |----
-VP        | 80k | 10 | 10
+    Validator | p1  | p2 | p3
+    ----------|-----|--- |----
+    VP        | 80k | 10 | 10
 
 2. Run selection once. The notation '..p'/'p..' means very small deviations compared to column priority.
 
-|Priority  Run | -90k..| -60k | -45k   | -15k| 0 | 45k | 75k  | 155k   | Comment
-|--------------|------ |----- |------- |---- |---|---- |----- |------- |---------
-| last run     |   p3  |      | p2     |     |   |  p1 |      |        | __added p3__
-| next run
-| *right_shift*|       |  p3  |        |  p2 |   |     |  p1  |        | A(i) -= avg,avg=-30k
-|              |       |  ..p3|        | ..p2|   |     |      |  p1    | A(i)+=VP(i)
-|              |       |  ..p3|        | ..p2|   |     | p1.. |        | A(p1)-=P, P=80k+20
+    |Priority  Run | -90k..| -60k | -45k   | -15k| 0 | 45k | 75k  | 155k   | Comment
+    |--------------|------ |----- |------- |---- |---|---- |----- |------- |---------
+    | last run     |   p3  |      | p2     |     |   |  p1 |      |        | __added p3__
+    | next run
+    | *right_shift*|       |  p3  |        |  p2 |   |     |  p1  |        | A(i) -= avg,avg=-30k
+    |              |       |  ..p3|        | ..p2|   |     |      |  p1    | A(i)+=VP(i)
+    |              |       |  ..p3|        | ..p2|   |     | p1.. |        | A(p1)-=P, P=80k+20
 
 3. Remove p1 and run selection once:
 
-Validator | p3   | p2  | Comment
-----------|----- |---- |--------
-VP        | 10   | 10  |
-A         |-60k  |-15k |  
-A         |-22.5k|22.5k| __run selection__
+    Validator | p3   | p2  | Comment
+    ----------|----- |---- |--------
+    VP        | 10   | 10  |
+    A         |-60k  |-15k |  
+    A         |-22.5k|22.5k| __run selection__
 
 At this point, while the total voting power is 20, the distance between priorities is 45k. It will take 4500 runs for p3 to catch up with p2.
 
@@ -239,6 +245,7 @@ In order to prevent these types of scenarios, the selection algorithm performs s
 
 The modified selection algorithm is:
 
+```md
     def ProposerSelection (vset):
 
         // scale the priority values
@@ -253,12 +260,13 @@ The modified selection algorithm is:
         avg = sum(A(i) for i in vset)/len(vset)
         for each validator i in vset:
             A(i) -= avg
-        
+
         // compute priorities and elect proposer
         for each validator i in vset:
             A(i) += VP(i)
         prop = max(A)
         A(prop) -= P
+```
 
 Observations:
 
@@ -266,20 +274,22 @@ Observations:
 
 Note also that even during steady state the priority range may increase beyond 2 * P. The scaling introduced here  helps to keep the range bounded.
 
-### Wrinkles
+## Wrinkles
 
-#### Validator Power Overflow Conditions
+### Validator Power Overflow Conditions
 
 The validator voting power is a positive number stored as an int64. When a validator is added the `1.125 * P` computation must not overflow. As a consequence the code handling validator updates (add and update) checks for overflow conditions making sure the total voting power is never larger than the largest int64 `MAX`, with the property that `1.125 * MAX` is still in the bounds of int64. Fatal error is return when overflow condition is detected.
 
-#### Proposer Priority Overflow/ Underflow Handling
+### Proposer Priority Overflow/ Underflow Handling
 
 The proposer priority is stored as an int64. The selection algorithm performs additions and subtractions to these values and in the case of overflows and underflows it limits the values to:
 
+```go
     MaxInt64  =  1 << 63 - 1
     MinInt64  = -1 << 63
+```
 
-### Requirement Fulfillment Claims
+## Requirement Fulfillment Claims
 
 __[R1]__
 
@@ -302,6 +312,8 @@ Assigning priorities to each validator based on the voting power and updating th
 
 Intuitively, a process v jumps ahead in the queue at most (max(A) - min(A))/VP(v) times until it reaches the head and is elected. The frequency is then:
 
+```md
     f(v) ~ VP(v)/(max(A)-min(A)) = 1/k * VP(v)/P
+```
 
 For current implementation, this means v should be proposer at least VP(v) times out of k * P runs, with scaling factor k=2.

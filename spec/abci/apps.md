@@ -203,7 +203,7 @@ blockchain.
 Updates to the Tendermint validator set can be made by returning
 `ValidatorUpdate` objects in the `ResponseEndBlock`:
 
-```
+```proto
 message ValidatorUpdate {
   PubKey pub_key
   int64 power
@@ -381,7 +381,7 @@ Some applications (eg. Ethereum, Cosmos-SDK) have multiple "levels" of Merkle tr
 where the leaves of one tree are the root hashes of others. To support this, and
 the general variability in Merkle proofs, the `ResponseQuery.Proof` has some minimal structure:
 
-```
+```proto
 message Proof {
   repeated ProofOp ops
 }
@@ -437,7 +437,7 @@ failed during the Commit of block H, then `last_block_height = H-1` and
 We now distinguish three heights, and describe how Tendermint syncs itself with
 the app.
 
-```
+```md
 storeBlockHeight = height of the last block Tendermint saw a commit for
 stateBlockHeight = height of the last block for which Tendermint completed all
     block processing and saved all ABCI results to disk
@@ -509,20 +509,20 @@ Applications that want to support state syncing must take state snapshots at reg
 this is accomplished is entirely up to the application. A snapshot consists of some metadata and
 a set of binary chunks in an arbitrary format:
 
-* `Height (uint64)`: The height at which the snapshot is taken. It must be taken after the given
+- `Height (uint64)`: The height at which the snapshot is taken. It must be taken after the given
   height has been committed, and must not contain data from any later heights.
 
-* `Format (uint32)`: An arbitrary snapshot format identifier. This can be used to version snapshot
+- `Format (uint32)`: An arbitrary snapshot format identifier. This can be used to version snapshot
   formats, e.g. to switch from Protobuf to MessagePack for serialization. The application can use
   this when restoring to choose whether to accept or reject a snapshot.
 
-* `Chunks (uint32)`: The number of chunks in the snapshot. Each chunk contains arbitrary binary
+- `Chunks (uint32)`: The number of chunks in the snapshot. Each chunk contains arbitrary binary
   data, and should be less than 16 MB; 10 MB is a good starting point.
 
-* `Hash ([]byte)`: An arbitrary hash of the snapshot. This is used to check whether a snapshot is
+- `Hash ([]byte)`: An arbitrary hash of the snapshot. This is used to check whether a snapshot is
   the same across nodes when downloading chunks.
 
-* `Metadata ([]byte)`: Arbitrary snapshot metadata, e.g. chunk hashes for verification or any other
+- `Metadata ([]byte)`: Arbitrary snapshot metadata, e.g. chunk hashes for verification or any other
   necessary info.
 
 For a snapshot to be considered the same across nodes, all of these fields must be identical. When
@@ -533,14 +533,14 @@ application via the ABCI `ListSnapshots` method to discover available snapshots,
 snapshot chunks via `LoadSnapshotChunk`. The application is free to choose how to implement this
 and which formats to use, but should provide the following guarantees:
 
-* **Consistent:** A snapshot should be taken at a single isolated height, unaffected by
+- **Consistent:** A snapshot should be taken at a single isolated height, unaffected by
   concurrent writes. This can e.g. be accomplished by using a data store that supports ACID
   transactions with snapshot isolation.
 
-* **Asynchronous:** Taking a snapshot can be time-consuming, so it should not halt chain progress,
+- **Asynchronous:** Taking a snapshot can be time-consuming, so it should not halt chain progress,
   for example by running in a separate thread.
 
-* **Deterministic:** A snapshot taken at the same height in the same format should be identical
+- **Deterministic:** A snapshot taken at the same height in the same format should be identical
   (at the byte level) across nodes, including all metadata. This ensures good availability of
   chunks, and that they fit together across nodes.
   
