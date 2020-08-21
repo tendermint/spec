@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- {date}: initialized
+- August 21, 2020: initialized
 
 ## Author(s)
 
@@ -10,15 +10,12 @@
 
 ## Context
 
-Tendermint uses ed25519 in consensus critical ways. As more clients begin appearing which implement the Tendermint spec (tendermint-rs) an agreement on ed25519 signature verification is needed.
-
-[RFC 8032](https://www.rfc-editor.org/rfc/rfc8032.html) leaves space for interpretation for signature validity. This becomes a problem when a different implementation is trying to verify a signature then the one that was used to generate it.
+Ed25519 keys are the only supported key types for Tendermint validators currently. Tendermint-Go wraps the ed25519 key implementation from the go standard library. As more clients are implemented to communicate with the canonical Tendermint implementation (Tendermint-Go) different implementations of ed25519 will be used. Due to [RFC 8032](https://www.rfc-editor.org/rfc/rfc8032.html) not guaranteeing implementation compatibility, Tendermint clients must to come to an agreement of how to guarantee implementation compatibility. [Zcash](https://z.cash/) has multiple implementations of their client and have identified this as a problem as well. The team at Zcash has made a proposal to address this issue, [Zcash improvement proposal 215](https://zips.z.cash/zip-0215).
 
 ## Proposal
 
-The [Zcash](https://z.cash/) team has identified this as a problem for their client and have written libraries in various languages to help address this. [Zcash improvement proposal 215](https://zips.z.cash/zip-0215) outlines the specification of the approach for signature validity. ZIP 215 explicitly defines the criteria for signature validation.
-
-- Tendermint-go would adopt [hdevalence/ed25519consensus](https://github.com/hdevalence/ed25519consensus).
+- Tendermint-Go would adopt [hdevalence/ed25519consensus](https://github.com/hdevalence/ed25519consensus).
+  - This library is implemented as an extension of the go standard library one.
 - Tendermint-rs would adopt [ed25519-zebra](https://github.com/ZcashFoundation/ed25519-zebra)
   - related [issue](https://github.com/informalsystems/tendermint-rs/issues/355)
 
