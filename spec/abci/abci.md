@@ -332,7 +332,7 @@ via light client.
     be non-deterministic.
     - `GasWanted (int64)`: Amount of gas requested for transaction.
     - `GasUsed (int64)`: Amount of gas consumed by transaction.
-    - `Events ([]abc.Event)`: Type & Key-Value events for indexing
+    - `Events ([]abci.Event)`: Type & Key-Value events for indexing
     transactions (eg. by account).
     - `Codespace (string)`: Namespace for the `Code`.
 - **Usage**:
