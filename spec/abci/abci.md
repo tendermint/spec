@@ -96,6 +96,27 @@ Example:
 }
 ```
 
+## EvidenceType
+
+A part of Tendermint's security model is the use of evidence which serves as proof of
+malicious behaviour by a network participant. It is the responsibility of Tendermint
+to detect such malicious behaviour, to gossip this and commit it to the chain and once
+verified by all validators to pass it on to the application through the ABCI. It is the
+responsibility of the application then to handle the evidence and exercise punishment.
+
+EvidenceType has the following protobuf format:
+
+```proto
+enum EvidenceType {
+  UNKNOWN               = 0;
+  DUPLICATE_VOTE        = 1;
+  LIGHT_CLIENT_ATTACK   = 2;
+}
+```
+
+There are two forms of evidence: Duplicate Vote and Light Client Attack. More
+information can be found [here](https://github.com/tendermint/spec/blob/master/spec/light-client/accountability.md)
+
 ## Determinism
 
 ABCI applications must implement deterministic finite-state machines to be
@@ -570,8 +591,7 @@ via light client.
 ### Evidence
 
 - **Fields**:
-    - `Type (string)`: Type of the evidence. A hierarchical path like
-    "duplicate/vote".
+    - `Type (EvidenceType)`: Type of the evidence. An enum of possible evidence's.
     - `Validator (Validator`: The offending validator
     - `Height (int64)`: Height when the offense occured
     - `Time (google.protobuf.Timestamp)`: Time of the block that was committed at the height that the offense occured
