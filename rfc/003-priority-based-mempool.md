@@ -10,7 +10,7 @@
 
 ## Context
 
-User-defined priorities for blockchain transactions can be useful, e.g. `gasPrice` in Ethereum blockchain works as a first-price auction mechanism to cope with limited capacity. However in Tendermint, current approach for packing transactions into a block follows a first-in-first-out style which is baked in Tendermint engine and can't be affected by ABCI applications.
+User-defined priorities for blockchain transactions can be useful, e.g. `gasPrice` in Ethereum blockchain works as a first-price auction mechanism to cope with limited capacity. However in Tendermint, current approach for packing transactions into a block follows a first-in-first-out (FIFO) style which is baked in Tendermint engine and can't be affected by ABCI applications.
 
 To make Tendermint support priority-based transaction processing, two main aspects of current architecture in Tendermint need to be updated: one is on ABCI's interface for accepting a transaction (`CheckTx`), and another is on Tendermint's mempool design and implementation. This RFC proposes corresponding changes to address these two aspects.
 
@@ -40,17 +40,17 @@ The next step is to make current mempool implementation priority-aware. We can h
 ### Phase 0: Keep existing CList-based mempool
 
 Goal:
-1. Zero cost on processing "legacy" transactions (i.e. all have 0 priority)
+1. Zero cost on processing "legacy" transactions (i.e. those have 0 priority)
 2. When creating a block, transactions with higher priorities should be included earlier
 
-The first phase will be experimental and only achieves the desired functionality **with** potential performance degradation. The main purpose is to design the code flow and underlying APIs accordingly, without dramatic code changes on existing data structures / algorithms.
+The first phase will be experimental and only achieves the desired functionality *with potential performance degradation*. The main purpose is to design the code flow and underlying APIs accordingly, without dramatic code changes on existing data structures / algorithms.
 
 The simplest approach I can think of is:
 
-1. When reading `CheckTx` responses, mempool keeps a single counter called `MaxPriority`. If all transactions have 0 priorities, the counter should simply have the same 0 value
-2. When `Mempool.ReapMaxBytesMaxGas` is called by consensus engine, mempool would check its `MaxPriority` value:
+1. When reading `CheckTx` responses, mempool keeps a single counter called `maxPriority`. If all transactions have 0 priorities, the counter should simply have the same 0 value
+2. When `Mempool.ReapMaxBytesMaxGas` is called by consensus engine, mempool would check its `maxPriority` value:
     - if it's zero, it should follow existing logic to return eligible transactions in FIFO style
-    - if not, should return eligible transactions ranked by their priorities (either by `O(n^2)` brute-force or `O(nlogn)` sort). Then during commit, update mempool's `MaxPriority` accordingly since transactions will be removed from mempool
+    - if not, should return eligible transactions ranked by their priorities (either by `O(n^2)` brute-force or `O(nlogn)` sort). Then during commit, update mempool's `maxPriority` accordingly since transactions will be removed from mempool
 
 ### Phase 1: Abstract away existing mempool interface
 
@@ -107,11 +107,11 @@ type mempoolImpl interface {
 	getRecheckCursorTx() *mempoolTx
 	getMempoolTx(types.Tx) *mempoolTx
 	deleteAll()
-  // ...and more
+	// ...and more
 }
 ```
 
-Such that mempool's shared code will live under `basemempool` (callback handling, WAL, etc.) while different `mempoolImpl` only need to implement required methods on transaction addition / removal / iteration. The proposed interface is [implemented in this code base](https://github.com/QuarkChain/tendermintx/blob/master/mempool/mempool.go).
+Such that mempool's shared code will live under `basemempool` (callback handling, WAL, etc.) while different `mempoolImpl` only needs to implement required methods on transaction addition / removal / iteration etc. The proposed interface is [implemented in this code base](https://github.com/QuarkChain/tendermintx/blob/master/mempool/mempool.go).
 
 ### Phase 2: Implement mempool based on different data structures
 
@@ -130,7 +130,7 @@ Proposed
 
 ### Negative
 
-- At early phases, supporting priority-based mempools could face performance degradations
+- At early phases, using priority-based mempools could face performance degradations
 - Mempool implementations may have increased complexities
 
 ### Neutral
