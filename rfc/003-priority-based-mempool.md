@@ -1,4 +1,4 @@
-# RFC 003: Priority-based Mempool
+# RFC 004: Priority-based Mempool
 
 ## Changelog
 
