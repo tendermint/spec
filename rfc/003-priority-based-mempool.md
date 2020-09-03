@@ -18,7 +18,7 @@ To make Tendermint support priority-based transaction processing, two main aspec
 
 Add a new field `priority` to the ABCI `ResponseCheckTx` message:
 
-```
+```proto
 message ResponseCheckTx {
   uint32         code       = 1;
   bytes          data       = 2;
@@ -40,6 +40,7 @@ The next step is to make current mempool implementation priority-aware. We can h
 ### Phase 0: Keep existing CList-based mempool
 
 Goal:
+
 1. Zero cost on processing "legacy" transactions (i.e. those have 0 priority)
 2. When creating a block, transactions with higher priorities should be included earlier
 
@@ -57,57 +58,58 @@ The simplest approach I can think of is:
 In case phase 0 is not enough (for reference, go-ethereum uses [a heap](https://github.com/ethereum/go-ethereum/blob/6c9f040ebeafcc680b0c457e6f4886e2bca32527/core/tx_list.go#L440) to do similar logic), we may want to change the underlying data structure storing transactions. However, before adding a new data structure to replace existing CList implementation, certain refactoring work needs to be finished.
 
 Goal:
+
 1. No functionality change and no performance improvement. This phase should be to design a common underlying mempool interface to allow different implementations
 
 Existing mempool code has many places tightly coupled with CList implementation (like in mempool reactor), and this phase mainly works as a middle ground to abstract away this coupling to allow future mempool implementation using other data structures for better performances.
 
 Proposed interface changes:
 
-```
+```golang
 type basemempool struct {
-	mempoolImpl
+    mempoolImpl
 
-	// Atomic integers
-	height   int64 // the last block Update()'d to
-	txsBytes int64 // total size of mempool, in bytes
+    // Atomic integers
+    height   int64 // the last block Update()'d to
+    txsBytes int64 // total size of mempool, in bytes
 
-	// Notify listeners (ie. consensus) when txs are available
-	notifiedTxsAvailable bool
-	txsAvailable         chan struct{} // fires once for each height, when the mempool is not empty
+    // Notify listeners (ie. consensus) when txs are available
+    notifiedTxsAvailable bool
+    txsAvailable         chan struct{} // fires once for each height, when the mempool is not empty
 
-	// Keep a cache of already-seen txs.
-	// This reduces the pressure on the proxyApp.
-	cache     txCache
-	preCheck  PreCheckFunc
-	postCheck PostCheckFunc
+    // Keep a cache of already-seen txs.
+    // This reduces the pressure on the proxyApp.
+    cache     txCache
+    preCheck  PreCheckFunc
+    postCheck PostCheckFunc
 
-	config *cfg.MempoolConfig
+    config *cfg.MempoolConfig
 
-	// Exclusive mutex for Update method to prevent concurrent execution of
-	// CheckTx or ReapMaxBytesMaxGas(ReapMaxTxs) methods.
-	updateMtx sync.RWMutex
+    // Exclusive mutex for Update method to prevent concurrent execution of
+    // CheckTx or ReapMaxBytesMaxGas(ReapMaxTxs) methods.
+    updateMtx sync.RWMutex
 
-	wal          *auto.AutoFile // a log of mempool txs
-	proxyAppConn proxy.AppConnMempool
+    wal          *auto.AutoFile // a log of mempool txs
+    proxyAppConn proxy.AppConnMempool
 
-	logger  log.Logger
-	metrics *Metrics
+    logger  log.Logger
+    metrics *Metrics
 }
 
 type mempoolImpl interface {
-	Size() int
+    Size() int
 
-	addTx(*mempoolTx, uint64)
-	removeTx(types.Tx) bool // return whether corresponding element is removed or not
-	updateRecheckCursor()
-	reapMaxTxs(int) types.Txs
-	reapMaxBytesMaxGas(int64, int64) types.Txs // based on priority
-	recheckTxs(proxy.AppConnMempool)
-	isRecheckCursorNil() bool
-	getRecheckCursorTx() *mempoolTx
-	getMempoolTx(types.Tx) *mempoolTx
-	deleteAll()
-	// ...and more
+    addTx(*mempoolTx, uint64)
+    removeTx(types.Tx) bool // return whether corresponding element is removed or not
+    updateRecheckCursor()
+    reapMaxTxs(int) types.Txs
+    reapMaxBytesMaxGas(int64, int64) types.Txs // based on priority
+    recheckTxs(proxy.AppConnMempool)
+    isRecheckCursorNil() bool
+    getRecheckCursorTx() *mempoolTx
+    getMempoolTx(types.Tx) *mempoolTx
+    deleteAll()
+    // ...and more
 }
 ```
 
@@ -118,7 +120,6 @@ Such that mempool's shared code will live under `basemempool` (callback handling
 We will have more discussions on what data structure fits the requirements best. For reference, we have some preliminary profiling results on [left-leaning red–black tree and BTree](https://github.com/QuarkChain/tendermintx/blob/master/mempool/bench_test.go#L18-L31).
 
 ## Status
-
 
 Proposed
 
@@ -139,6 +140,6 @@ Proposed
 
 ## References
 
-- Introduction to ABCIx: https://forum.cosmos.network/t/introduction-to-abcix-an-extension-of-abci-with-greater-flexibility-and-security/3771/
-- On ABCIx’s priority-based mempool implementation:https://forum.cosmos.network/t/on-abcixs-priority-based-mempool-implementation/3912
-- Existing ABCIx implementation: https://github.com/QuarkChain/tendermintx
+- [Introduction to ABCIx](https://forum.cosmos.network/t/introduction-to-abcix-an-extension-of-abci-with-greater-flexibility-and-security/3771/)
+- [On ABCIx’s priority-based mempool implementation](https://forum.cosmos.network/t/on-abcixs-priority-based-mempool-implementation/3912)
+- [Existing ABCIx implementation](https://github.com/QuarkChain/tendermintx)
