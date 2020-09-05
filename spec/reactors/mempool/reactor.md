@@ -13,10 +13,10 @@ for details.
 Sending incorrectly encoded data or data exceeding `maxMsgSize` will result
 in stopping the peer.
 
-`maxMsgSize` equals `MaxTxBytes` (1MB) * `TxBatchSize` (100) + 4 (proto
-overhead). `MaxTxBytes` and `TxBatchSize` are mempool config parameters ->
-defined locally. The reactor sends transactions to the connected peers in
-batches. The maximum size of one batch is `TxBatchSize`.
+`maxMsgSize` equals `MaxBatchBytes` (10MB) + 4 (proto overhead).
+`MaxBatchBytes` is a mempool config parameter -> defined locally. The reactor
+sends transactions to the connected peers in batches. The maximum size of one
+batch is `MaxBatchBytes`.
 
 The mempool will not send a tx back to any peer which it received it from.
 
