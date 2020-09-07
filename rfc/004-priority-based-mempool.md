@@ -46,7 +46,7 @@ Goal:
 
 The first phase will be experimental and only achieves the desired functionality *with potential performance degradation*. The main purpose is to design the code flow and underlying APIs accordingly, without dramatic code changes on existing data structures / algorithms.
 
-The simplest approach I can think of is:
+A simple approach we can take is the following:
 
 1. When reading `CheckTx` responses, mempool keeps a single counter called `maxPriority`. If all transactions have 0 priorities, the counter should simply have the same 0 value
 2. When `Mempool.ReapMaxBytesMaxGas` is called by consensus engine, mempool would check its `maxPriority` value:
