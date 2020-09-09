@@ -38,39 +38,37 @@ of the problem addressed by the Fastsync protocol.
   aspects of the fast sync problem, system assumptions and temporal
   logic specifications.
 
-  - [Computational Model](#Computational-Model):
+    - [Computational Model](#Computational-Model):
       timing and correctness assumptions.
 
-  - [Distributed Problem Statement](#Distributed-Problem-Statement):
+    - [Distributed Problem Statement](#Distributed-Problem-Statement):
       temporal properties that formalize safety and liveness
       properties of fast sync in distributed setting.
 
 - [Part IV](#part-iv---fastsync-protocol): Specification of Fastsync V2
   (the protocol underlying the current Golang implementation).
 
-     - [Definitions](#Definitions): Describes inputs, outputs,
+    - [Definitions](#Definitions): Describes inputs, outputs,
        variables used by the protocol, auxiliary functions
 
-     - [FastSync V2](#FastSync-V2): gives an outline of the solution,
+    - [FastSync V2](#FastSync-V2): gives an outline of the solution,
        and details of the functions used (with preconditions,
        postconditions, error conditions).
 
-     - [Algorithm Invariants](#Algorithm-Invariants): invariants over
+    - [Algorithm Invariants](#Algorithm-Invariants): invariants over
        the protocol variables that the implementation should maintain.
-
 
 - [Part V](#part-v---analysis-and-improvements): Analysis
   of Fastsync V2 that highlights several issues that prevent achieving
   some of the desired fault-tolerance properties. We also give some
   suggestions on how to address the issues in the future.
 
-     - [Analysis of Fastsync V2](#Analysis-of-Fastsync-V2): describes
+    - [Analysis of Fastsync V2](#Analysis-of-Fastsync-V2): describes
         undesirable scenarios of Fastsync V2, and why they violate
         desirable temporal logic specification in an unreliable
         distributed system.
 
-     - [Suggestions](#Suggestions-for-an-Improved-Fastsync-Implementation)  to address the issues discussed in the analysis.
-
+    - [Suggestions](#Suggestions-for-an-Improved-Fastsync-Implementation)  to address the issues discussed in the analysis.
 
 In this document we quite extensively use tags in order to be able to
 reference assumptions, invariants, etc. in future communication. In
@@ -87,50 +85,48 @@ these tags we frequently use the following short forms:
 - FS-VAR: refers to properties of Fastsync protocol variables
 - NewFS: refers to improved future Fastsync implementations
 
-
 # Part I - Tendermint Blockchain
 
 We will briefly list some of the notions of Tendermint blockchains that are
 required for this specification. More details can be found [here][block].
 
-#### **[TMBC-HEADER]**:
+#### **[TMBC-HEADER]**
+
 A set of blockchain transactions is stored in a data structure called
 *block*, which contains a field called *header*. (The data structure
 *block* is defined [here][block]).  As the header contains hashes to
 the relevant fields of the block, for the purpose of this
 specification, we will assume that the blockchain is a list of
-headers, rather than a list of blocks. 
+headers, rather than a list of blocks.
 
-#### **[TMBC-SEQ]**:
+#### **[TMBC-SEQ]**
 
-The Tendermint blockchain is a list *chain* of headers. 
+The Tendermint blockchain is a list *chain* of headers.
 
-#### **[TMBC-SEQ-GROW]**:
+#### **[TMBC-SEQ-GROW]**
 
 During operation, new headers may be appended to the list one by one.
 
 > In the following, *ETIME* is a lower bound
 > on the time interval between the times at which two
-> successor blocks are added. 
+> successor blocks are added.
 
-
-#### **[TMBC-SEQ-APPEND-E]**:
+#### **[TMBC-SEQ-APPEND-E]**
 
 If a header is appended at time *t* then no additional header will be
 appended before time *t + ETIME*.
 
+#### **[TMBC-AUTH-BYZ]**
 
-#### **[TMBC-AUTH-BYZ]**:
 We assume the authenticated Byzantine fault model in which no node (faulty or
 correct) may break digital signatures, but otherwise, no additional
-assumption is made about the internal behavior of faulty 
+assumption is made about the internal behavior of faulty
 nodes. That is, faulty nodes are only limited in that they cannot forge
 messages.
 
 <!-- The authenticated Byzantine model assumes [TMBC-Sign-NoForge] and -->
 <!-- [TMBC-FaultyFull], that is, faulty nodes are limited in that they -->
 <!-- cannot forge messages [TMBC-Sign-NoForge]. -->
-
 
 > We observed that in the existing documentation the term
 > *validator* refers to both a data structure and a full node that
@@ -139,51 +135,53 @@ messages.
 > distinguish these notions in the cases where they are not clear from
 > the context.
 
+#### **[TMBC-VALIDATOR-PAIR]**
 
-#### **[TMBC-VALIDATOR-PAIR]**:
+Given a full node, a
+*validator pair* is a pair *(address, voting_power)*, where
 
-Given a full node, a 
-*validator pair* is a pair *(address, voting_power)*, where 
-  - *address* is the address (public key) of a full node, 
-  - *voting_power* is an integer (representing the full node's
+- *address* is the address (public key) of a full node,
+- *voting_power* is an integer (representing the full node's
   voting power in a given consensus instance).
   
 > In the Golang implementation the data type for *validator
 > pair* is called `Validator`.
 
-#### **[TMBC-VALIDATOR-SET]**:
+#### **[TMBC-VALIDATOR-SET]**
 
 A *validator set* is a set of validator pairs. For a validator set
 *vs*, we write *TotalVotingPower(vs)* for the sum of the voting powers
 of its validator pairs.
 
-#### **[TMBC-CORRECT]**:
-We define a predicate *correctUntil(n, t)*, where *n* is a node and *t* is a 
-time point. 
-The predicate *correctUntil(n, t)* is true if and only if the node *n* 
+#### **[TMBC-CORRECT]**
+
+We define a predicate *correctUntil(n, t)*, where *n* is a node and *t* is a
+time point.
+The predicate *correctUntil(n, t)* is true if and only if the node *n*
 follows all the protocols (at least) until time *t*.
 
-#### **[TMBC-TIME-PARAMS]**:
-A blockchain has the following configuration parameters:
- - *unbondingPeriod*: a time duration.
- - *trustingPeriod*: a time duration smaller than *unbondingPeriod*.
+#### **[TMBC-TIME-PARAMS]**
 
-#### **[TMBC-FM-2THIRDS]**:
+A blockchain has the following configuration parameters:
+
+- *unbondingPeriod*: a time duration.
+- *trustingPeriod*: a time duration smaller than *unbondingPeriod*.
+
+#### **[TMBC-FM-2THIRDS]**
+
 If a block *h* is in the chain,
 then there exists a subset *CorrV*
 of *h.NextValidators*, such that:
-  - *TotalVotingPower(CorrV) > 2/3
-    TotalVotingPower(h.NextValidators)*; 
-  - For every validator pair *(n,p)* in *CorrV*, it holds *correctUntil(n,
+
+- *TotalVotingPower(CorrV) > 2/3
+    TotalVotingPower(h.NextValidators)*;
+- For every validator pair *(n,p)* in *CorrV*, it holds *correctUntil(n,
     h.Time + trustingPeriod)*.
 
-
-#### **[TMBC-CORR-FULL]**:
+#### **[TMBC-CORR-FULL]**
 
 Every correct full node locally stores a prefix of the
 current list of headers from [**[TMBC-SEQ]**][TMBC-SEQ-link].
-
-
 
 # Part II - Sequential Definition of Fastsync Problem
 
@@ -197,16 +195,14 @@ to read blocks of the Tendermint blockchain (in a safe way, that is,
 it checks the soundness conditions), until it has read the most recent
 block and then terminates.
 
-
 ## Sequential Problem statement
-
 
 *Fastsync* gets as input a block of height *h* and the corresponding
 application state *s* that corresponds to the block and state of that
 height of the blockchain, and produces
 as output (i) a list *L* of blocks starting at height *h* to some height
 *terminationHeight*, and (ii) the application state when applying the
-transactions of the list *L* to *s*. 
+transactions of the list *L* to *s*.
 
 > In Tendermint, the commit for block of height *h* is contained in block *h + 1*,
 > and thus the block of height *h + 1* is needed to verify the block of
@@ -216,11 +212,10 @@ transactions of the list *L* to *s*.
 > height that could be verified. In order to do so, *Fastsync* needs the
 > block at height  *terminationHeight + 1* of the blockchain.
 
-
 Fastsync has to satisfy the following properties:
 
- 
-#### **[FS-SEQ-SAFE-START]**:
+#### **[FS-SEQ-SAFE-START]**
+
 Let *bh* be the height of the blockchain at the time *Fastsync*
 starts. By assumption we have *bh >= h*.
 When *Fastsync* terminates, it outputs a list of all blocks from
@@ -232,49 +227,51 @@ height *h* to some height *terminationHeight >= bh - 1*.
 > better to link the target height to a time close to the
 > termination. This is captured by the following specification:
 
-#### **[FS-SEQ-SAFE-SYNC]**:
+#### **[FS-SEQ-SAFE-SYNC]**
+
 Let *eh* be the height of the blockchain at the time *Fastsync*
 terminates. There is a constant *D >= 1* such that when *Fastsync*
 terminates, it outputs a list of all blocks from height *h* to some
 height *terminationHeight >= eh - D*.
 
+#### **[FS-SEQ-SAFE-STATE]**
 
-
-#### **[FS-SEQ-SAFE-STATE]**:
 Upon termination, the application state is the one that corresponds to
 the blockchain at height *terminationHeight*.
 
+#### **[FS-SEQ-LIVE]**
 
-#### **[FS-SEQ-LIVE]**:
 *Fastsync* eventually terminates.
-
 
 # Part III - FastSync as Distributed System
 
 ## Computational Model
 
+#### **[FS-A-NODE]**
 
-#### **[FS-A-NODE]**:
 We consider a node *FS* that performs *Fastsync*.
 
-#### **[FS-A-PEER-IDS]**:
+#### **[FS-A-PEER-IDS]**
+
 *FS* has access to a set *peerIDs* of IDs (public keys) of peers
      . During the execution of *Fastsync*, another protocol (outside
      of this specification) may add new IDs to *peerIDs*.
 
+#### **[FS-A-PEER]**
 
-#### **[FS-A-PEER]**:
 Peers can be faulty, and we do not make any assumptions about the number or
 ratio of correct/faulty nodes. Faulty processes may be Byzantine
 according to [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link].
 
-#### **[FS-A-VAL]**:
+#### **[FS-A-VAL]**
+
 The system satisfies [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link] and
 [**[TMBC-FM-2THIRDS]**][TMBC-FM-2THIRDS-link]. Thus, there is a
 blockchain that satisfies the soundness requirements (that is, the
 validation rules in [[block]]).
 
-#### **[FS-A-COMM]**:
+#### **[FS-A-COMM]**
+
 Communication between the node *FS* and all correct peers is reliable and
 bounded in time: there is a message end-to-end delay *Delta* such that
 if a message is sent at time *t* by a correct process to a correct
@@ -282,7 +279,6 @@ process, then it will be received and processed by time *t +
 Delta*. This implies that we need a timeout of at least *2 Delta* for
 remote procedure calls to ensure that the response of a correct peer
 arrives before the timeout expires.
-
 
 ## Distributed Problem Statement
 
@@ -298,26 +294,27 @@ specify below under what (favorable) conditions *Fastsync* ensures to
 terminate successfully, and satisfy the requirements of the sequential
 problem statement:
 
+#### **[FS-DIST-LIVE]**
 
-#### **[FS-DIST-LIVE]**:
 *Fastsync* eventually terminates: it either *terminates successfully* or
 it *terminates with failure*.
 
 ### Fairness
 
 As mentioned above, without assumptions on the correctness of some
-peers, no protocol can achieve the required specifications. Therefore, 
+peers, no protocol can achieve the required specifications. Therefore,
 we consider the following (fairness) constraint in the
 safety and liveness properties below:
 
-#### **[FS-SOME-CORR-PEER]**:
+#### **[FS-SOME-CORR-PEER]**
+
 Initially, the set *peerIDs* contains at least one correct full node.
 
-> While in principle the above condition [FS-SOME-CORR-PEER] 
+> While in principle the above condition [FS-SOME-CORR-PEER]
 > can be part of a sufficient
 > condition to solve [FS-SEQ-LIVE] and
 > [FS-SEQ-SAFE-START] and [FS-SEQ-SAFE-SYNC] in the distributed
-> setting (their corresponding properties are given below), we will discuss in 
+> setting (their corresponding properties are given below), we will discuss in
 > [Part V](#part-v---analysis-and-improvements) that the
 > current implementation of Fastsync (V2) requires the much
 > stronger requirement [**[FS-ALL-CORR-PEER]**](#FS-ALL-CORR-PEER)
@@ -333,19 +330,19 @@ Initially, the set *peerIDs* contains at least one correct full node.
 > Tendermint, as the consensus reactor then synchronizes from that
 > height.)
 
-#### **[FS-DIST-SAFE-START]**:
-Let *maxh* be the maximum 
+#### **[FS-DIST-SAFE-START]**
+
+Let *maxh* be the maximum
 height of a correct peer [**[TMBC-CORR-FULL]**][TMBC-CORR-FULL-link]
 in *peerIDs* at the time *Fastsync* starts. If *FastSync* terminates
 successfully, it is at some height *terminationHeight >= maxh - 1*.
-
 
 > To address [FS-SEQ-SAFE-SYNC] we consider the following property in
 > the distributed setting. See the comments below on the relation to
 > the sequential version.
 
+#### **[FS-DIST-SAFE-SYNC]**
 
-#### **[FS-DIST-SAFE-SYNC]**:
 Under [FS-SOME-CORR-PEER], there exists a constant time interval *TD*, such
 that if *term* is the time *Fastsync* terminates and
 *maxh* is the maximum height of a correct peer
@@ -353,12 +350,9 @@ that if *term* is the time *Fastsync* terminates and
 *term - TD*, then if *FastSync* terminates successfully, it is at
 some height *terminationHeight >= maxh - 1*.
 
-
 > *TD* might depend on timeouts etc. We suggest that an acceptable
 > value for *TD* is in the range of approx. 10 sec., that is the
 > interval between two calls `QueryStatus()`; see below.
-
-
 > We use *term - TD* as reference time, as we have to account
 > for communication delay between the peer and *FS*. After the peer sent
 > the last message to *FS*, the peer and *FS* run concurrently and
@@ -366,10 +360,9 @@ some height *terminationHeight >= maxh - 1*.
 > add blocks (e.g., it might be in the process of catching up
 > itself). Hence, without additional assumption we cannot link
 > [FS-DIST-SAFE-SYNC] to
-> [**[FS-SEQ-SAFE-SYNC]**](#FS-SEQ-SAFE-SYNC), in particular to the 
+> [**[FS-SEQ-SAFE-SYNC]**](#FS-SEQ-SAFE-SYNC), in particular to the
 > parameter *D*. We discuss a
 > way to achieve this below:
-
 > **Relation to [FS-SEQ-SAFE-SYNC]:**  
 > Under [FS-SOME-CORR-PEER], if *peerIDs* contains a full node that is
 > "synchronized with the blockchain", and *blockchainheight* is the height
@@ -379,18 +372,16 @@ some height *terminationHeight >= maxh - 1*.
 > cf. [**[TMBC-SEQ-APPEND-E]**][TMBC-SEQ-APPEND-E-link], that is,
 > the parameter *D* from [FS-SEQ-SAFE-SYNC] is in the range of  *TD / ETIME*.
 
+#### **[FS-DIST-SAFE-STATE]**
 
-#### **[FS-DIST-SAFE-STATE]**:
 It is the same as the sequential version
 [**[FS-SEQ-SAFE-STATE]**](#FS-SEQ-SAFE-STATE).
 
+#### **[FS-DIST-NONABORT]**
 
-#### **[FS-DIST-NONABORT]**:
 If there is one correct process in *peerIDs* [FS-SOME-CORR-PEER],
 *Fastsync* never terminates with failure. (Together with [FS-DIST-LIVE]
  that means it will terminate successfully.)
-
-
 
 # Part IV - Fastsync protocol
 
@@ -436,13 +427,14 @@ defined in detail at a later date in a separate Block Execution specification.
 > We now introduce variables and auxiliary functions used by the protocol.
 
 ### Inputs
+
 - *startBlock*: the block Fastsync starts from
 - *startState*: application state corresponding to *startBlock.Height*
 
-#### **[FS-A-V2-INIT]**:
+#### **[FS-A-V2-INIT]**
+
 - *startBlock* is from the blockchain
 - *startState* is the application state of the blockchain at Height *startBlock.Height*.
-
 
 ### Variables
 
@@ -466,20 +458,21 @@ defined in detail at a later date in a separate Block Execution specification.
 
 ### Auxiliary Functions
 
-#### **[FS-FUNC-TARGET]**:
+#### **[FS-FUNC-TARGET]**
+
 - *TargetHeight = max {peerHeigts(addr): addr in peerIDs} union {height}*
 
-#### **[FS-FUNC-MATCH]**:
-
+#### **[FS-FUNC-MATCH]**
 
 ```go
 func VerifyCommit(b Block, c Commit) Boolean
 ```
+
 - Comment
     - Corresponds to `verifyCommit(chainID string, blockID
      types.BlockID, height int64, commit *types.Commit) error` in the
      current Golang implementation, which expects blockID and height
-	 (from the first block) and the
+  (from the first block) and the
      corresponding commit from the following block. We use the
      simplified form for ease in presentation.
 
@@ -487,14 +480,15 @@ func VerifyCommit(b Block, c Commit) Boolean
     <!-- - implements the check from -->
     <!--  [**[TMBC-SOUND-DISTR-PossCommit]**][TMBC-SOUND-DISTR-PossCommit--link], -->
     <!--  that is, that  *c* is a valid commit for block *b* -->
-	- implements the check that  *c* is a valid commit for block *b*
+    - implements the check that  *c* is a valid commit for block *b*
 - Expected precondition
     - *c* is a valid commit for block *b*
 - Expected postcondition
     - *true* if precondition holds
-	- *false* if precondition is violated
+    - *false* if precondition is violated
 - Error condition
     - none
+
 ----
 
 ### Messages
@@ -510,11 +504,12 @@ implementation.
 ```go
 // type: "tendermint/blockchain/BlockRequest"
 type bcBlockRequestMessage struct {
-	Height int64
+ Height int64
 }
 ```
 
 Remark:
+
 - `msg.Height` > 0
 
 #### bcNoBlockResponseMessage
@@ -522,11 +517,12 @@ Remark:
 ```go
 // type: "tendermint/blockchain/NoBlockResponse"
 type bcNoBlockResponseMessage struct {
-	Height int64
+ Height int64
 }
 ```
 
 Remark:
+
 - `msg.Height` > 0
 - This message type is included in the protocol for convenience and is not expected to be sent between two correct peers
 
@@ -535,11 +531,12 @@ Remark:
 ```go
 // type: "tendermint/blockchain/BlockResponse"
 type bcBlockResponseMessage struct {
-	Block *types.Block
+ Block *types.Block
 }
 ```
 
 Remark:
+
 - `msg.Block` is a Tendermint block as defined in [[block]].
 - `msg.Block` != nil
 
@@ -548,11 +545,12 @@ Remark:
 ```go
 // type: "tendermint/blockchain/StatusRequest"
 type bcStatusRequestMessage struct {
-	Height int64
+ Height int64
 }
 ```
 
 Remark:
+
 - `msg.Height` > 0
 
 #### bcStatusResponseMessage
@@ -560,11 +558,12 @@ Remark:
 ```go
 // type: "tendermint/blockchain/StatusResponse"
 type bcStatusResponseMessage struct {
-	Height int64
+ Height int64
 }
 ```
 
 Remark:
+
 - `msg.Height` > 0
 
 ### Remote Functions
@@ -574,46 +573,47 @@ remote procedure calls. The "Expected precondition" are only expected for
 correct peers (as no assumption is made on internals of faulty
 processes [FS-A-PEER]). These functions are implemented using the above defined message types.
 
-
 > In this document we describe the communication with peers
 via asynchronous RPCs.
-
 
 ```go
 func Status(addr Address) (int64, error)
 ```
-- Implementation remark
-   - RPC to full node *addr*
-   - Request message: `bcStatusRequestMessage`.
-   - Response message: `bcStatusResponseMessage`.
-- Expected precondition
-  - none
-- Expected postcondition
-  - if *addr* is correct: Returns the current height `height` of the
-    peer. [FS-A-COMM]
-  - if *addr* is faulty: Returns an arbitrary height. [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
-- Error condition
-   * if *addr* is correct: none. By [FS-A-COMM] we assume communication is reliable and timely.
-   * if *addr* is faulty: arbitrary error (including timeout). [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
-----
 
+- Implementation remark
+    - RPC to full node *addr*
+    - Request message: `bcStatusRequestMessage`.
+    - Response message: `bcStatusResponseMessage`.
+- Expected precondition
+    - none
+- Expected postcondition
+    - if *addr* is correct: Returns the current height `height` of the
+    peer. [FS-A-COMM]
+    - if *addr* is faulty: Returns an arbitrary height. [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
+- Error condition
+    - if *addr* is correct: none. By [FS-A-COMM] we assume communication is reliable and timely.
+    - if *addr* is faulty: arbitrary error (including timeout). [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
+
+----
 
  ```go
 func Block(addr Address, height int64) (Block, error)
 ```
+
 - Implementation remark
-   - RPC to full node *addr*
-   - Request message: `bcBlockRequestMessage`.
-   - Response message: `bcBlockResponseMessage` or `bcNoBlockResponseMessage`.
+    - RPC to full node *addr*
+    - Request message: `bcBlockRequestMessage`.
+    - Response message: `bcBlockResponseMessage` or `bcNoBlockResponseMessage`.
 - Expected precondition
-  - 'height` is less than or equal to height of the peer
+    - 'height` is less than or equal to height of the peer
 - Expected postcondition
-  - if *addr* is correct: Returns the block of height `height`
+    - if *addr* is correct: Returns the block of height `height`
   from the blockchain. [FS-A-COMM]
-  - if *addr* is faulty: Returns arbitrary or no block [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
+    - if *addr* is faulty: Returns arbitrary or no block [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
 - Error condition
-  - if *addr* is correct: precondition violated (returns `bcNoBlockResponseMessage`). [FS-A-COMM]
-  - if *addr* is faulty: arbitrary error (including timeout). [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
+    - if *addr* is correct: precondition violated (returns `bcNoBlockResponseMessage`). [FS-A-COMM]
+    - if *addr* is faulty: arbitrary error (including timeout). [**[TMBC-AUTH-BYZ]**][TMBC-Auth-Byz-link]
+
 ----
 
 ## FastSync V2
@@ -637,10 +637,9 @@ trigger the execution of these functions:
   
 > We have left the strategy how peers are selected unspecified, and
 > the currently existing different implementations of Fastsync differ
-> in this aspect. In V2, a peer *p* is selected with the minimum number of 
+> in this aspect. In V2, a peer *p* is selected with the minimum number of
 > pending requests that can serve the required height *h*, that is
 > with *peerHeight(p) >= h*.
-
 
 The functions `Status` and `Block` are called by asynchronous
 RPC. When they return, the following functions are called:
@@ -655,14 +654,15 @@ RPC. When they return, the following functions are called:
 
 - `Execute()`: Iterates over the *blockstore*.  Checks soundness of
   the blocks, and
-  executes the transactions of a sound block and updates *state*. 
+  executes the transactions of a sound block and updates *state*.
 
 > In addition to the functions above, the following two features are
 > implemented in Fastsync V2
 
-#### **[FS-V2-PEER-REMOVE]**:
+#### **[FS-V2-PEER-REMOVE]**
+
 Periodically, *peerTimeStamp* and *peerRate* and *pendingTime* are
-analyzed. 
+analyzed.
 If a peer *p*
 has not provided a block recently (check of *peerTimeStamp[p]*) or it
 has not provided sufficiently many data (check of *peerRate[p]*), then
@@ -670,15 +670,13 @@ has not provided sufficiently many data (check of *peerRate[p]*), then
 estimate whether the peer that is responsible for the current height
 has provided the corresponding block on time.
 
-  
-#### **[FS-V2-TIMEOUT]**:
+#### **[FS-V2-TIMEOUT]**
 
 *Fastsync V2* starts a timeout whenever a block is
 executed (that is, when the height is incremented). If the timeout expires
 before the next block is executed, *Fastsync* terminates.
 If this happens, then *Fastsync* terminates
 with failure.
-
 
 ### Details
 
@@ -694,58 +692,63 @@ with failure.
 ```go
 func QueryStatus()
 ```
+
 - Expected precondition
     - peerIDs initialized and non-empty
 - Expected postcondition
     - call asynchronously `Status(n)` at each peer *n* in *peerIDs*.
 - Error condition
     - fails if precondition is violated
+
 ----
 
 ```go
 func OnStatusResponse(addr Address, ht int64)
 ```
+
 - Comment
     - *ht* is a height
-	- peers can provide the status without being called
+    - peers can provide the status without being called
 - Expected precondition
     - *peerHeights(addr) <= ht*
 - Expected postcondition
     - *peerHeights(addr) = ht*
-	- *TargetHeight* is updated
+    - *TargetHeight* is updated
 - Error condition
     - if precondition is violated: *addr* not in *peerIDs* (that is,
       *addr* is removed from *peerIDs*)
 - Timeout condition
     - if `OnStatusResponse(addr, ht)` was not invoked within *2 Delta* after
-	`Status(addr)` was called:  *addr* not in *peerIDs*
-----
+ `Status(addr)` was called:  *addr* not in *peerIDs*
 
+----
 
 ```go
 func CreateRequest
 ```
+
 - Expected precondition
     - *height < TargetHeight*
-	- *peerIDs* nonempty
+    - *peerIDs* nonempty
 - Expected postcondition
-    - Function `Block` is called remotely at a peer *addr* in peerIDs 
-	  for a missing height *h*  
-	  *Remark:* different implementations may have different
+    - Function `Block` is called remotely at a peer *addr* in peerIDs
+   for a missing height *h*  
+   *Remark:* different implementations may have different
       strategies to balance the load over the peers
     - *pendingblocks(h) = addr*
-----
 
+----
 
 ```go
 func OnBlockResponse(addr Address, b Block)
 ```
+
 - Comment
     - if after adding block *b*, blocks of heights *height* and
       *height + 1* are in *blockstore*, then `Execute` is called
 - Expected precondition
     - *pendingblocks(b.Height) = addr*
-	- *b* satisfies basic soundness  
+    - *b* satisfies basic soundness  
 - Expected postcondition
     - if function `Execute` has been executed without error or was not
       executed:
@@ -757,36 +760,38 @@ func OnBlockResponse(addr Address, b Block)
           block and time it has passed between current time and last block received from this peer (addr)
 - Error condition
     - if precondition is violated: *addr* not in *peerIDs*; reset
-	*pendingblocks(b.Height)* to nil;
+ *pendingblocks(b.Height)* to nil;
 - Timeout condition
     - if `OnBlockResponse(addr, b)` was not invoked within *2 Delta* after
-	`Block(addr,h)` was called for *b.Height = h*: *addr* not in *peerIDs*
-----
+ `Block(addr,h)` was called for *b.Height = h*: *addr* not in *peerIDs*
 
+----
 
 ```go
 func Execute()
 ```
+
 - Comments
     - none
 - Expected precondition
-	- application state is the one of the blockchain at height
+    - application state is the one of the blockchain at height
       *height - 1*
-	- **[FS-V2-Verif]** for any two blocks *a* and *b* from
-	*receivedBlocks*: if
-	  *a.Height + 1 = b.Height* then *VerifyCommit (a,b.Commit) = true*
+    - **[FS-V2-Verif]** for any two blocks *a* and *b* from
+ *receivedBlocks*: if
+   *a.Height + 1 = b.Height* then *VerifyCommit (a,b.Commit) = true*
 - Expected postcondition
     - Any two blocks *a* and *b* violating [FS-V2-Verif]:
-	  *a* and *b* not in *blockstore*; nodes with Address 
-	  receivedBlocks(a.Height) and receivedBlocks(b.Height) not in peerIDs
-	- height is updated height of complete prefix that matches the blockchain
-	- state is the one of the blockchain at height *height - 1*
-	- if the new value of *height* is equal to *TargetHeight*, then
-	Fastsync 
-	**terminates
-	  successfully**.
+   *a* and *b* not in *blockstore*; nodes with Address
+   receivedBlocks(a.Height) and receivedBlocks(b.Height) not in peerIDs
+    - height is updated height of complete prefix that matches the blockchain
+    - state is the one of the blockchain at height *height - 1*
+    - if the new value of *height* is equal to *TargetHeight*, then
+ Fastsync
+ **terminates
+   successfully**.
 - Error condition
     - none
+
 ----
 
 ## Algorithm Invariants
@@ -796,32 +801,36 @@ func Execute()
 > problem, that is on the algorithm. These invariants are useful for
 > the verification, but can also guide the implementation.
 
-#### **[FS-VAR-STATE-INV]**:
+#### **[FS-VAR-STATE-INV]**
+
 It is always the case that *state* corresponds to the application state of the
 blockchain of that height, that is, *state = chain[height -
 1].AppState*; *chain* is defined in
 [**[TMBC-SEQ]**][TMBC-SEQ-link].
 
-#### **[FS-VAR-PEER-INV]**:
+#### **[FS-VAR-PEER-INV]**
+
 It is always the case that the set *peerIDs* only contains nodes that
 have not yet misbehaved (by sending wrong data or timing out).
 
-#### **[FS-VAR-BLOCK-INV]**:
+#### **[FS-VAR-BLOCK-INV]**
+
 For *startBlock.Height <= i < height - 1*, let *b(i)* be the block with
 height *i* in *blockstore*, it always holds that
 *VerifyCommit(b(i), b(i+1).Commit) = true*. This means that *height*
 can only be incremented if all blocks with lower height have been verified.
 
-
 # Part V - Analysis and Improvements
 
 ## Analysis of Fastsync V2
 
-####  **[FS-ISSUE-KILL]**:
+#### **[FS-ISSUE-KILL]**
+
 If two blocks are not matching [FS-V2-Verif], `Execute` dismisses both
 blocks and removes the peers that provided these blocks from
 *peerIDs*. If block *a* was correct and provided by a correct peer *p*,
 and block b was faulty and provided by a faulty peer, the protocol
+
 - removes the correct peer *p*, although it might be useful to
   download blocks from it in the future
 - removes the block *a*, so that a fresh copy of *a* needs to be downloaded
@@ -832,8 +841,7 @@ By [FS-A-PEER] we do not put a restriction on the number
   correct peers from *peerIDs*. As a result, this version of
   *Fastsync* violates [FS-DIST-SAFE-SYNC].
 
-
-####  **[FS-ISSUE-NON-TERM]**:
+#### **[FS-ISSUE-NON-TERM]**
 
 Due to [**[FS-ISSUE-KILL]**](#fs-issue-kill), from some point on, only
 faulty peers may be in *peerIDs*. They can thus control at which rate
@@ -846,28 +854,29 @@ but faulty peers are regularly asked for blocks.
 
 ### Consequence
 
-The issues [FS-ISSUE-KILL] and [FS-ISSUE-NON-TERM] explain why 
+The issues [FS-ISSUE-KILL] and [FS-ISSUE-NON-TERM] explain why
 does not satisfy the property [FS-DIST-LIVE] relevant for termination.
 As a result, V2 only solves the specifications in a restricted form,
 namely, when all peers are correct:
 
-#### **[FS-ALL-CORR-PEER]**:
+#### **[FS-ALL-CORR-PEER]**
+
 At all times, the set *peerIDs* contains only correct full nodes.
 
-With this restriction we can give the achieved properties: 
+With this restriction we can give the achieved properties:
 
-#### **[FS-VC-ALL-CORR-NONABORT]**:
+#### **[FS-VC-ALL-CORR-NONABORT]**
+
 Under [FS-ALL-CORR-PEER], *Fastsync* never terminates with failure.
 
+#### **[FS-VC-ALL-CORR-LIVE]**
 
-#### **[FS-VC-ALL-CORR-LIVE]**:
 Under [FS-ALL-CORR-PEER], *Fastsync* eventually terminates successfully.
-
 
 > In a fault tolerance context this is problematic,
 > as it means that faulty peers can prevent *FastSync* from termination.
 > We observe that this also touches other properties, namely,
-> [FS-DIST-SAFE-START] and [FS-DIST-SAFE-SYNC]: 
+> [FS-DIST-SAFE-START] and [FS-DIST-SAFE-SYNC]:
 > Termination at an acceptable height are all conditional under
 > "successful termination". The properties above severely restrict
 > under which circumstances FastSync (V2) terminates successfully.
@@ -875,7 +884,6 @@ Under [FS-ALL-CORR-PEER], *Fastsync* eventually terminates successfully.
 > implementation of  are not fault-tolerant. We will
 > discuss this, and suggestions how to solve this after the
 > description of the current protocol.
-
 
 ## Suggestions for an Improved Fastsync Implementation
 
@@ -892,13 +900,14 @@ Commit in the block *b2* with *startBlock.Height + 2* contains more
 than 2/3 of the voting power in *startBlock.NextValidators*. If this
 is the case we can check *VerifyCommit (b1,b2.Commit)*. If we perform
 checks in this order we observe:
-  - By assumption, *startBlock* is OK, 
-  - If the first check (2/3 of voting power) fails,
-    the peer that provided block *b2* is faulty, 
-  - If the first check passes and the second check
+
+- By assumption, *startBlock* is OK,
+- If the first check (2/3 of voting power) fails,
+    the peer that provided block *b2* is faulty,
+- If the first check passes and the second check
     fails (*VerifyCommit*), then the peer that provided *b1* is
     faulty.
-  - If both checks pass, we can trust *b1*
+- If both checks pass, we can trust *b1*
 
 Based on this reasoning, we can ensure to only remove faulty peers
 from *peerIDs*.  That is, if
@@ -906,16 +915,15 @@ we sequentially verify blocks starting with *startBlock*, we will
 never remove a correct peer from *peerIDs* and we will be able to
 ensure the following invariant:
 
+#### **[NewFS-VAR-PEER-INV]**
 
-#### **[NewFS-VAR-PEER-INV]**:
 If a peer never misbehaves, it is never removed from *peerIDs*. It
 follows that under [FS-SOME-CORR-PEER], *peerIDs* is always non-empty.
 
-
 > To ensure this, we suggest to change the protocol as follows:
 
+#### Fastsync has the following configuration parameters
 
-#### Fastsync has the following configuration parameters:
 - *trustingPeriod*: a time duration; cf.
   [**[TMBC-TIME-PARAMS]**][TMBC-TIME-PARAMS-link].
 
@@ -924,7 +932,8 @@ follows that under [FS-SOME-CORR-PEER], *peerIDs* is always non-empty.
 > peer reported an invalid block in order to ensure the
 > invariant [NewFS-VAR-TRUST-INV] below:
 
-#### **[NewFS-A-INIT]**:
+#### **[NewFS-A-INIT]**
+
 - *startBlock* is from the blockchain, and within *trustingPeriod*
 (possible with some extra margin to ensure termination before
 *trustingPeriod* expired)
@@ -933,17 +942,17 @@ follows that under [FS-SOME-CORR-PEER], *peerIDs* is always non-empty.
 - *startHeight = startBlock.Height*
 
 #### Additional Variables
+
 - *trustedBlockstore*: stores for each height greater than or equal to
     *startBlock.Height*, the block of that height. Initially it
     contains only *startBlock*
 
+#### **[NewFS-VAR-TRUST-INV]**
 
-#### **[NewFS-VAR-TRUST-INV]**:
 Let *b(i)* be the block in *trustedBlockstore*
 with b(i).Height = i. It holds that
-for *startHeight < i < height - 1*, 
+for *startHeight < i < height - 1*,
 *VerifyCommit (b(i),b(i+1).Commit) = true*.
-
 
 > We propose to update the function `Execute`. To do so, we first
 > define the following helper functions:
@@ -951,62 +960,64 @@ for *startHeight < i < height - 1*,
 ```go
 func ValidCommit(VS ValidatorSet, C Commit) Boolean
 ```
+
 - Comments
     - checks validator set based on [**[TMBC-FM-2THIRDS]**][TMBC-FM-2THIRDS-link]
 - Expected precondition
-	-  The validators in *C*
-	     - are a subset of VS
-		 - have more than 2/3 of the voting power in VS
+    - The validators in *C*
+        - are a subset of VS
+        - have more than 2/3 of the voting power in VS
 - Expected postcondition
     - returns *true* if precondition holds, and *false* otherwise
 - Error condition
-    - none 
-----
+    - none
 
+----
 
 ```go
 func SequentialVerify {
-	while (true) {
-		b1 = blockstore[height];
-		b2 = blockstore[height+1];
-		if b1 == nil or b2 == nil {
-			exit;
-		}
-		if ValidCommit(trustedBlockstore[height - 1].NextValidators, b2.commit) {
-			// we trust b2
-			if VerifyCommit(b1, b2.commit) {
-				trustedBlockstore.Add(b1);
-				height = height + 1;
-			}
-			else {
-				// as we trust b2, b1 must be faulty
-				blockstore.RemoveFromPeer(receivedBlocks[height]);
-				// we remove all blocks received from the faulty peer
-				peerIDs.Remove(receivedBlocks(bnew.Height));
-				exit;
-			
-			}			
-		} else {
-			// b2 is faulty
-			blockstore.RemoveFromPeer(receivedBlocks[height + 1]);
-			// we remove all blocks received from the faulty peer
-		    peerIDs.Remove(receivedBlocks(bnew.Height));
-			exit;			}
-		}
+ while (true) {
+  b1 = blockstore[height];
+  b2 = blockstore[height+1];
+  if b1 == nil or b2 == nil {
+   exit;
+  }
+  if ValidCommit(trustedBlockstore[height - 1].NextValidators, b2.commit) {
+   // we trust b2
+   if VerifyCommit(b1, b2.commit) {
+    trustedBlockstore.Add(b1);
+    height = height + 1;
+   }
+   else {
+    // as we trust b2, b1 must be faulty
+    blockstore.RemoveFromPeer(receivedBlocks[height]);
+    // we remove all blocks received from the faulty peer
+    peerIDs.Remove(receivedBlocks(bnew.Height));
+    exit;
+
+   }
+  } else {
+   // b2 is faulty
+   blockstore.RemoveFromPeer(receivedBlocks[height + 1]);
+   // we remove all blocks received from the faulty peer
+      peerIDs.Remove(receivedBlocks(bnew.Height));
+   exit;   }
+  }
 }
 ```
+
 - Comments
     - none
 - Expected precondition
-	- [NewFS-VAR-TRUST-INV]
+    - [NewFS-VAR-TRUST-INV]
 - Expected postcondition
     - [NewFS-VAR-TRUST-INV]
-	- there is no block *bnew* with *bnew.Height = height + 1* in
+    - there is no block *bnew* with *bnew.Height = height + 1* in
       *blockstore*
 - Error condition
     - none
-----
 
+----
 
 > Then `Execute` just consists in calling `SequentialVerify` and then
 > updating the application state to the (new) height.
@@ -1014,19 +1025,21 @@ func SequentialVerify {
 ```go
 func Execute()
 ```
+
 - Comments
     - first `SequentialVerify` is executed
 - Expected precondition
-	- application state is the one of the blockchain at height
+    - application state is the one of the blockchain at height
       *height - 1*
-	- [NewFS-NOT-EXP] *trustedBlockstore[height-1].Time > now - trustingPeriod*
+    - [NewFS-NOT-EXP] *trustedBlockstore[height-1].Time > now - trustingPeriod*
 - Expected postcondition
     - there is no block *bnew* with *bnew.Height = height + 1* in
       *blockstore*
-	- state is the one of the blockchain at height *height - 1*
-	- if height = TargetHeight: **terminate successfully**
+    - state is the one of the blockchain at height *height - 1*
+    - if height = TargetHeight: **terminate successfully**
 - Error condition
     - fails if [NewFS-NOT-EXP] is violated
+
 ----
 
 ### Solution for [FS-ISSUE-NON-TERM]
@@ -1039,7 +1052,7 @@ cannot slow us down and provide blocks at a lower rate than the
 blockchain may grow. To ensure that we will have to add an assumption
 on message delays.
 
-#### **[NewFS-A-DELTA]**:
+#### **[NewFS-A-DELTA]**
 
 *2 Delta < ETIME*; cf. [**[TMBC-SEQ-APPEND-E]**][TMBC-SEQ-APPEND-E-link].
 
@@ -1048,20 +1061,18 @@ on message delays.
 > slower than *2 Delta* will be removed. In the following we will
 > provide a rough estimate on termination time in a fault-prone
 > scenario.
-
-
 > In the following
 > we assume that during a "long enough" finite good period no new
 > faulty peers are added to *peerIDs*. Below we will sketch how "long
 > enough" can be estimated based on the timing assumption in this
-> specification. 
+> specification.
 
+#### **[NewFS-A-STATUS-INTERVAL]**
 
-#### **[NewFS-A-STATUS-INTERVAL]**:
 Let Sigma be the (upper bound on the)
 time between two calls of `QueryStatus()`.
 
-#### **[NewFS-A-GOOD-PERIOD]**:
+#### **[NewFS-A-GOOD-PERIOD]**
 
 A time interval *[begin,end]* is *good period* if:
 
@@ -1078,7 +1089,7 @@ A time interval *[begin,end]* is *good period* if:
 > request and add the new block. Then [NewFS-A-DELTA] ensures that
 > *Fastsync* catches up.
 
-Arguments: 
+Arguments:
 
 1. If a faulty peer *p* reports a faulty block, `SequentialVerify` will
   eventually remove *p* from *peerIDs*
@@ -1089,21 +1100,21 @@ Arguments:
 
 3. Assume whenever a block does not have an open request, `CreateRequest` is
    called immediately, which calls `Block(n)` on a peer. Say this
-   happens at time *t*. There are two cases: 
+   happens at time *t*. There are two cases:
   
    - by t + 2 Delta a block is added to *blockStore*
    - at t + 2 Delta `Block(n)` timed out and *n* is removed from
        peer.
-	   
+
 4. Let *f(t)* be the number of faulty peers in *peerIDs* at time *t*;  
    *f(begin) = fmax*.
-	   
+
 5. Let t_i be the sequence of times `OnBlockResponse(addr,b)` is
    invoked or times out with *b.Height = height + 1*.
-   
-6. By 3., 
-   - (a). *t_1 <= begin + 2 Delta* 
-   - (b). *t_{i+1} <= t_i + 2 Delta* 
+
+6. By 3.,
+   - (a). *t_1 <= begin + 2 Delta*
+   - (b). *t_{i+1} <= t_i + 2 Delta*
 
 7. By an inductive argument we prove for *i > 0* that
 
@@ -1114,7 +1125,7 @@ Arguments:
    peer is removed, if it is faulty and returns a faulty block
    `SequentialVerify` removes the peer (b). If the returned block is OK,
    height is increased (a).
-	 
+  
 8. By 2. and 7., faulty peers can delay incrementing the height at
    most *fmax* times, where each time "costs" *2 Delta* seconds. We
    have additional *2 Delta* initial offset (3a) plus *2 Delta* to get
@@ -1124,15 +1135,13 @@ Arguments:
    conservative estimation of Delta, or a more refined analysis). Thus
    we reach the *targetHeight* and terminate by time *end*.
 
-
 # References
 
 <!--
 > links to other specifications/ADRs this document refers to
 ---->
 
-
-[[block]] Specification of the block data structure. 
+[[block]] Specification of the block data structure.
 
 <!-- [[blockchain]] The specification of the Tendermint blockchain. Tags refering to this specification are labeled [TMBC-*]. -->
 
