@@ -34,17 +34,17 @@ implementation of the [scheduler in Go](https://github.com/tendermint/tendermint
 The [scheduler.tla](scheduler.tla) can be model checked in TLC with the following
 parameters:
 
- - Constants:
+- Constants:
     - numRequests <- 2
     - PeerIDs <- 0..2
     - ultimateHeight <- 3
- - Invariants:
+- Invariants:
     - TypeOK
- - Properties:
+- Properties:
     - TerminationWhenNoAdvance
     - TerminationGoodPeers
     - TerminationAllCases
- - Proofs that properties are not vacuously true:
+- Proofs that properties are not vacuously true:
     - TerminationGoodPeersPre
     - TerminationAllCases
     - SchedulerIncreasePre

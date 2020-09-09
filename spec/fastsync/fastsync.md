@@ -1,6 +1,5 @@
 # Fastsync
 
-
 Fastsync is a protocol that is used by a node to catch-up to the
 current state of a Tendermint blockchain. Its typical use case is a
 node that was disconnected from the system for some time. The
