@@ -323,7 +323,7 @@ then the  detector eventually outputs the fork.
 > specification are acceptable.
 > These properties capture the following operational requirement:
 >
-> #### **[LCD-REQ-REP.1]**
+> **[LCD-REQ-REP.1]**  
 > If the  detector observes two conflicting headers for height *h*,
 > it should try to verify both. If both are verified it should report evidence.
 > If the primary reports header *h* and a secondary reports header *h'*,
@@ -568,7 +568,7 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
 
 See the [verification specification][verification] for details.
 
-## Solution
+## Protocol
 
 ### Shared data of the light client
 
