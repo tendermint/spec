@@ -23,7 +23,8 @@ component of the implementation](scheduler.tla). Both specifications contain
 properties that may be checked by the TLC model checker, though only for small
 values of the relevant parameters.
 
-We will continue to refine these specifications in our research work, to deduplicate 
+We will continue to refine these specifications in our research work,
+to deduplicate
 the redundancies between them, improve their utility to researchers and
 engineers, and to improve their verifiability. For now, they provide a complete
 description of the fast sync protocol in TLA+; especially the
