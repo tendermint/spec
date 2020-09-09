@@ -5,12 +5,12 @@ protocol. Implementations of the light client can be found in
 [Rust](https://github.com/informalsystems/tendermint-rs/tree/master/light-client) and
 [Go](https://github.com/tendermint/tendermint/tree/master/light).
 
-Light clients are assumed to be initialized once from a trusted source 
+Light clients are assumed to be initialized once from a trusted source
 with a trusted header and validator set. The light client
 protocol allows a client to then securely update its trusted state by requesting and
-verifying a minimal set of data from a network of full nodes (at least one of which is correct). 
+verifying a minimal set of data from a network of full nodes (at least one of which is correct).
 
-The light client is decomposed into three components: 
+The light client is decomposed into three components:
 
 - Commit Verification - verify signed headers and associated validator set changes from a single full node
 - Fork Detection -  verify commits across multiple full nodes and detect conflicts (ie. the existence of forks)
@@ -20,13 +20,13 @@ The light client is decomposed into three components:
 
 The [English specification](verification/verification.md) describes the light client
 commit verification problem in terms of the temporal properties
-[LCV-DIST-SAFE.1](https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification/verification.md#lcv-dist-safe1) and 
-[LCV-DIST-LIVE.1](https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification/verification.md#lcv-dist-live1). 
+[LCV-DIST-SAFE.1](https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification/verification.md#lcv-dist-safe1) and
+[LCV-DIST-LIVE.1](https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification/verification.md#lcv-dist-live1).
 Commit verification is assumed to operate within the Tendermint Failure Model, where +2/3 of validators are correct for some time period and
 validator sets can change arbitrarily at each height.
 
 A light client protocol is also provided, including all checks that
-need to be performed on headers, commits, and validator sets 
+need to be performed on headers, commits, and validator sets
 to satisfy the temporal properties - so a light client can continuously
 synchronize with a blockchain. Clients can skip possibly
 many intermediate headers by exploiting overlap in trusted and untrusted validator sets.
@@ -53,8 +53,8 @@ IS_PRIMARY_CORRECT == FALSE
 To run a complete set of experiments, clone [apalache](https://github.com/informalsystems/apalache) and [apalache-tests](https://github.com/informalsystems/apalache-tests) into a directory `$DIR` and run the following commands:
 
 ```sh
-$ $DIR/apalache-tests/scripts/mk-run.py --memlimit 28 001bmc-apalache.csv $DIR/apalache . out
-$ ./out/run-all.sh
+$DIR/apalache-tests/scripts/mk-run.py --memlimit 28 001bmc-apalache.csv $DIR/apalache . out
+./out/run-all.sh
 ```
 
 After the experiments have finished, you can collect the logs by executing the following command:
@@ -65,7 +65,7 @@ $DIR/apalache-tests/scripts/parse-logs.py --human .
 ```
 
 The following table summarizes the experimental results. The TLA+ properties can be found in the
-[TLA+ specification](verification/Lightclient_A_1.tla). 
+[TLA+ specification](verification/Lightclient_A_1.tla).
  The experiments were run in an AWS instance equipped with 32GB
 RAM and a 4-core Intel® Xeon® CPU E5-2686 v4 @ 2.30GHz CPU.
 We write “✗=k” when a bug is reported at depth k, and “✓<=k” when
@@ -90,4 +90,3 @@ There is no English specification yet. TODO: Jovan's work?
 TODO: there is a WIP [TLA+
 specification](https://github.com/informalsystems/verification/pull/13) in the
 verification repo that should be moved over here.
-
