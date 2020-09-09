@@ -54,7 +54,7 @@ project.
 
 The light client maintains a simple address book containing addresses
 of full nodes that it can pick as primary and secondaries.  To obtain
-a new header, the light client first does [verification](verification)
+a new header, the light client first does [verification][verification]
 with the primary, and then cross-checks the header with the
 secondaries using this specification.
 
