@@ -689,7 +689,7 @@ func ForkDetector(ls LightStore, PoFs PoFStore)
 
 [verificationVDD]: https://github.com/informalsystems/VDD/blob/master/lightclient/failuredetector.md
 
-[verification]: https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification.md
+[verification]: https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification/verification.md
 
 [accountability]: https://github.com/tendermint/spec/blob/master/spec/consensus/light-client/accountability.md
 
