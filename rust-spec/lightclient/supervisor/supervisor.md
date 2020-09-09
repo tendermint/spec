@@ -10,7 +10,7 @@
     - update tags to ".2"
     - lightstore.update: remove Unverified upon leaving verifyTotarget
 
-- replace links to "https://informal.systems" with proper links
+- replace links to https://informal.systems with proper links
 
 check that all is addressed:
 
