@@ -196,10 +196,10 @@ Proof that a leaf is in a Merkle tree is composed as follows:
 
 ```golang
 type Proof struct {
-        Total int
-        Index int
-        LeafHash []byte
-        Aunts [][]byte
+  Total int
+  Index int
+  LeafHash []byte
+  Aunts [][]byte
 }
 ```
 
@@ -275,7 +275,7 @@ Signed messages (eg. votes, proposals) in the consensus are encoded using protob
 When signing, the elements of a message are re-ordered so the fixed-length fields
 are first, making it easy to quickly check the type, height, and round.
 The `ChainID` is also appended to the end.
-We call this encoding the SignBytes. For instance, SignBytes for a vote is the Amino encoding of the following struct:
+We call this encoding the SignBytes. For instance, SignBytes for a vote is the protobuf encoding of the following struct:
 
 ```protobuf
 message CanonicalVote {
