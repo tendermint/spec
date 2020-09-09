@@ -10,7 +10,7 @@
     - update tags to ".2"
     - lightstore.update: remove Unverified upon leaving verifyTotarget
 
-- replace links to "https://informal.systems/" with proper links
+- replace links to "https://informal.systems" with proper links
 
 check that all is addressed:
 
@@ -36,7 +36,7 @@ model][TMBC-FM-2THIRDS-link]: starting at time *Time* of the
 more than two-thirds of the next validators of a new block are correct
 for the duration of *TrustedPeriod*.
 
-[Light Client Verification](https://informal.systems/) implements the fault-tolerant read
+[Light Client Verification](https://informal.systems) implements the fault-tolerant read
 operation designed for this security model. That is, it is safe if the
 model assumptions are satisfied and makes progress if it communicates
 to a correct primary.
@@ -46,7 +46,7 @@ faulty peers (that have been validators at some point in the past) may
 launch attacks on the Tendermint network, and on the light
 client. These attacks as well as an axiomatization of blocks in
 general are defined in [a document that contains the definitions that
-are currently in detection.md](https://informal.systems/).
+are currently in detection.md](https://informal.systems).
 
 If there is a light client attack (but no
 successful attack on the network), the safety of the verification step
@@ -54,7 +54,7 @@ may be violated (as we operate outside its basic assumption).
 The light client also
 contains a defense mechanism against light clients attacks, called detection.
 
-[Light Client Detection](https://informal.systems/) implements a cross check of the result
+[Light Client Detection](https://informal.systems) implements a cross check of the result
 of the verification step. If there is a light client attack, and the
 light client is connected to a correct peer, the light client as a
 whole is safe, that is, it will not operate on invalid
@@ -65,7 +65,7 @@ evidence. Evidence can be used to prove
 to a correct full node that there has been a
 light client attack.
 
-[Light Client Evidence Accountability](https://informal.systems/) is a protocol run on a
+[Light Client Evidence Accountability](https://informal.systems) is a protocol run on a
 full node to check whether submitted evidence indeed proves the
 existence of a light client attack. Further, from the evidence and its
 own knowledge about the blockchain, the full node computes a set of
@@ -76,10 +76,10 @@ via ABCI to the application.
 In this document we specify
 
 - Initialization of the Light Client
-- The interaction of [verification](https://informal.systems/) and [detection](https://informal.systems/)
+- The interaction of [verification](https://informal.systems) and [detection](https://informal.systems)
 
 The details of these two protocols are captured in their own
-documents, as is the [accountability](https://informal.systems/) protocol.
+documents, as is the [accountability](https://informal.systems) protocol.
 
 > Another related line is IBC attack detection and submission at the
 > relayer, as well as attack verification at the IBC handler. This
@@ -89,8 +89,8 @@ documents, as is the [accountability](https://informal.systems/) protocol.
 
 This document is work in progress. In order to develop the
 specification step-by-step,
-it assumes certain details of [verification](https://informal.systems/) and
-[detection](https://informal.systems/) that are not specified in the respective current
+it assumes certain details of [verification](https://informal.systems) and
+[detection](https://informal.systems) that are not specified in the respective current
 versions yet. This inconsistencies will be addresses over several
 upcoming PRs.
 
@@ -440,8 +440,8 @@ we want to maintain [LCV-INV-TP.1] from the beginning.
 > it may increase trust, when one cross-checks the initial light
 > block. However, if a peer provides a conflicting
 > lightblock, the question is to distinguish the case of a
-> [bogus](https://informal.systems/) block (upon which operation should proceed) from a
-> [light client attack](https://informal.systems/) (upon which operation should stop). In
+> [bogus](https://informal.systems) block (upon which operation should proceed) from a
+> [light client attack](https://informal.systems) (upon which operation should stop). In
 > case of a bogus block, the lightclient might be forced to do
 > backwards verification until the blocks are out of the trusting
 > period, to make sure no previous validator set could have generated
@@ -499,7 +499,7 @@ func InitLightClient (initData LCInitData) (LightStore, Error) {
     - none
 - Expected precondition
     - *LCInitData* contains either a genesis file of a lightblock
-    - if genesis it passes `ValidateAndComplete()` see [Tendermint](https://informal.systems/)
+    - if genesis it passes `ValidateAndComplete()` see [Tendermint](https://informal.systems)
 - Expected postcondition
     - *lightStore* initialized with trusted lightblock. It has either been
       cross-checked (from genesis) or it has initial trust from the
