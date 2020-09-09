@@ -213,7 +213,7 @@ of *h.NextValidators*, such that:
     h.Time + trustingPeriod)*; cf. [TMBC-CORRECT.1]
 
 > The definition of correct
-> [**[TMBC-CORRECT.1]**](TMBC-CORRECT-link) refers to realtime, while it
+> [**[TMBC-CORRECT.1]**][TMBC-CORRECT-link] refers to realtime, while it
 > is used here with *Time* and *trustingPeriod*, which are "hardware
 > times".  We do not make a distinction here.
 
@@ -1140,9 +1140,9 @@ func Main (primary PeerID, lightStore LightStore, targetHeight Height)
 [TMBC-SEQ-link]: #tmbc-seq1
 [TMBC-CorrFull-link]: #tmbc-corr-full1
 [TMBC-Auth-Byz-link]: #tmbc-auth-byz1
-[TMBC-TIME_PARAMS-link]: tmbc-time-params1
+[TMBC-TIME_PARAMS-link]: #tmbc-time-params1
 [TMBC-FM-2THIRDS-link]: #tmbc-fm-2thirds1
-[TMBC-VAL-CONTAINS-CORR-link]: tmbc-val-contains-corr1
+[TMBC-VAL-CONTAINS-CORR-link]: #tmbc-val-contains-corr1
 [TMBC-VAL-COMMIT-link]: #tmbc-val-commit1
 [TMBC-SOUND-DISTR-POSS-COMMIT-link]: #tmbc-sound-distr-poss-commit1
 
