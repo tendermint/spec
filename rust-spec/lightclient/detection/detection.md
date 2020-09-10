@@ -1,6 +1,4 @@
-***This an unfinished draft. Comments are welcome!***
-
-Evidences := AttackDetector(root_of_trust, verifiedLS);
+# ***This an unfinished draft. Comments are welcome!***
 
 # Light Client Attack Detector
 
@@ -270,37 +268,38 @@ things should be done, rather than what should be done. However, they
 do not constitute temporal logic verification conditions. For those,
 see [LCD-DIST-*] below.
 
-The detector works on a LightStore that contains LightBlocks in one of
-the state `StateUnverified`, `StateVerified`, `StateFailed`, or
-`StateTrusted`.
+The detector is called in the [supervisor](TODO) as follows
 
-#### **[LCD-IP-Q.1]**
+```go
+Evidences := AttackDetector(root_of_trust, verifiedLS);`
+```
 
-Whenever the light client verifier performs `VerifyToTarget` with the
-primary and returns with
-`(lightStore, ResultSuccess)`, the
- detector should query the secondaries by calling `FetchLightBlock` for height
- *LightStore.LatestVerified().Height* remotely.  
-Then,
-the detector returns the set of all headers *h'* downloaded from
-secondaries that satisfy
+where
 
-- *h'* is different from *LightStore.LatestVerified()*
-- *h'* is a (light) fork.
+- `root-of-trust` is a light block that is trusted (that is,
+except upon initialization, the primary and the secondaries
+agreed on in the past), and
+- `verifiedLS` is a lightstore that contains a verification trace that
+  starts from a lightblock that can be verified with the
+  `root-of-trust` in one step and ends with a lightblock of the height
+  requested by the user
+- `Evidences` is a list of evidence for misbehavior
 
-#### **[LCD-IP-PEERSET.1]**
+#### **[LCD-IP-STATEMENT.1]**
 
-Whenever the detector observes *detectable misbehavior* of a full node
-from the set of Secondaries it should be replaced by a fresh full
-node.  (A full node that has not been primary or secondary
-before). Detectable misbehavior can be
+Whenever AttackDetector is called,
+the detector should for each secondary do the following
 
-- a timeout
-- The case where *h'* is different
-from *LightStore.LatestVerified()* but *h'* is not a fork, that is, if
-*h'* is bogus. In other words, the
-secondary cannot provide a sequence of light blocks that constitutes
-proof of *h'*.
+- query the secondary by calling `FetchLightBlock` for height
+  *verifiedLS.Latest().Height* remotely.
+- in case the returned block *b* is different from verifiedLS.Latest(),
+  try to replay the verification trace `verifiedLS` with the secondary
+  - in case replaying leads to detection of a light client attack
+      (one of the lightblocks differ from the one in verifiedLS with
+      the same height), we should return evidence
+  - if the secondary cannot provide a verification trace, we have no
+      proof for an attack. Block *b* may be bogus. In this case the
+      secondary is faulty and it should be replaces.
 
 ## Assumptions/Incentives/Environment
 
@@ -324,9 +323,18 @@ detector.
 At all times there is at least one correct full
 node among the primary and the secondaries.
 
-**Remark:** Check whether [LCD-A-CorrFull.1] is not needed in the end because
-the verification conditions [LCD-DIST-*] have preconditions on specific
-cases where primary and/or secondaries are faulty.
+> For this version of the detection we take this assumption. It
+> allows us to establish the invariant that the lightblock
+> `root-of-trust` is always the one from the blockchain, and we can
+> use it as starting point for the evidence computation. Moreover, it
+> allows us to establish the invariant at the supervisor that any
+> lightblock in the (top-level) lightstore is from the blockchain.  
+> In the future we might design a lightclient based on the assumption
+> that at least in regular intervals the lightclient is connected to a
+> correct full node. This will require the detector to reconsider
+> `root-of-trust`, and remove lightblocks from the top-level
+> lightstore. 
+
 
 #### **[LCD-A-RelComm.1]**
 
@@ -339,63 +347,10 @@ This implies that we need a timeout of at least *2 Delta* for remote
 procedure calls to ensure that the response of a correct peer arrives
 before the timeout expires.
 
-## (Distributed) Problem statement
-
-> As the fork detector from the beginning is there to reduce the
-> impact of faulty nodes, and faulty nodes imply that there is a
-> distributed system, there is no sequential specification.
-
-The  detector gets as input a lightstore *lightStore*.
-Let *h-verified = lightStore.LatestVerified().Height* and
-     *h-trust=lightStore.LatestTrusted().Height* (see
-     [LCV-DATA-LIGHTSTORE]).
-It queries the secondaries for headers at height *h-verified*.
-The  detector returns a set *PoF* of *Proof of Forks*, and should satisfy the following
-     temporal formulas:
-
-#### **[LCD-DIST-INV.1]**
-
-If there is no fork at height *h-verified* ([TMBC-SIGN-FORK.1]),
-then the detector should return the empty set.
-
-> If the empty set is returned the supervisor will change the state of
-> the header at height *h-verified* to *stateTrusted*.
-
-#### **[LCD-DIST-LIVE-FORK.1]**
-
-If there is a fork at height *h-verified*, and
-there are two correct full nodes *i* and *j* that are
-
-- on different branches, and
-- *i* is primary and
-- *j* is secondary,
-
-then the  detector eventually outputs the fork.
-
-#### **[LCD-DIST-LIVE-FORK-FAULTY.1]**
-
-If there is a fork at height *h-verified*, and
-there is a correct secondary that is on a different branch than the
-primary reported,
-then the  detector eventually outputs the fork.
-
-> The above property is quite operational ("Than the primary
-> reported"), but it captures quite closely the requirement. As the
-> fork detector only makes sense in a distributed setting, and does
-> not have a sequential specification, less "pure"
-> specification are acceptable.
-> These properties capture the following operational requirement:
-> #### **[LCD-REQ-REP.1]**
-
-> If the  detector observes two conflicting headers for height *h*,
-> it should try to verify both. If both are verified it should report evidence.
-> If the primary reports header *h* and a secondary reports header *h'*,
-> and if *h'* can be verified based on common root of trust, then
-> evidence should be generated;
-> By verifying we mean calling `VerifyToTarget` from the
-> [[verification]] specification.
 
 ## Definitions
+
+TODO
 
 - A fixed set of full nodes is provided in the configuration upon
      initialization. Initially this set is partitioned into
@@ -404,7 +359,6 @@ then the  detector eventually outputs the fork.
   - a set *FullNodes*.
 - A set *FaultyNodes* of nodes that the light client suspects of being faulty; it is initially empty
 
-- *Lightstore* as defined in the [verification specification][verification].
 
 #### **[LCD-INV-NODES.1]:**
 
@@ -421,65 +375,51 @@ and the following transition invariant
 > The following invariant is very useful for reasoning, and underlies
 > many intuition when we
 
-#### **[LCD-INV-TRUSTED-AGREED.1]:**
+## (Distributed) Problem statement
 
-It is always the case the light client has downloaded a lightblock for height
-*lightStore.LatestTrusted().Height*
-from each of the current primary and the secondary, that all reported
-the identical lightblock for that height.
+> As the attack detector from the beginning is there to reduce the
+> impact of faulty nodes, and faulty nodes imply that there is a
+> distributed system, there is no sequential specification to which
+> this distributed problem statement may refer to.
 
-> In the above, I guess "the identical" might be replaced with "a
-> matching" to cover commits that might be different.
-> The above requires us that before we pick a new secondary, we have to
-> query the secondary for the header of height
-> *lightStore.LatestTrusted().Height*.
 
-## Solution
+
+#### **[LCD-DIST-INV-ATTACK.1]**
+
+If the detector returns non-empty evidence, then there is an
+attack at height *verifiedLS.Latest()* ([TMBC-ATTACK.1]).
+
+#### **[LCD-DIST-INV-STORE.1]**
+
+If the detector returns empty evidence, then *verifiedLS* contains
+only blocks from the blockchain.
+
+#### **[LCD-DIST-BOGUS.1]**
+
+If a secondary reports a bogus lightblock, then the secondary is
+replaced. 
+
+
+> The above property is quite operational ("reports"), but it captures 
+> quite closely the requirement. As the
+> detector only makes sense in a distributed setting, and does
+> not have a sequential specification, less "pure"
+> specification are acceptable.
+
+
+# Protocol (goes here)
+
+
 
 ### Data Structures
 
+#### **[LCD-DATA-LIGHTSTORE.1]**
+
 Lightblocks and LightStores are
-defined at [LCV-DATA-LIGHTBLOCK.1] and [LCV-DATA-LIGHTSTORE.1]. See the [verification specification][verification] for details.
+defined in the verification specification
+[LCV-DATA-LIGHTBLOCK.1] and [LCV-DATA-LIGHTSTORE.1]. See the [verification specification][verification] for details.
 
-> The following data structure [LCV-DATA-POF.1]
-> defines a **proof of fork**. Following
-> [TMBC-SIGN-FORK.1], we require two blocks *b* and *c* for the same
-> height that can both be verified from a common root block *a* (using
-> the skipping or the sequential method).
-> [LCV-DATA-POF.1] mirrors the definition [TMBC-SIGN-FORK.1]:
-> *TrustedBlock* corresponds to *a*, and *PrimaryTrace* and *SecondaryTrace*
-> are traces to two blocks *b* and *c*. The traces establish that both
-> *skip-root(a,b,t)* and *skip-root(a,c,t)* are satisfied.
-
-#### **[LCV-DATA-POF.1]**
-
-```go
-type LightNodeProofOfFork struct {
-    TrustedBlock      LightBlock
-    PrimaryTrace      []LightBlock
-    SecondaryTrace    []LightBlock
-}
-```
-
-<!-- ```go -->
-<!-- // info about the LC's last trusted block -->
-<!-- type TrustedBlockInfo struct { -->
-<!--   Height              int -->
-<!--   BlockID             BlockID -->
-<!-- }  -->
-<!-- ``` -->
-
-#### **[LCV-DATA-POFSTORE.1]**
-
-Proofs of Forks are stored in a structure which stores all  proofs
-generated during detection.
-
-```go
-type PoFStore struct {
- ...
-}
-```
-
+TODO: add those to verification  
 In additions to the functions defined in
 the [verification specification][verification], the
 LightStore exposes the following function
@@ -493,8 +433,34 @@ func (ls LightStore) Subtrace(from int, to int) LightStore
 - Expected postcondition
   - returns a lightstore that contains all lightblocks *b* from *ls*
      that satisfy: *from < b.Header.Height <= to*
-
 ----
+
+**TODO:** the evidence should go to the supervisor spec
+
+The following data structure is the one that the lightclient submits
+to a peer. It is created specifically for that peer
+depending on the lightblocks it provided to the lightclient.
+
+#### **[LCD-DATA-EVIDENCE.1]**
+
+```go
+type LightClientAttackEvidence struct {
+    ConflictingBlock   LightBlock
+    CommonHeight       int64
+}
+```
+
+As the above data is computed for a specific peer, the following
+data structure wraps the evidence and adds the peerID.
+
+#### **[LCD-DATA-EVIDENCE-INT.1]**
+```go
+type InternalEvidence struct {
+    Evidence           LightClientAttackEvidence
+    Peer               PeerID
+}
+```
+
 
 ### Inter Process Communication
 
@@ -504,59 +470,12 @@ func FetchLightBlock(peer PeerID, height Height) LightBlock
 
 See the [verification specification][verification] for details.
 
-#### **[LCD-FUNC-SUBMIT.1]:**
 
-```go
-func SubmitProofOfFork(pof LightNodeProofOfFork) Result
-```
-
-**TODO:** finalize what this should do, and what detail of
-  specification we need.
-
-- Implementation remark
-- Expected precondition
-  - none
-- Expected postcondition
-  - submit evidence to primary and the secondary in *pof*, that is,
-      to
-    - `pof.PrimaryTrace[1].Provider`
-    - `pof.SecondaryTrace[1].Provider`
-  - **QUESTION** minimize data? We could submit to the primary only
-      the trace of the secondary, and vice versa. Do we need to spell
-      that out here? (Also, by [LCD-INV-TRUSTED-AGREED.1], we do not
-      need to send `pof.TrustedBlock`)
-  - **FUTURE WORK:** we might send *pof* to primary or all
-      secondaries or broadcast to all full nodes. However, in evidence
-      detection this might need that a full node has to check a *pof*
-      where both traces are not theirs. This leads to more complicated
-      logic at the full node, which we do not need right now.
-
-- Error condition
-  - none
 
 ### Auxiliary Functions (Local)
 
-#### **[LCD-FUNC-CROSS-CHECK.1]:**
-
-```go
-func CrossCheck(peer PeerID, testedLB LightBlock) (result) {
- sh := FetchLightBlock(peer, testedLB.Height);
-  // as the check below only needs the header, it is sufficient
-  // to download the header rather than the LighBlock
-    if testedLB.Header == sh.Header {
-     return OK
- }
- else {
-     return DoesNotMatch
- }
-}
-```
-
-- Implementation remark
-  - download block and compare to previously downloaded one.
-- Expected precondition
-- Expected postcondition
-- Error condition
+**TODO:** this should also go to the supervisor. Especially replace
+primary only happens there.
 
 #### **[LCD-FUNC-REPLACE-PRIMARY.1]:**
 
@@ -581,10 +500,10 @@ Replace_Primary()
                    lightblock in store. (Might be the approach for the
                    light node that assumes to be connected to correct
                    full nodes only from time to time)
-   
+
 - Expected precondition
   - *FullNodes* is nonempty
- 
+
 - Expected postcondition
   - *primary* is moved to *FaultyNodes*
   - all lightblocks with height greater than
@@ -682,7 +601,7 @@ func ForkDetector(ls LightStore, PoFs PoFStore)
     // If return code was EXPIRED it might be too late
     // to punish, we still report it.
     pof = new LightNodeProofOfFork;
-    pof.TrustedBlock := LightStore.LatestTrusted() 
+    pof.TrustedBlock := LightStore.LatestTrusted()
     pof.PrimaryTrace :=
         LightStore.Subtrace(LightStore.LatestTrusted().Height,
                          testedLB.Height);
