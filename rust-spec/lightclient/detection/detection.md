@@ -550,6 +550,13 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
 
 See the [verification specification][verification] for details.
 
+### From the supervisor TODO: move it there
+```
+func submitEvidence(Evidences []InternalEvidence)
+```
+- Expected postcondition
+    - for each `ev` in `Evidences`: submit `ev.Evidence` to `ev.Peer`
+
 ## Solution
 
 ### Shared data of the light client
@@ -583,23 +590,23 @@ func AttackDetector(root LightBlock,
 	Evidences := new []InternalEvidence;
 	
 	for each secondary {
-	    conflict, result :=
+	    sec_block, result :=
 	        FetchLightBlock(secondary,primarytrace.Latest().Height);
 		if result != ResultSuccess {
 		    replace_secondary();
 			// TODO: FetchLightBlock to return error codes (what to do
 			// if the secondary doesn't have the height?
 		}
-	    if conflict != primarytrace.Latest {
+	    if sec_block != primarytrace.Latest {
 		    // we replay the primary trace with the secondary, in
 			// order to generate evidence that we can submit to the 
 			// secodary. We return the evidence + the trace the
 			// secondary told us that spans the evidence at its local store
 			
 			
-	    	EvidenceForSecondary, secondary_trace, result := 
+	    	EvidenceForSecondary, newroot, secondary_trace, result := 
 			    CreateEvidenceForPeer(secondary, root, primary_trace)
-			if result == FaultSecondary {
+			if result == FaultyPeer {
 			    replace_secondary();
 			}
 			else if result == FoundEvidence {
@@ -608,9 +615,8 @@ func AttackDetector(root LightBlock,
 			    // we replay the secondary trace with the primary, ...
 			    EvidenceForPrimary, _, result := 
 			        CreateEvidenceForPeer(secondary,
-			                              head(secondary_trace),
-										  tail(secondary_trace));
-										  // TODO: head and tail function
+			                              newroot,
+										  secondary_trace);
 			    if result == FoundEvidence {
 			        Evidences.Add(EvidenceForPrimary);
 			    }
@@ -632,6 +638,18 @@ func AttackDetector(root LightBlock,
 	return Evidences;	
 }
 ```
+**TODO:** fix
+- Expected precondition
+  - root and primary trace satisfy are a verification tract
+- Expected postcondition
+  - solves the problem statement (if attack found it is reported)
+- Error condition
+  - `ErrorTrustExpired`: fails if root expires (outside trusting
+    period) [LCV-INV-TP]
+  - `ErrorNoPeers`: if no peers are left to replace secondaries	
+----
+
+
 
 
 ```go
@@ -645,97 +663,47 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
 		
 		if result != ResultSuccess {
 		    // something went wrong
-		    return (nil, nil, FaultSecondary)
+		    return (nil, nil, nil, FaultyPeer)
 	    }
 		else {
 		    if auxLS.Latest() != trace[i].Header {
 			    // the header reported by peer differs from the
 				// reference header in trace but both could be
-				// verified from common
+				// verified from common in one step.
+				// we can create evidence for submission to the secondary
 				ev := new InternalEvidence;
 				ev.Evidence.ConflictingBlock := trace[i];
-				ev.Evidencd.CommonHeight := common.Height;
+				ev.Evidence.CommonHeight := common.Height;
 				ev.Peer := peer
 				
-				return (ev, auxLS, FoundEvidence)
+				return (ev, common, auxLS, FoundEvidence)
 			}
 			else {
 			    // the peer agrees with the trace, we move common forward
+				// we could delete auxLS as it will be overwritten in
+			    // the next iteration
 			    common := trace[i].Header
 			}
 		}
 	}
     // in current usage this should be unreachable. We only call	
-	return (nil, nil, NoEvidence)
-}
-
-
-```
-
-
-
-
-
-func ForkDetector(ls LightStore, PoFs PoFStore)
-{
- testedLB := LightStore.LatestVerified()
- for i, secondary range Secondaries {
-     if OK = CrossCheck(secondary, testedLB) {
-   // header matches. we do nothing.
-  }
-  else {
-   // [LCD-REQ-REP]
-   // header does not match. there is a situation.
-   // we try to verify sh by querying s
-   // we set up an auxiliary lightstore with the highest
-   // trusted lightblock and the lightblock we want to verify
-   auxLS.Init
-   auxLS.Update(LightStore.LatestTrusted(), StateVerified);
-   auxLS.Update(sh,StateUnverified);
-   LS,result := VerifyToTarget(secondary, auxLS, sh.Header.Height)
-   if (result = ResultSuccess || result = EXPIRED) {
-    // we verified header sh which is conflicting to hd
-    // there is a fork on the main blockchain.
-    // If return code was EXPIRED it might be too late
-    // to punish, we still report it.
-    pof = new LightNodeProofOfFork;
-    pof.TrustedBlock := LightStore.LatestTrusted()
-    pof.PrimaryTrace :=
-        LightStore.Subtrace(LightStore.LatestTrusted().Height,
-                         testedLB.Height);
-    pof.SecondaryTrace :=
-        auxLS.Subtrace(LightStore.LatestTrusted().Height,
-                    testedLB.Height);
-    PoFs.Add(pof);
-   }
-   else {
-    // secondary might be faulty or unreachable
-    // it might fail to provide a trace that supports sh
-    // or time out
-    Replace_Secondary(secondary)
-   }
-  }
- }
- return PoFs
+	return (nil, nil, nil, NoEvidence)
 }
 ```
-
-**TODO:** formalize conditions
-
+**TODO:** fix
 - Expected precondition
-  - Secondaries initialized and non-empty
-  - `PoFs` initialized and empty
-  - *lightStore.LatestTrusted().Height < lightStore.LatestVerified().Height*
+  - root and trace satisfy are a verification trace
+  - [LCD-BRANCH.1] the peer is on a different branch of the blockchain than trace (it
+    should only be called if this is the case)
 - Expected postcondition
-  - satisfies [LCD-DIST-INV.1], [LCD-DIST-LIFE-FORK.1]
-  - removes faulty secondary if it reports wrong header
-  - **TODO** submit proof of fork
+  - finds evidence where trace and peer diverge
 - Error condition
-  - fails if precondition is violated
-  - fails if [LCV-INV-TP] is violated (no trusted header within
-      trusting period
-
+  - `ErrorTrustExpired`: fails if root expires (outside trusting
+    period) [LCV-INV-TP]
+  - `NoEvidence`  [LCD-BRANCH.1] is violated
 ----
+
+
 
 ## Correctness arguments
 
