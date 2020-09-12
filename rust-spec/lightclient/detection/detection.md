@@ -107,12 +107,16 @@ time t there exists an *h* and a sequence *a(1)*, ... *a(h)* s.t.
 - *a(h) = c* and
 - *supports( a(i), a(i+1), t)*, for all i, *1 <= i < h*.
 
+We call such a sequence *a(1)*, ... *a(h)* a **verification trace**
+
 > **TODO** In the above we might use a sequence of times t(i). Not sure.
 > **TODO:** I believe the following definition
 > corresponds to **Slashable fork** in
 > [forks][tendermintfork]. Please confirm!  
 > Observe that sign-skip-match  is even defined if there is a fork on
 > the chain.
+
+
 
 #### **[TMBC-SIGN-SKIP-MATCH.1]**
 
@@ -148,6 +152,8 @@ characterization of attacks" which focuses on what nodes are
 affected. For future reference and discussion we also provide a
 "block-based characterization of attacks".
 
+
+
 ### Node-based characterization of attacks
 
 #### **[TMBC-MC-FORK.1]**
@@ -174,6 +180,43 @@ We say there is a light client attack at time *t*, if
 > blockchain, and some attacker has computed *c* and tries to wrongly
 > convince
 > the light client that *c* is the block from the chain.
+
+#### **[TMBC-LC-ATTACK-EVIDENCE.1]**
+
+We consider the following case
+- *attack(a,b,c,t)*
+- there is a peer p1 that has a sequence of blocks *chain* from *a* to *b*
+- *skip-root(a,c,t)*: by **[TMBC-SKIP-ROOT.1]** there is a
+  verification trace *v* of the form *a = v(1)*, ... *v(h) = c*
+
+Evidence for p1 (that proves an attack) consists of v(i) and v(i+1)
+such that
+- E1. v(i) is equal to the block of *chain* at height v(i).Height, and
+- E2. v(i+1) that is different from  the block of *chain* at height v(i+1).height
+   
+> Observe p1 can 
+> - check that v(i+1) can check that it differs from its block at that
+>   height
+> - verify v(i+1) in one step from v(i) as v is a verification trace
+
+> To prove the attack to p1, because of Point 1, it is sufficient to 
+> submit v(i).Height rather than v(i).
+
+> In the case of attack, evidence must exists:
+> first observe that 
+> - (I) NOT E2(i) implies E1(i+1)
+>
+> Now by contradiction assume there is no evidence. Thus 
+> - for all i, we have NOT E1(i) or NOT E2(i)
+> - for i = 1 we have E1(1) and thus NOT E2(1)  
+>   thus by induction on i, by (I) we have for all i that **E1(i)**
+> - from attack we have E2(h), and as there is no evidence for
+>   i = h we get **NOT E1(h)**. Contradiction.
+
+
+
+
+
 
 #### **[TMBC-ATTACKERS.1]**
 
@@ -381,6 +424,9 @@ and the following transition invariant
 > impact of faulty nodes, and faulty nodes imply that there is a
 > distributed system, there is no sequential specification to which
 > this distributed problem statement may refer to.
+
+**TODO:** What is evidence? refer to light client attack.
+
 
 
 
