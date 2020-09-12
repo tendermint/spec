@@ -576,8 +576,106 @@ The problem laid out is solved by calling  the function `ForkDetector`
 ### Fork Detector
 
 #### **[LCD-FUNC-DETECTOR.1]:**
+```go
+func AttackDetector(root LightBlock,
+                    primary_trace []LightBlock) ([]InternalEvidence) {
+			
+	Evidences := new []InternalEvidence;
+	
+	for each secondary {
+	    conflict, result :=
+	        FetchLightBlock(secondary,primarytrace.Latest().Height);
+		if result != ResultSuccess {
+		    replace_secondary();
+			// TODO: FetchLightBlock to return error codes (what to do
+			// if the secondary doesn't have the height?
+		}
+	    if conflict != primarytrace.Latest {
+		    // we replay the primary trace with the secondary, in
+			// order to generate evidence that we can submit to the 
+			// secodary. We return the evidence + the trace the
+			// secondary told us that spans the evidence at its local store
+			
+			
+	    	EvidenceForSecondary, secondary_trace, result := 
+			    CreateEvidenceForPeer(secondary, root, primary_trace)
+			if result == FaultSecondary {
+			    replace_secondary();
+			}
+			else if result == FoundEvidence {
+			    // the conflict is not bogus
+			    Evidences.Add(EvidenceForSecondary);
+			    // we replay the secondary trace with the primary, ...
+			    EvidenceForPrimary, _, result := 
+			        CreateEvidenceForPeer(secondary,
+			                              head(secondary_trace),
+										  tail(secondary_trace));
+										  // TODO: head and tail function
+			    if result == FoundEvidence {
+			        Evidences.Add(EvidenceForPrimary);
+			    }
+			    // At this point we do not care about the other error
+			    // codes. We already have generated evidence for an
+			    // attack and need to stop the lightclient. It does not
+			    // help to call replace_primary. Also we will use the
+				// same primary to check with other secondaries in
+				// later iterations of the loop
+			}
+			else {
+			    // first the secondary reported a faulty block but
+			    // then reported a matching block for the same height
+				// first block was most likely bogus
+			    replace_secondary();
+			}
+        }
+	}
+	return Evidences;	
+}
+```
+
 
 ```go
+func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
+(Evidence, LightStore, result) {
+
+    common := root;
+
+    for i in 1 len(trace) - 1 {
+        auxLS, result := VerifyToTarget(peer, common, trace[i].Header.Height)
+		
+		if result != ResultSuccess {
+		    // something went wrong
+		    return (nil, nil, FaultSecondary)
+	    }
+		else {
+		    if auxLS.Latest() != trace[i].Header {
+			    // the header reported by peer differs from the
+				// reference header in trace but both could be
+				// verified from common
+				ev := new InternalEvidence;
+				ev.Evidence.ConflictingBlock := trace[i];
+				ev.Evidencd.CommonHeight := common.Height;
+				ev.Peer := peer
+				
+				return (ev, auxLS, FoundEvidence)
+			}
+			else {
+			    // the peer agrees with the trace, we move common forward
+			    common := trace[i].Header
+			}
+		}
+	}
+    // in current usage this should be unreachable. We only call	
+	return (nil, nil, NoEvidence)
+}
+
+
+```
+
+
+
+
+
 func ForkDetector(ls LightStore, PoFs PoFStore)
 {
  testedLB := LightStore.LatestVerified()
