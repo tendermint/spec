@@ -156,21 +156,21 @@ affected. For future reference and discussion we also provide a
 
 ### Node-based characterization of attacks
 
-#### **[TMBC-MC-FORK.1]**
+#### ****
 
 We say there is a (main chain) fork at time *t* if
 
 - there are two correct full nodes *i* and *j* and
 - *i* is different from *j* and
-- *i* has decided on *a* and
-- *j* has decided on *b* and
+- *i* has decided on *b* and
+- *j* has decided on *c* and
 - there exist *a* such that *attack(a,b,c,t)*.
 
 #### **[TMBC-LC-ATTACK.1]**
 
 We say there is a light client attack at time *t*, if
 
-- there is **no** (main chain) fork and
+- there is **no** (main chain) fork [TMBC-MC-FORK.1], and
 - there exist nodes that have computed light blocks *b* and *c* and
 - there exist *a* such that *attack(a,b,c,t)*.
 
@@ -183,9 +183,9 @@ We say there is a light client attack at time *t*, if
 
 #### **[TMBC-LC-ATTACK-EVIDENCE.1]**
 
-We consider the following case
+We consider the following case of a light client attach [TMBC-LC-ATTACK.1]
 - *attack(a,b,c,t)*
-- there is a peer p1 that has a sequence of blocks *chain* from *a* to *b*
+- there is a peer p1 that has a sequence *chain* of blocks from *a* to *b*
 - *skip-root(a,c,t)*: by **[TMBC-SKIP-ROOT.1]** there is a
   verification trace *v* of the form *a = v(1)*, ... *v(h) = c*
 
@@ -200,11 +200,14 @@ such that
 >   height
 > - verify v(i+1) in one step from v(i) as v is a verification trace
 
-> To prove the attack to p1, because of Point 1, it is sufficient to 
-> submit v(i).Height rather than v(i).
+#### **[TMBC-LC-EVIDENCE-DATA.1]**
+To prove the attack to p1, because of Point 1, it is sufficient to
+submit 
+- v(i).Height (rather than v(i)).
+- v(i+1)
 
-> In the case of attack, evidence must exists:
-> first observe that 
+> Proposition. In the case of attack, evidence must exists.  
+> Proof. first observe that 
 > - (A). (NOT E2(i)) implies E1(i+1)
 >
 > Now by contradiction assume there is no evidence. Thus 
