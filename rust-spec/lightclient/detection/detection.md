@@ -156,7 +156,7 @@ implies *b.Header = c.Header*.
 
 If there exists three light blocks a, b, and c, with
 *sign-skip-match(a,b,c,t) =
-false* then we have an *attack*.  
+false* then we have an *attack*.
 We say we have **an attack at height** *b.Header.Height* and write
 *attack(a,b,c,t)*.
 
@@ -196,6 +196,8 @@ We say there is a light client attack at time *t*, if
 - there exist nodes that have computed light blocks *b* and *c* and
 - there exist *a* such that *attack(a,b,c,t)*.
 
+We say the attack is at height *a.Header.Height*.
+
 > In this specification we consider detection of light client
 > attacks. Intuitively, the case we consider is that
 > light block *b* is the one from the
@@ -228,6 +230,8 @@ submit
 - v(i).Height (rather than v(i)).
 - v(i+1)
 
+This information is *evidence for height v(i).Height*.
+
 > Proposition. In the case of attack, evidence must exists.  
 > Proof. first observe that 
 > - (A). (NOT E2(i)) implies E1(i+1)
@@ -240,7 +244,7 @@ submit
 >   i = h - 1 we get **NOT E1(h-1)**. Contradiction.
 
 
-
+**TODO** Highlight that +1/3 of v(i).Header.NextValidators misbehaved.
 
 
 
@@ -425,14 +429,17 @@ before the timeout expires.
 
 ## Definitions
 
-TODO
+### Peers
 
-- A fixed set of full nodes is provided in the configuration upon
-     initialization. Initially this set is partitioned into
+#### **[LCD-DATA-PEERS.1]:**
+
+A fixed set of full nodes is provided in the configuration upon
+initialization. Initially this set is partitioned into
   - one full node that is the *primary* (singleton set),
   - a set *Secondaries* (of fixed size, e.g., 3),
   - a set *FullNodes*.
-- A set *FaultyNodes* of nodes that the light client suspects of being faulty; it is initially empty
+  - A set *FaultyNodes* of nodes that the light client suspects of
+    being faulty; it is initially empty
 
 
 #### **[LCD-INV-NODES.1]:**
@@ -447,51 +454,40 @@ and the following transition invariant
 
 - *FullNodes' \union Secondaries' \union FaultyNodes' = FullNodes \union Secondaries \union FaultyNodes*
 
-> The following invariant is very useful for reasoning, and underlies
-> many intuition when we
+### Evidence
 
-## (Distributed) Problem statement
+Following the definition of [TMBC-LC-ATTACK-EVIDENCE.1], by evidence
+we refer to a variable of the following type
 
-> As the attack detector from the beginning is there to reduce the
-> impact of faulty nodes, and faulty nodes imply that there is a
-> distributed system, there is no sequential specification to which
-> this distributed problem statement may refer to.
+#### **[LC-DATA-EVIDENCE.1]**
 
-**TODO:** What is evidence? refer to light client attack.
+```go
+type LightClientAttackEvidence struct {
+    ConflictingBlock   LightBlock
+    CommonHeight       int64
+}
+```
 
+As the above data is computed for a specific peer, the following
+data structure wraps the evidence and adds the peerID.
 
+#### **[LC-DATA-EVIDENCE-INT.1]**
+```go
+type InternalEvidence struct {
+    Evidence           LightClientAttackEvidence
+    Peer               PeerID
+}
+```
 
+**TODO:** move submitEvidence function to supervisor spec
+```
+func submitEvidence(Evidences []InternalEvidence)
+```
+- Expected postcondition
+    - for each `ev` in `Evidences`: submit `ev.Evidence` to `ev.Peer`
 
-#### **[LCD-DIST-INV-ATTACK.1]**
+### LightStore
 
-If the detector returns non-empty evidence, then there is an
-attack at height *verifiedLS.Latest()* ([TMBC-ATTACK.1]).
-
-#### **[LCD-DIST-INV-STORE.1]**
-
-If the detector returns empty evidence, then *verifiedLS* contains
-only blocks from the blockchain.
-
-#### **[LCD-DIST-BOGUS.1]**
-
-If a secondary reports a bogus lightblock, then the secondary is
-replaced. 
-
-
-> The above property is quite operational ("reports"), but it captures 
-> quite closely the requirement. As the
-> detector only makes sense in a distributed setting, and does
-> not have a sequential specification, less "pure"
-> specification are acceptable.
-
-
-# Protocol (goes here)
-
-
-
-### Data Structures
-
-#### **[LCD-DATA-LIGHTSTORE.1]**
 
 Lightblocks and LightStores are
 defined in the verification specification
@@ -513,31 +509,78 @@ func (ls LightStore) Subtrace(from int, to int) LightStore
      that satisfy: *from < b.Header.Height <= to*
 ----
 
-**TODO:** the evidence should go to the supervisor spec
 
-The following data structure is the one that the lightclient submits
-to a peer. It is created specifically for that peer
-depending on the lightblocks it provided to the lightclient.
+**TODO:** the lightstore and the evidence should go to the supervisor spec
 
-#### **[LCD-DATA-EVIDENCE.1]**
 
-```go
-type LightClientAttackEvidence struct {
-    ConflictingBlock   LightBlock
-    CommonHeight       int64
-}
-```
 
-As the above data is computed for a specific peer, the following
-data structure wraps the evidence and adds the peerID.
+## (Distributed) Problem statement
 
-#### **[LCD-DATA-EVIDENCE-INT.1]**
-```go
-type InternalEvidence struct {
-    Evidence           LightClientAttackEvidence
-    Peer               PeerID
-}
-```
+> As the attack detector from the beginning is there to reduce the
+> impact of faulty nodes, and faulty nodes imply that there is a
+> distributed system, there is no sequential specification to which
+> this distributed problem statement may refer to.
+
+
+The detector gets as input a trusted lightblock called *root* and an
+auxiliary lightstore called *primary_trace* with lightblocks that have
+been verified before and that were provided by the primary. 
+
+#### **[LCD-DIST-INV-ATTACK.1]**
+
+If the detector returns non-empty evidence for height *h*
+[TMBC-LC-EVIDENCE-DATA.1], then there is an attack at height
+*h*. [TMBC-LC-ATTACK.1]
+
+#### **[LCD-DIST-INV-STORE.1]**
+
+If the detector returns empty evidence, then *primary_trace* contains
+only blocks from the blockchain.
+
+
+
+#### **[LCD-DIST-LIVE-NORMAL.1]**
+
+If 
+- the *primary_trace* contains only blocks from the blockchain, and 
+- there is no attack, and 
+- *Secondaries* is always non-empty, and
+- the age of *root* is always less than the trusting period,
+
+then the detector returns empty evidence.
+
+#### **[LCD-DIST-LIVE-ATTACK.1]**
+
+If 
+- there is an attack, and 
+- a secondary reports a block that conflicts
+  with one of the blocks in *primary_trace*, and
+- the age of *root* is always less than the trusting period,
+
+then the detector returns evidence.
+
+> Observe that above we require that "a secondary reports a block that
+> conflicts". If there is an attack, but no secondary tries to launch
+> it against the detector, there is nothing to detect for us.
+
+#### **[LCD-DIST-SAFE-BOGUS.1]**
+
+No correct secondary is ever replaced.
+
+#### **[LCD-DIST-LIVE-BOGUS.1]**
+
+If a secondary reports a bogus lightblock, then the secondary is
+replaced. 
+
+
+> The above property is quite operational ("reports"), but it captures 
+> quite closely the requirement. As the
+> detector only makes sense in a distributed setting, and does
+> not have a sequential specification, less "pure"
+> specification are acceptable.
+
+
+# Protocol
 
 
 ### Inter Process Communication
@@ -549,75 +592,52 @@ func FetchLightBlock(peer PeerID, height Height) LightBlock
 See the [verification specification][verification] for details.
 
 
+### Auxiliary Functions for the Peer Set
 
-### Auxiliary Functions (Local)
-
-**TODO:** this should also go to the supervisor. Especially replace
+**TODO:** this needs to go to the supervisor. Especially replace
 primary only happens there.
+
+#### **[LC-INV-ROOT-AGREED.1]**
+
+In the Sequential-Supervisor, it is always the case that the primary
+and all secondaries agree on
+lightStore.Latest(). 
 
 #### **[LCD-FUNC-REPLACE-PRIMARY.1]:**
 
 ```go
-Replace_Primary()
+Replace_Primary(root-of-trust LightBlock)
 ```
-
-**TODO:** formalize conditions
-
 - Implementation remark
-  - the primary is replaced by a secondary, and lightblocks above
-      trusted blocks are removed
-  - to maintain a constant size of secondaries, at this point we
-      might need to
-    - pick a new secondary *nsec*
-    - maintain [LCD-INV-TRUSTED-AGREED.1], that is,
-      - call `CrossCheck(nsec,lightStore.LatestTrusted()`.
-              If it matches we are OK, otherwise
-        - we repeat with another full node as new
-                   secondary candidate
-        - **FUTURE:** try to do fork detection from some possibly old
-                   lightblock in store. (Might be the approach for the
-                   light node that assumes to be connected to correct
-                   full nodes only from time to time)
-
+    - the primary is replaced by a secondary
+    - to maintain a constant size of secondaries, need to
+        - pick a new secondary *nsec* while ensuring [LC-INV-ROOT-AGREED.1]
+        - that is, we need to ensure that root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
 - Expected precondition
-  - *FullNodes* is nonempty
-
+    - *FullNodes* is nonempty
 - Expected postcondition
-  - *primary* is moved to *FaultyNodes*
-  - all lightblocks with height greater than
-      lightStore.LatestTrusted().Height are removed from *lightStore*.
-  - a secondary *s* is moved from *Secondaries* to primary
-
-> this ensures that *s* agrees on the Last Trusted State
-
+    - *primary* is moved to *FaultyNodes*
+    - a secondary *s* is moved from *Secondaries* to primary
 - Error condition
-  - if precondition is violated
+    - if precondition is violated
+
+
 
 #### **[LCD-FUNC-REPLACE-SECONDARY.1]:**
 
 ```go
-Replace_Secondary(addr Address)
+Replace_Secondary(addr Address, root-of-trust LightBlock)
 ```
-
-**TODO:** formalize conditions
-
 - Implementation remark
-  - maintain [LCD-INV-TRUSTED-AGREED.1], that is,
-    - call `CrossCheck(nsec,lightStore.LatestTrusted()`.
-           If it matches we are OK, otherwise
-      - we might just repeat with another full node as new secondary
-      - **FUTURE:** try to do fork detection from some possibly old
-             lightblock in store. (Might be the approach for the
-             light node that assumes to be connected to correct
-             full nodes only from time to time)
-
+  - maintain [LCD-INV-ROOT-AGREED.1], that is,
+    ensure root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
 - Expected precondition
-  - *FullNodes* is nonempty
+    - *FullNodes* is nonempty
 - Expected postcondition
-  - addr is moved from *Secondaries* to *FaultyNodes*
-  - an address *a* is moved from *FullNodes* to *Secondaries*
+    - addr is moved from *Secondaries* to *FaultyNodes*
+    - an address *nsec* is moved from *FullNodes* to *Secondaries*
 - Error condition
-  - if precondition is violated
+    - if precondition is violated
 
 ### From the verifier
 
@@ -628,12 +648,6 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
 
 See the [verification specification][verification] for details.
 
-### From the supervisor TODO: move it there
-```
-func submitEvidence(Evidences []InternalEvidence)
-```
-- Expected postcondition
-    - for each `ev` in `Evidences`: submit `ev.Evidence` to `ev.Peer`
 
 ## Solution
 
@@ -642,7 +656,8 @@ func submitEvidence(Evidences []InternalEvidence)
 - a pool of full nodes *FullNodes* that have not been contacted before
 - peer set called *Secondaries*
 - primary
-- lightStore
+
+> note that the 
 
 ### Outline
 
@@ -667,11 +682,11 @@ func AttackDetector(root LightBlock,
 			
 	Evidences := new []InternalEvidence;
 	
-	for each secondary {
+	for each secondary in Secondaries {
 	    sec_block, result :=
 	        FetchLightBlock(secondary,primarytrace.Latest().Height);
 		if result != ResultSuccess {
-		    replace_secondary();
+		    replace_secondary(root);
 			// TODO: FetchLightBlock to return error codes (what to do
 			// if the secondary doesn't have the height?
 		}
@@ -685,7 +700,7 @@ func AttackDetector(root LightBlock,
 	    	EvidenceForSecondary, newroot, secondary_trace, result := 
 			    CreateEvidenceForPeer(secondary, root, primary_trace)
 			if result == FaultyPeer {
-			    replace_secondary();
+			    replace_secondary(root);
 			}
 			else if result == FoundEvidence {
 			    // the conflict is not bogus
@@ -709,7 +724,7 @@ func AttackDetector(root LightBlock,
 			    // first the secondary reported a faulty block but
 			    // then reported a matching block for the same height
 				// first block was most likely bogus
-			    replace_secondary();
+			    replace_secondary(root);
 			}
         }
 	}
@@ -724,7 +739,8 @@ func AttackDetector(root LightBlock,
 - Error condition
   - `ErrorTrustExpired`: fails if root expires (outside trusting
     period) [LCV-INV-TP]
-  - `ErrorNoPeers`: if no peers are left to replace secondaries	
+  - `ErrorNoPeers`: if no peers are left to replace secondaries, and
+    no evidence was found before that happened
 ----
 
 
