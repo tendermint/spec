@@ -21,6 +21,10 @@ Ed25519 keys are the only supported key types for Tendermint validators currentl
 
 As signature verification is one of the major bottlenecks of Tendermint-go, if ZIP 215 is adopted batch verification of signatures will be safe in consensus critical areas.
 
+The change has been recommended to be done in a major release. Although it is not a breaking change if this change were to be rolled out in a minor release a node could construct signatures which could only be verified by nodes which have received updates to the verification function.
+
+This change will have no impact on signature aggregation because to enable this feature Tendermint will have to use a different curve i.e [BLS](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
+
 ## Status
 
 Proposed
@@ -29,14 +33,17 @@ Proposed
 
 ### Positive
 
-- Batch verification
-- Signature verification across implementations
+- Consistent signature verification across implementations
+
+#### Tendermint-Go
+
+- Enable safe batch verification
 
 ### Negative
 
 #### Tendermint-Go
 
-- Additional dependency
+- Third_party dependency, the library has not gone through a security review.
 - Fragmentation of the ed25519 key for the go implementation, verification is done using a third party library while the rest
   uses the go standard library
 
