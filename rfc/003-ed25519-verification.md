@@ -15,15 +15,18 @@ Ed25519 keys are the only supported key types for Tendermint validators currentl
 ## Proposal
 
 - Tendermint-Go would adopt [hdevalence/ed25519consensus](https://github.com/hdevalence/ed25519consensus).
-    - This library is implemented as an extension of the go standard library one.
+    - This library is implemented as an extension of the go standard library.
+    -
 - Tendermint-rs would adopt [ed25519-zebra](https://github.com/ZcashFoundation/ed25519-zebra)
     - related [issue](https://github.com/informalsystems/tendermint-rs/issues/355)
 
 As signature verification is one of the major bottlenecks of Tendermint-go, if ZIP 215 is adopted batch verification of signatures will be safe in consensus critical areas.
 
-The change has been recommended to be done in a major release. Although it is not a breaking change if this change were to be rolled out in a minor release a node could construct signatures which could only be verified by nodes which have received updates to the verification function.
+The change has been recommended to be done in a major release. Although it is not a breaking change if this change were to be rolled out in a minor release a node could construct signatures which could only be verified by nodes which have received updates to the verification function resulting in a possible network halt.
 
 This change will have no impact on signature aggregation because to enable this feature Tendermint will have to use a different curve i.e [BLS](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
+
+As part of the acceptance of this proposal it would be best to contract or discuss with a third party the process of conducting a security review of the go library.
 
 ## Status
 
@@ -38,12 +41,15 @@ Proposed
 #### Tendermint-Go
 
 - Enable safe batch verification
+    - This has not yet been implemented.
 
 ### Negative
 
 #### Tendermint-Go
 
-- Third_party dependency, the library has not gone through a security review.
+- Third_party dependency
+    - library has not gone through a security review.
+    - unclear maintenance schedule
 - Fragmentation of the ed25519 key for the go implementation, verification is done using a third party library while the rest
   uses the go standard library
 
