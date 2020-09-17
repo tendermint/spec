@@ -802,31 +802,31 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
 
 ## Correctness arguments
 
-#### Argument for [LCD-DIST-INV-ATTACK.1]
+#### Argument for [[LCD-DIST-INV-ATTACK.1]](#LCD-DIST-INV-ATTACK1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-INV-STORE.1]
+#### Argument for [[LCD-DIST-INV-STORE.1]](#LCD-DIST-INV-STORE1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-LIVE.1]
+#### Argument for [[LCD-DIST-LIVE.1]](#LCD-DIST-LIVE1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-TERM-NORMAL.1]
+#### Argument for [[LCD-DIST-TERM-NORMAL.1]](#LCD-DIST-TERM-NORMAL1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-TERM-ATTACK.1]
+#### Argument for [[LCD-DIST-TERM-ATTACK.1]](#LCD-DIST-TERM-ATTACK1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-SAFE-SECONDARY.1]
+#### Argument for [[LCD-DIST-SAFE-SECONDARY.1]](#LCD-DIST-SAFE-SECONDARY1)
 
 **TODO**
 
-#### Argument for [LCD-DIST-SAFE-BOGUS.1]
+#### Argument for [[LCD-DIST-SAFE-BOGUS.1]](#LCD-DIST-SAFE-BOGUS1)
 
 **TODO**
 
