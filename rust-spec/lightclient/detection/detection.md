@@ -558,6 +558,8 @@ then the secondary is replaced before the detector terminates.
 
 # Protocol
 
+## Functions and Data defined in other Specifications
+
 ### From the supervisor
 
 ```go
@@ -588,7 +590,7 @@ via the function [FetchLightBlock](fetch).
 
 > Note that the lightStore is not needed to be shared.
 
-### Outline
+## Outline
 
 The problem laid out is solved by calling the function `AttackDetector`
 with a lightstore that contains a light block that has just been
@@ -604,7 +606,7 @@ secondary is replaced.
   
 
   
-### Details of the functions
+## Details of the functions
 
 #### **[LCD-FUNC-DETECTOR.1]:**
 
