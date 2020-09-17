@@ -1,5 +1,21 @@
 # ***This an unfinished draft. Comments are welcome!***
 
+
+**TODO:** Peerset definitions and function should go to supervisor.
+Especially replace primary only happens there.
+
+**TODO:** in an updated verification spec: 
+The state of the Lightstore needs to go. LatestVerified can
+keep the name but will ignore state as it will not exist anymore.
+
+**TODO:** verification spec should be adapted to the second parameter
+being a lightblock; new version number of function tag;
+
+**TODO:** We should clarify what is the expectation of VerifyToTarget
+so if it returns TimeoutError it can be assumed faulty. I guess that
+VerifyToTarget with correct full node should never terminate with
+TimeoutError.
+
 # Light Client Attack Detector
 
 In this specification, we strengthen the light client to be resistant
@@ -370,11 +386,7 @@ agreed on in the past), and
 #### **[LCD-IP-STATEMENT.1]**
 
 Whenever AttackDetector is called,
-the detector should for each secondary do the following
-
-- query the secondary by calling `FetchLightBlock` for height
-  *verifiedLS.Latest().Height* remotely.
-- in case the returned block *b* is different from verifiedLS.Latest(),
+the detector should for each secondary
   try to replay the verification trace `verifiedLS` with the secondary
     - in case replaying leads to detection of a light client attack
       (one of the lightblocks differ from the one in verifiedLS with
@@ -481,39 +493,22 @@ type InternalEvidence struct {
 }
 ```
 
-**TODO:** move submitEvidence function to supervisor spec
 
+#### **[LC-SUMBIT-EVIDENCE.1]**
 ```
 func submitEvidence(Evidences []InternalEvidence)
 ```
-
 - Expected postcondition
     - for each `ev` in `Evidences`: submit `ev.Evidence` to `ev.Peer`
+---
 
 ### LightStore
 
-Lightblocks and LightStores are
-defined in the verification specification
-[LCV-DATA-LIGHTBLOCK.1] and [LCV-DATA-LIGHTSTORE.1]. See the [verification specification][verification] for details.
+Lightblocks and LightStores are defined in the verification
+specification [LCV-DATA-LIGHTBLOCK.1] and [LCV-DATA-LIGHTSTORE.1]. See
+the [verification specification][verification] for details.
 
-TODO: add those to verification  
-In additions to the functions defined in
-the [verification specification][verification], the
-LightStore exposes the following function
 
-#### **[LCD-FUNC-SUBTRACE.1]:**
-
-```go
-func (ls LightStore) Subtrace(from int, to int) LightStore
-```
-
-- Expected postcondition
-    - returns a lightstore that contains all lightblocks *b* from *ls*
-     that satisfy: *from < b.Header.Height <= to*
-
-----
-
-**TODO:** the lightstore and the evidence should go to the supervisor spec
 
 ## (Distributed) Problem statement
 
@@ -559,6 +554,7 @@ If
 - there is an attack, and
 - a secondary reports a block that conflicts
   with one of the blocks in *primary_trace*, and
+- *Secondaries* is always non-empty, and
 - the age of *root* is always less than the trusting period,
 
 then the detector returns evidence.
@@ -589,19 +585,8 @@ then the secondary is replaced before the detector terminates.
 
 # Protocol
 
-### Inter Process Communication
-
-The following function is defined in the [verification
-specification](fetch).
-
-```go
-func FetchLightBlock(peer PeerID, height Height) LightBlock
-```
-
 ### Auxiliary Functions for the Peer Set
 
-**TODO:** this needs to go to the supervisor. Especially replace
-primary only happens there.
 
 #### **[LCD-FUNC-REPLACE-PRIMARY.1]:**
 
@@ -641,13 +626,18 @@ Replace_Secondary(addr Address, root-of-trust LightBlock)
 
 ### From the verifier
 
-**TODO:** verification spec should be adapted to the second parameter
-being a lightblock; new version number of function tag;
 
 ```go
 func VerifyToTarget(primary PeerID, root LightBlock,
                     targetHeight Height) (LightStore, Result)
 ```
+
+> Note: the above differs from the current version in the second
+> parameter. verification will be revised.
+
+Observe that `VerifyToTarget` does communication with the secondaries
+via the function [FetchLightBlock](fetch).
+
 
 ### Shared data of the light client
 
@@ -671,13 +661,7 @@ indeed an attack is confirmed. It could be that the secondary reports
 a bogus block, which means that there need not be an attack, and the
 secondary is replaced.
   
-**TODO:** We should clarify what is the expectation of
-  VerifyToTarget so if it returns TimeoutError it can be assumed
-  faulty. I guess that VerifyToTarget with correct full node should
-  never terminate with TimeoutError.
 
-- **TODO:** clarify EXPIRED case. Can we always punish? Can we give sufficient
-  conditions.
   
 ### Details of the functions
 
@@ -690,48 +674,39 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
     Evidences := new []InternalEvidence;
  
     for each secondary in Secondaries {
-        sec_block, result := FetchLightBlock (secondary,
-		                                      primarytrace.Latest().Height);
-        if result != ResultSuccess {
-            replace_secondary(root);
-            // TODO: FetchLightBlock to return error codes (what to do
-            // if the secondary doesn't have the height?
-        }
-        if sec_block != primarytrace.Latest {
-            // we replay the primary trace with the secondary, in
-            // order to generate evidence that we can submit to the
-            // secodary. We return the evidence + the trace the
-            // secondary told us that spans the evidence at its local store
+        // we replay the primary trace with the secondary, in
+        // order to generate evidence that we can submit to the
+        // secodary. We return the evidence + the trace the
+        // secondary told us that spans the evidence at its local store
    
-            EvidenceForSecondary, newroot, secondary_trace, result :=
+       EvidenceForSecondary, newroot, secondary_trace, result :=
                 CreateEvidenceForPeer(secondary, root, primary_trace)
-            if result == FaultyPeer {
-                replace_secondary(root);
-            }
-            else if result == FoundEvidence {
-                // the conflict is not bogus
-                Evidences.Add(EvidenceForSecondary);
-                // we replay the secondary trace with the primary, ...
-                EvidenceForPrimary, _, result :=
+       if result == FaultyPeer {
+           replace_secondary(root);
+       }
+       else if result == FoundEvidence {
+           // the conflict is not bogus
+           Evidences.Add(EvidenceForSecondary);
+           // we replay the secondary trace with the primary, ...
+           EvidenceForPrimary, _, result :=
 				    CreateEvidenceForPeer(secondary,
                                           newroot,
                                           secondary_trace);
-                if result == FoundEvidence {
-                    Evidences.Add(EvidenceForPrimary);
-                }
-                // At this point we do not care about the other error
-                // codes. We already have generated evidence for an
-                // attack and need to stop the lightclient. It does not
-                // help to call replace_primary. Also we will use the
-                // same primary to check with other secondaries in
-                // later iterations of the loop
-            }
-            else {
-                // first the secondary reported a faulty block but
-                // then reported a matching block for the same height
-                // first block was most likely bogus
-                replace_secondary(root);
-            }
+           if result == FoundEvidence {
+               Evidences.Add(EvidenceForPrimary);
+           }
+           // At this point we do not care about the other error
+           // codes. We already have generated evidence for an
+           // attack and need to stop the lightclient. It does not
+           // help to call replace_primary. Also we will use the
+           // same primary to check with other secondaries in
+           // later iterations of the loop
+        }
+        else {
+            // first the secondary reported a faulty block but
+            // then reported a matching block for the same height
+            // first block was most likely bogus
+            replace_secondary(root);
         }
     }
     return Evidences; 
@@ -759,76 +734,87 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
     for i in 1 len(trace) - 1 {
         auxLS, result := VerifyToTarget(peer, common, trace[i].Header.Height)
   
-    if result != ResultSuccess {
-        // something went wrong
-        return (nil, nil, nil, FaultyPeer)
-    }
-    else {
-        if auxLS.Latest() != trace[i].Header {
-            // the header reported by peer differs from the
-            // reference header in trace but both could be
-            // verified from common in one step.
-            // we can create evidence for submission to the secondary
-            ev := new InternalEvidence;
-            ev.Evidence.ConflictingBlock := trace[i];
-            ev.Evidence.CommonHeight := common.Height;
-            ev.Peer := peer
-            return (ev, common, auxLS, FoundEvidence)
+        if result != ResultSuccess {
+            // something went wrong
+            return (nil, nil, nil, FaultyPeer)
         }
         else {
-            // the peer agrees with the trace, we move common forward
-            // we could delete auxLS as it will be overwritten in
-            // the next iteration
-            common := trace[i].Header
+            if auxLS.LatestVerified() != trace[i].Header {
+                // the header reported by peer differs from the
+                // reference header in trace but both could be
+                // verified from common in one step.
+                // we can create evidence for submission to the secondary
+                ev := new InternalEvidence;
+                ev.Evidence.ConflictingBlock := trace[i];
+                ev.Evidence.CommonHeight := common.Height;
+                ev.Peer := peer
+                return (ev, common, auxLS, FoundEvidence)
+            }
+            else {
+                // the peer agrees with the trace, we move common forward
+                // we could delete auxLS as it will be overwritten in
+                // the next iteration
+                common := trace[i].Header
             }
         }
     }
-    // under [LCD-BRANCH.1] this should be unreachable.
     return (nil, nil, nil, NoEvidence)
 }
 ```
 - Expected precondition
     - root and trace are a verification trace
-    - [LCD-BRANCH.1] the peer is on a different branch of the
-      blockchain than trace (it should only be called if this is the case)
 - Expected postcondition
     - finds evidence where trace and peer diverge
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
        period) [[LCV-INV-TP.1]](LCV-INV-TP1-link)
-    - `NoEvidence` [LCD-BRANCH.1] is violated
-
+ 
 ----
 
 ## Correctness arguments
 
 #### Argument for [[LCD-DIST-INV-ATTACK.1]](#LCD-DIST-INV-ATTACK1)
 
-**TODO**
+Under the assumption that root and trace are a verification trace,
+when in `CreateEvidenceForPeer` the detector the detector creates
+evidence, then the lightclient has seen two different headers (one via
+`trace` and one via `VerifyToTarget` for the same height that can both
+be verified in one step.
+
 
 #### Argument for [[LCD-DIST-INV-STORE.1]](#LCD-DIST-INV-STORE1)
 
-**TODO**
+We assume that there is at least one correct peer, and there is no
+fork. As a result the correct peer has the correct sequence of
+blocks. Since the primary_trace is checked block-by-block also against
+each secondary, and at no point evidence was generated that means at
+no point there were conflicting blocks.
+
 
 #### Argument for [[LCD-DIST-LIVE.1]](#LCD-DIST-LIVE1)
 
-**TODO**
+At the latest when [[LCV-INV-TP.1]](LCV-INV-TP1-link) is violated,
+`AttackDetector` terminates. 
+ 
 
 #### Argument for [[LCD-DIST-TERM-NORMAL.1]](#LCD-DIST-TERM-NORMAL1)
 
-**TODO**
+As there are finitely many peers, eventually the main loop
+terminates. As there is no attack no evidence can be generated.
 
 #### Argument for [[LCD-DIST-TERM-ATTACK.1]](#LCD-DIST-TERM-ATTACK1)
 
-**TODO**
+Argument similar to  [[LCD-DIST-TERM-NORMAL.1]](#LCD-DIST-TERM-NORMAL1)
 
 #### Argument for [[LCD-DIST-SAFE-SECONDARY.1]](#LCD-DIST-SAFE-SECONDARY1)
 
-**TODO**
+Secondaries are only replaced if they time-out or if they report bogus
+blocks. The former is ruled out by the timing assumption, the latter
+by correct peers only reporting blocks from the chain.
 
 #### Argument for [[LCD-DIST-SAFE-BOGUS.1]](#LCD-DIST-SAFE-BOGUS1)
 
-**TODO**
+Once a bogus block is recognized as such the secondary is removed.
 
 # References
 
