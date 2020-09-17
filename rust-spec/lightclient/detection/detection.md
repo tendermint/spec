@@ -442,30 +442,7 @@ before the timeout expires.
 
 ## Definitions
 
-### Peers
 
-#### **[LCD-DATA-PEERS.1]:**
-
-A fixed set of full nodes is provided in the configuration upon
-initialization. Initially this set is partitioned into
-
-- one full node that is the *primary* (singleton set),
-- a set *Secondaries* (of fixed size, e.g., 3),
-- a set *FullNodes*.
-- A set *FaultyNodes* of nodes that the light client suspects of
-    being faulty; it is initially empty
-
-#### **[LCD-INV-NODES.1]:**
-
-The detector shall maintain the following invariants:
-
-- *FullNodes \intersect Secondaries = {}*
-- *FullNodes \intersect FaultyNodes = {}*
-- *Secondaries \intersect FaultyNodes = {}*
-
-and the following transition invariant
-
-- *FullNodes' \union Secondaries' \union FaultyNodes' = FullNodes \union Secondaries \union FaultyNodes*
 
 ### Evidence
 
@@ -585,44 +562,12 @@ then the secondary is replaced before the detector terminates.
 
 # Protocol
 
-### Auxiliary Functions for the Peer Set
-
-
-#### **[LCD-FUNC-REPLACE-PRIMARY.1]:**
-
-```go
-Replace_Primary(root-of-trust LightBlock)
-```
-
-- Implementation remark
-    - the primary is replaced by a secondary
-    - to maintain a constant size of secondaries, need to
-        - pick a new secondary *nsec* while ensuring [LC-INV-ROOT-AGREED.1]
-        - that is, we need to ensure that root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
-- Expected precondition
-    - *FullNodes* is nonempty
-- Expected postcondition
-    - *primary* is moved to *FaultyNodes*
-    - a secondary *s* is moved from *Secondaries* to primary
-- Error condition
-    - if precondition is violated
-
-#### **[LCD-FUNC-REPLACE-SECONDARY.1]:**
+### From the supervisor
 
 ```go
 Replace_Secondary(addr Address, root-of-trust LightBlock)
 ```
 
-- Implementation remark
-    - maintain [LCD-INV-ROOT-AGREED.1], that is,
-    ensure root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
-- Expected precondition
-    - *FullNodes* is nonempty
-- Expected postcondition
-    - addr is moved from *Secondaries* to *FaultyNodes*
-    - an address *nsec* is moved from *FullNodes* to *Secondaries*
-- Error condition
-    - if precondition is violated
 
 ### From the verifier
 
