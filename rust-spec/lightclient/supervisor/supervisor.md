@@ -228,6 +228,70 @@ lightstore, and all lightblocks in the lightstore are trusted.
 
 ## Definitions
 
+### Peers
+
+#### **[LC-DATA-PEERS.1]:**
+
+A fixed set of full nodes is provided in the configuration upon
+initialization. Initially this set is partitioned into
+
+- one full node that is the *primary* (singleton set),
+- a set *Secondaries* (of fixed size, e.g., 3),
+- a set *FullNodes*.
+- A set *FaultyNodes* of nodes that the light client suspects of
+    being faulty; it is initially empty
+
+#### **[LC-INV-NODES.1]:**
+
+The detector shall maintain the following invariants:
+
+- *FullNodes \intersect Secondaries = {}*
+- *FullNodes \intersect FaultyNodes = {}*
+- *Secondaries \intersect FaultyNodes = {}*
+
+and the following transition invariant
+
+- *FullNodes' \union Secondaries' \union FaultyNodes' = FullNodes
+   \union Secondaries \union FaultyNodes*
+
+#### **[LC-FUNC-REPLACE-PRIMARY.1]:**
+
+```go
+Replace_Primary(root-of-trust LightBlock)
+```
+
+- Implementation remark
+    - the primary is replaced by a secondary
+    - to maintain a constant size of secondaries, need to
+        - pick a new secondary *nsec* while ensuring [LC-INV-ROOT-AGREED.1]
+        - that is, we need to ensure that root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
+- Expected precondition
+    - *FullNodes* is nonempty
+- Expected postcondition
+    - *primary* is moved to *FaultyNodes*
+    - a secondary *s* is moved from *Secondaries* to primary
+- Error condition
+    - if precondition is violated
+
+#### **[LC-FUNC-REPLACE-SECONDARY.1]:**
+
+```go
+Replace_Secondary(addr Address, root-of-trust LightBlock)
+```
+
+- Implementation remark
+    - maintain [LCD-INV-ROOT-AGREED.1], that is,
+    ensure root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
+- Expected precondition
+    - *FullNodes* is nonempty
+- Expected postcondition
+    - addr is moved from *Secondaries* to *FaultyNodes*
+    - an address *nsec* is moved from *FullNodes* to *Secondaries*
+- Error condition
+    - if precondition is violated
+
+
+
 ### Data Types
 
 The core data structure of the protocol is the LightBlock.
@@ -329,18 +393,7 @@ func makeblock (genesisDoc GenesisDoc) (lightBlock LightBlock))
 
 **TODO:** trusting period
 
-### Variables
 
-**TODO**
-
-- PeerList.
-
-It exposes the functions
-
-- primary()
-- secondaries()
-- replace_primary()
-- replace secondary(peerID PeerID)
 
 #### **[LC-INV-ROOT-AGREED.1]**
 
@@ -476,7 +529,7 @@ func InitLightClient (initData LCInitData) (LightStore, Error) {
    // TODO: remove "trusted.Commit is a commit for the header
       // trusted.Header, i.e., it contains the correct hash of the
       // header, and +2/3 of signatures" from validAndVerified precondition
-          peerList.replacePrimary();
+          Replace_Primary();
    }
    else {
        result = ResultSuccess
@@ -534,49 +587,49 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
     }
 
     // get the lightblock with maximum height smaller than targetHeight
- // would typically be the heighest, if we always move forward
+    // would typically be the heighest, if we always move forward
     root_of_trust, r2 = lightStore.LatestPrevious(targetHeight);
     if r2 = false {
-     // there is no lightblock from which we can do forward
-  // (skipping) verification. Thus we have to go backwards.
-  // No cross-check needed. We trust hashes. Therefore, we
-     // directly return the result
-    return Backwards(peerList.primary(), lightStore.lowest, targetHeight)
-     // TODO: in Backwards definition pointers need to be fixed to
-  //       predecessor
-  // TODO: add tag pointer to Backwards
-  // TODO: define lightStore.lowest
- }
- else {
+        // there is no lightblock from which we can do forward
+        // (skipping) verification. Thus we have to go backwards.
+        // No cross-check needed. We trust hashes. Therefore, we
+        // directly return the result
+        return Backwards(peerList.primary(), lightStore.lowest, targetHeight)
+        // TODO: in Backwards definition pointers need to be fixed to
+        // predecessor
+        // TODO: add tag pointer to Backwards
+        // TODO: define lightStore.lowest
+    }
+    else {
         // Forward verification + detection
         result := NoResult;
         while result != ResultSuccess {
             verifiedLS,result := VerifyToTarget(peerList.primary(),
-                                       root_of_trust,
-            nextHeight);
-   // TODO: in verifytotarget return only verification chain
-      // TODO: add tag pointer to verifytotarget
+                                                root_of_trust,
+                                                nextHeight);
+            // TODO: in verifytotarget return only verification chain
+            // TODO: add tag pointer to verifytotarget
             if result == ResultFailure {
-    // pick new primary (promote a secondary to primary)
-             peerList.Replace_Primary();
-   }
+                // pick new primary (promote a secondary to primary)
+                Replace_Primary(root_of_trust);
+            }
         }
   
-  // Cross-check
-  // TODO: fix parameters and functions
+        // Cross-check
+        // TODO: fix parameters and functions
         Evidences := AttackDetector(root_of_trust, verifiedLS);
-  // TODO: add tag pointer to AttackDetector
-  if Evidences.Empty {
-      // no attack detected, we trust the new lightblock
+        // TODO: add tag pointer to AttackDetector
+        if Evidences.Empty {
+            // no attack detected, we trust the new lightblock
             lightStore.store_chain(verifidLS);
-   // TODO: add store_chain function
-   return (lightStore, OK);
+            // TODO: add store_chain function
+            return (lightStore, OK);
         }
         else {
-      // there is an attack, we exit
+            // there is an attack, we exit
             return(lightStore, ErrorAttack);
         }
- }
+    }
 }
 
 ```
