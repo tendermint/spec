@@ -1,9 +1,5 @@
 # ***This an unfinished draft. Comments are welcome!***
 
-
-**TODO:** Peerset definitions and function should go to supervisor.
-Especially replace primary only happens there.
-
 **TODO:** in an updated verification spec: 
 The state of the Lightstore needs to go. LatestVerified can
 keep the name but will ignore state as it will not exist anymore.
@@ -627,7 +623,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
        EvidenceForSecondary, newroot, secondary_trace, result :=
                 CreateEvidenceForPeer(secondary, root, primary_trace)
        if result == FaultyPeer {
-           replace_secondary(root);
+           Replace_Secondary(root);
        }
        else if result == FoundEvidence {
            // the conflict is not bogus
@@ -651,7 +647,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
             // first the secondary reported a faulty block but
             // then reported a matching block for the same height
             // first block was most likely bogus
-            replace_secondary(root);
+            Replace_Secondary(root);
         }
     }
     return Evidences; 
