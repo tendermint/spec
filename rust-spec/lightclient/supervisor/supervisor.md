@@ -340,6 +340,11 @@ It exposes the functions
 - replace_primary()
 - replace secondary(peerID PeerID)
 
+#### **[LC-INV-ROOT-AGREED.1]**
+
+In the Sequential-Supervisor, it is always the case that the primary
+and all secondaries agree on lightStore.Latest(). 
+
 ### Assumptions
 
 init data is OK
