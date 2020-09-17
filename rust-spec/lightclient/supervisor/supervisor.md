@@ -4,6 +4,8 @@
 
 - move part I of verification here (or copy)
 
+- move evidence submission into detector spec
+
 - incorporate the structure of Stevan's Rust supervisor design
     - new versions of `verifytotarget` and `backwards` that take as
      input a single lightblock and return a fully verified lightstore
