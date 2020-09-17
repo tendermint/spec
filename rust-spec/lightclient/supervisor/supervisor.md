@@ -4,7 +4,7 @@
 
 - move part I of verification here (or copy)
 
-- move evidence submission into detector spec
+- move evidence submission into detector spec **QUESTION** Initially I wanted to have evidence submission here. Somewhat it feels at it should be visible at the supervisor. But the evidence is generated within the attack detector. Therefore all the definitions are there. Where should we put it?
 
 - incorporate the structure of Stevan's Rust supervisor design
     - new versions of `verifytotarget` and `backwards` that take as
