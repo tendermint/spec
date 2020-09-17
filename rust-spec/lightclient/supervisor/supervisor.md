@@ -488,6 +488,8 @@ func InitLightClient (initData LCInitData) (LightStore, Error) {
       newBlock := current
      }
   else {
+      // [LC-SUMBIT-EVIDENCE.1]
+      // TODO: link to upcoming detector spec
       submitEvidence(Evidences);
             return(nil, ErrorAttack);
   }
