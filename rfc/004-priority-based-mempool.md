@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-09-02: Initial draft
+- 2020-09-18: Integrated [comments](https://github.com/tendermint/spec/pull/154#issuecomment-689417610) from @melekes
 
 ## Author(s)
 
