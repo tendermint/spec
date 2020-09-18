@@ -14,7 +14,7 @@
 
 The mempool is a **in-memory pool of uncommitted transactions**.
 
-* Note that you can enable the Write-Ahead-Logging for transactions, but it’s disabled by default and rarely used in practice. It does not remove the need for “smart clients” which can resubmit transactions due to https://github.com/tendermint/tendermint/issues/3322#issuecomment-621138398 (evil proposers can drop valid transactions). So it’s purely for persistence, nothing else.
+- Note that you can enable the Write-Ahead-Logging for transactions, but it’s disabled by default and rarely used in practice. It does not remove the need for "smart clients" which can resubmit transactions due to [this issue](https://github.com/tendermint/tendermint/issues/3322#issuecomment-621138398) (evil proposers can drop valid transactions). So it’s purely for persistence, nothing else.
 
 The typical flow is:
 
@@ -32,19 +32,21 @@ The mempool also contains the LRU cache of the most recently used transactions. 
 
 ![mempool2](https://user-images.githubusercontent.com/1282182/92575388-52b91200-f299-11ea-91c8-10e05e7be4df.png)
 
-It’s been reported that the linked list and the map could diverge after the cache becomes full - https://github.com/tendermint/tendermint/issues/5281.
+It’s been reported that the linked list and the map could [diverge after the cache becomes full](https://github.com/tendermint/tendermint/issues/5281).
 
 The biggest downside of the current implementation is the lack of prioritization. It should give the ABCI application a way to establish some order, based on the fee or some other field(s).
 
-Dev and others also expressed some concerns about concurrency patters - “My concern is primarily that we currently have the downside that you can't keep receiving / broadcasting txs while updating / rechecking.“ (see https://github.com/tendermint/tendermint/issues/2147 and https://github.com/tendermint/tendermint/issues/2484)
+Dev and others also expressed some concerns about concurrency patters - “My concern is primarily that we currently have the downside that you can't keep receiving / broadcasting txs while updating / rechecking.“ (see [this issue](https://github.com/tendermint/tendermint/issues/2147) and [this one](https://github.com/tendermint/tendermint/issues/2484))
 
 Other possible optimizations:
-- https://github.com/tendermint/tendermint/issues/2187 highwayhash instead of SHA256
-- https://github.com/tendermint/tendermint/issues/2834 remove storing height
-- https://github.com/tendermint/tendermint/issues/2978 remove gasWanted for non-validators
-- https://github.com/tendermint/tendermint/issues/3436 time-based eviction
+
+- [highwayhash instead of SHA256](https://github.com/tendermint/tendermint/issues/2187)
+- [remove storing height](https://github.com/tendermint/tendermint/issues/2834)
+- [remove gasWanted for non-validators](https://github.com/tendermint/tendermint/issues/2978)
+- [time-based eviction](https://github.com/tendermint/tendermint/issues/3436)
 
 What we want from the new design:
+
 1. Prioritization
 2. Concurrency friendly (maybe even lock free)
 3. Efficient with 10^4 or 10^5 items
@@ -72,7 +74,7 @@ message ResponseCheckTx {
 
 Then ABCI developers can add application-specific user-defined priorities for the transactions. This addition is naturally backward-compatible because by default all requests will be returned with 0 priority and on mempool side the process will fallback to FIFO.
 
-The next step is to make current mempool implementation priority-aware. At some point switching from the CList to other data structures is necessary (e.g. self-balancing AVL tree or max-heap). QuarkChain (https://github.com/tendermint/spec/pull/154) suggests using a Red-Black tree.
+The next step is to make current mempool implementation priority-aware. At some point switching from the CList to other data structures is necessary (e.g. self-balancing AVL tree or max-heap). [QuarkChain](https://github.com/tendermint/spec/pull/154) suggests using a Red-Black tree.
 
 When choosing between different BST, AVL was picked because it’s good for in-memory usage (comparing to BTree, which is often used in databases where persistence is needed) and fast retrieval (comparing to Red-Black tree, which is better for
 insertion/deletion due to relaxed rebalancing).
@@ -165,7 +167,7 @@ We will have more discussions on what data structure fits the requirements best.
 
 ### Concurrency Issues
 
-> Dev and others also expressed some concerns about concurrency patters - “My concern is primarily that we currently have the downside that you can't keep receiving / broadcasting txs while updating / rechecking.“ (see https://github.com/tendermint/tendermint/issues/2147 and https://github.com/tendermint/tendermint/issues/2484)
+> Dev and others also expressed some concerns about concurrency patters - “My concern is primarily that we currently have the downside that you can't keep receiving / broadcasting txs while updating / rechecking.“ (see [this issue](https://github.com/tendermint/tendermint/issues/2147) and [this one](https://github.com/tendermint/tendermint/issues/2484))
 
 A smaller tree can be used to receive transactions and broadcast them to other peers. This tree will be merged into the main one once rechecking is done.
 
@@ -192,11 +194,11 @@ Proposed
 
 - Mempool code could undergo a non-trivial refactoring
 
-## Appendix A. What other projects are using?
+## Appendix A. Other Projects' Memory Pools
 
-Libra mempool (https://developers.libra.org/docs/crates/mempool) employs a hash map of accounts plus a BTree for PriorityIndex https://github.com/libra/libra/blob/c5f6a2b4a6be63f6ef8f17a2c1cf192c9a23bb07/mempool/src/core_mempool/index.rs#L25-L27.
+[Libra mempool](https://developers.libra.org/docs/crates/mempool) employs a hash map of accounts plus a BTree for [`PriorityIndex`](https://github.com/libra/libra/blob/c5f6a2b4a6be63f6ef8f17a2c1cf192c9a23bb07/mempool/src/core_mempool/index.rs#L25-L27).
 
-Resources from QuarkChain:
+Relevant resources from QuarkChain:
 
 - [Introduction to ABCIx from QuarkChain](https://forum.cosmos.network/t/introduction-to-abcix-an-extension-of-abci-with-greater-flexibility-and-security/3771/)
 - [On ABCIx’s priority-based mempool implementation](https://forum.cosmos.network/t/on-abcixs-priority-based-mempool-implementation/3912)
