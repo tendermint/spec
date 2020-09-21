@@ -23,19 +23,27 @@ that need to be checked, by exploiting the guarantees provided by the
 
 # Status
 
-This document is thoroughly reviewed, and the protocol has been
+## Previous Versions
+
+- [[001_published]](./verification_001_published.md)
+ is thoroughly reviewed, and the protocol has been
 formalized in TLA+ and model checked.
 
-## Issues that need to be addressed
+## Issues that are addressed in this revision
 
 As it is part of the larger light node, its data structures and
-functions interact with the fork dectection functionality of the light
+functions interact with the attack dectection functionality of the light
 client. As a result of the work on
-[Pull Request 479](https://github.com/informalsystems/tendermint-rs/pull/479) we
-established the need for an update in the data structures in [Issue 499](https://github.com/informalsystems/tendermint-rs/issues/499). This
-will not change the verification logic, but it will record information
-about verification that can be used in fork detection (in particular
-in computing more efficiently the proof of fork).
+
+- [fork detection](https://github.com/tendermint/spec/pull/164) for light nodes
+
+- fork detection for IBC
+
+- light client
+  [supervisor](https://github.com/tendermint/spec/pull/159)
+  
+adaptations to the semantics and functions exposed by the LightStore
+needed to be made.
 
 # Outline
 
@@ -477,7 +485,7 @@ type LightBlock struct {
 }
 ```
 
-#### **[LCV-DATA-LIGHTSTORE.1]**
+#### **[LCV-DATA-LIGHTSTORE.2]**
 
 LightBlocks are stored in a structure which stores all LightBlock from
 initialization or received from peers.
@@ -488,22 +496,6 @@ type LightStore struct {
 }
 
 ```
-
-Each LightBlock is in one of the following states:
-
-```go
-type VerifiedState int
-
-const (
- StateUnverified = iota + 1
- StateVerified
- StateFailed
- StateTrusted
-)
-```
-
-> Only the detector module sets a lightBlock state to `StateTrusted`
-> and only if it was `StateVerified` before.
 
 The LightStore exposes the following functions to query stored LightBlocks.
 
@@ -517,7 +509,41 @@ func (ls LightStore) Get(height Height) (LightBlock, bool)
     - returns a LightBlock at a given height or false in the second argument if
     the LightStore does not contain the specified LightBlock.
 
-#### **[LCV-FUNC-LATEST-VERIF.1]**
+#### **[LCV-FUNC-LATEST.1]**
+
+```go
+func (ls LightStore) Latest() LightBlock
+```
+
+- Expected postcondition
+    - returns the highest light block
+
+**TODO:** LatestPrevious + lightStore.store_chain(verifidLS)
+
+### Functions used internally to the verifiey
+
+
+#### **[LCV-DATA-LS-STATE.2]**
+
+**TODO:**
+Internally, the verification logic records for each LightBlock in
+which of the following states it is.
+
+> In the previous version there was also the state `StateTrusted` that
+> was supposed to be used by the attack detector. Therefore, it was
+> planned to expose the State over the API. 
+
+```go
+type VerifiedState int
+
+const (
+ StateUnverified = iota + 1
+ StateVerified
+ StateFailed
+)
+```
+
+#### **[LCV-FUNC-LATEST-VERIF.2]**
 
 ```go
 func (ls LightStore) LatestVerified() LightBlock
@@ -525,7 +551,6 @@ func (ls LightStore) LatestVerified() LightBlock
 
 - Expected postcondition
     - returns the highest light block whose state is `StateVerified`
-     or `StateTrusted`
 
 #### **[LCV-FUNC-UPDATE.1]**
 
@@ -536,18 +561,6 @@ func (ls LightStore) Update(lightBlock LightBlock, verfiedState VerifiedState)
 - Expected postcondition
     - The state of the LightBlock is set to *verifiedState*.
 
-> The following function is used only in the detector specification
-> listed here for completeness.
-
-#### **[LCV-FUNC-LATEST-TRUSTED.1]**
-
-```go
-func (ls LightStore) LatestTrusted() LightBlock
-```
-
-- Expected postcondition
-    - returns the highest light block that has been verified and
-     checked by the detector.
 
 ### Inputs
 
