@@ -502,6 +502,9 @@ const (
 )
 ```
 
+**TODO** verifiedBy
+
+
 > Only the detector module sets a lightBlock state to `StateTrusted`
 > and only if it was `StateVerified` before.
 
@@ -527,14 +530,17 @@ func (ls LightStore) LatestVerified() LightBlock
     - returns the highest light block whose state is `StateVerified`
      or `StateTrusted`
 
-#### **[LCV-FUNC-UPDATE.1]**
+#### **[LCV-FUNC-UPDATE.2]**
 
 ```go
-func (ls LightStore) Update(lightBlock LightBlock, verfiedState VerifiedState)
+func (ls LightStore) Update(lightBlock LightBlock, 
+                            verfiedState VerifiedState
+							verifiedBy Height)
 ```
 
 - Expected postcondition
     - The state of the LightBlock is set to *verifiedState*.
+	- verifiedBy of the Lightblock is set to *Height*
 
 > The following function is used only in the detector specification
 > listed here for completeness.
@@ -548,6 +554,15 @@ func (ls LightStore) LatestTrusted() LightBlock
 - Expected postcondition
     - returns the highest light block that has been verified and
      checked by the detector.
+
+#### **[LCV-FUNC-FILTER.1]**
+
+```go
+func (ls LightStore) FilterVerified() LightSTore
+```
+
+- Expected postcondition
+    - returns only the LightBlocks with state verified.
 
 ### Inputs
 
