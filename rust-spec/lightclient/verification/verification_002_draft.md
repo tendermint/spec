@@ -1,3 +1,30 @@
+# TODO:
+
+- Get
+- LatestPrevious <- already in there. move perhaps
+- lightStore.store_chain(verifidLS)
+
+- [LCV-INV-TP.1]: more generally LatestTrusted -> LatestVerified (only
+  one)
+
+- clean up IBC chapter
+
+- TODO: spec of pointers + also in supervisor
+
+- LCV-DIST
+
+- We will need to do small adaptations to the verification spec to reflect the semantics in the LightStore (verified, trusted, untrusted, etc. not needed anymore). In more detail:
+
+- The state of the Lightstore needs to go. Functions like LatestVerified can keep the name but will ignore state as it will not exist anymore.
+
+- verification spec should be adapted to the second parameter of VerifyToTarget being a lightblock; new version number of function tag;
+
+- We should clarify what is the expectation of VerifyToTarget so if it returns TimeoutError it can be assumed faulty. I guess that VerifyToTarget with correct full node should never terminate with TimeoutError.
+
+- Backwards also to one lightblock
+
+- add verification information for IBC
+
 # Light Client Verification
 
 The light client implements a read operation of a
