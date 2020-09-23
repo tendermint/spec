@@ -45,7 +45,7 @@ trace (a sequence of lightblocks) that the primary provided.
 In case the detector observes a light client attack, it computes
 evidence data that can be used by Tendermint full nodes to isolate a
 set of faulty full nodes that are still within the unbonding period
-(more than 1/3 of the validator set of some block on the chain),
+(more than 1/3 of the voting power of the validator set at some block of the chain),
 and report them via ABCI to the application of a Tendermint blockchain
 in order to punish faulty nodes.
 
