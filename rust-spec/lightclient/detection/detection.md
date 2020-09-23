@@ -654,12 +654,8 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
             // same primary to check with other secondaries in
             // later iterations of the loop
          }
-         else {
-             // first the secondary reported a faulty block but
-             // then reported a matching block for the same height
-             // first block was most likely bogus
-             Replace_Secondary(root);
-         }
+         // In the case where the secondary reports NoEvidence
+         // we do nothing
     }
     return Evidences; 
 }
