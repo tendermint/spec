@@ -666,7 +666,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
 ```
 
 - Expected precondition
-    - root and primary trace satisfy are a verification trace
+    - root and primary trace are a verification trace
 - Expected postcondition
     - solves the problem statement (if attack found, then evidence is reported)
 - Error condition
