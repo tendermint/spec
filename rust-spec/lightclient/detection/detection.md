@@ -383,7 +383,7 @@ agreed on in the past), and
   starts from a lightblock that can be verified with the
   `root-of-trust` in one step and ends with a lightblock of the height
   requested by the user
-- `Evidences` is a list of evidence for misbehavior
+- `Evidences` is a list of evidences for misbehavior
 
 #### **[LCD-IP-STATEMENT.1]**
 
