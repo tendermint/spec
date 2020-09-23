@@ -130,9 +130,9 @@ there exist light blocks *a(i)* s.t.
 > skipping verification. Observe that we do not require here (yet)
 > that *b* was properly generated.
 
-#### **[TMBC-SKIP-ROOT.1]**
+#### **[TMBC-SKIP-TRACE.1]**
 
-Let *b* and *c* be light blocks. We define *skip-root(b,c,t)* if at
+Let *b* and *c* be light blocks. We define *skip-trace(b,c,t)* if at
 time t there exists an *h* and a sequence *a(1)*, ... *a(h)* s.t.
 
 - *a(1) = b* and
@@ -156,8 +156,8 @@ evaluates to true:
 
 - *sequ-rooted(a)* and
 - *b.Header.Height = c.Header.Height* and
-- *skip-root(a,b,t)*
-- *skip-root(a,c,t)*
+- *skip-trace(a,b,t)*
+- *skip-trace(a,c,t)*
 
 implies *b.Header = c.Header*.
 
@@ -232,7 +232,7 @@ We consider the following case of a light client attack
 
 - *attack(a,b,c,t)*
 - there is a peer p1 that has a sequence *chain* of blocks from *a* to *b*
-- *skip-root(a,c,t)*: by [[TMBC-SKIP-ROOT.1]](#TMBC-SKIP-ROOT1) there is a
+- *skip-trace(a,c,t)*: by [[TMBC-SKIP-TRACE.1]](#TMBC-SKIP-TRACE1) there is a
   verification trace *v* of the form *a = v(1)*, ... *v(h) = c*
 
 Evidence for p1 (that proves an attack) consists for index i
@@ -333,7 +333,7 @@ Let *a*, *b*, *c*, be light blocks and *t* a time. We define
 Let *b* be a light block and *t* a time. We define *bogus(b,t)* iff
 
 - *sequ-rooted(b) = false* and
-- for all *a*, *sequ-rooted(a)* implies *skip-root(a,b,t) = false*
+- for all *a*, *sequ-rooted(a)* implies *skip-trace(a,b,t) = false*
   
 ### Informal Problem statement
 
