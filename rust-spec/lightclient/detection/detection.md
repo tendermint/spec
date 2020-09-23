@@ -166,7 +166,7 @@ implies *b.Header = c.Header*.
 > implication evaluates to true, and the right-hand-side evaluates to
 > false. In particular, there are two **different** headers *b* and
 > *c* that both can be verified from a common block *a* from the
-> chain. Thus, thee following describes an attack.
+> chain. Thus, the following describes an attack.
 
 #### **[TMBC-ATTACK.1]**
 
