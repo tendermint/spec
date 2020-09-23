@@ -100,6 +100,10 @@ c.Header.Height*. We define the predicate **signs(b,c)** to hold
 iff *c.Header.LastCommit* is in *PossibleCommit(b)*.
 [[TMBC-SOUND-DISTR-POSS-COMMIT.1]](TMBC-SOUND-DISTR-POSS-COMMIT-link).
  
+> The above encodes sequential verification, that is, intuitively,
+> b.Header.NextValidators = c.Header.Validators and 2/3 of 
+> these Validators signed c?
+ 
 #### **[TMBC-FUNC-SUPPORT.1]**
 
 Let *b* and *c* be two light blocks. We define the predicate
