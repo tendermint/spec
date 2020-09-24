@@ -679,7 +679,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
 
 ```go
 func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
-                          (Evidence, LightStore, result) {
+                          (Evidence, LightBlock, LightStore, result) {
 
     common := root;
 
@@ -705,7 +705,7 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
             else {
                 // the peer agrees with the trace, we move common forward
                 // we could delete auxLS as it will be overwritten in
-                // the next iteration
+                // the next iterationt
                 common := trace[i].Header
             }
         }
@@ -720,7 +720,8 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
        period) [[LCV-INV-TP.1]](LCV-INV-TP1-link)
- 
+	- If `VerifyToTarget` returns error but root is not expired then return
+	`FaultyPeer` 
 ----
 
 ## Correctness arguments
