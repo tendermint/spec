@@ -706,7 +706,7 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
                 // the peer agrees with the trace, we move common forward
                 // we could delete auxLS as it will be overwritten in
                 // the next iteration
-                common := trace[i].Header
+                common := trace[i]
             }
         }
     }
