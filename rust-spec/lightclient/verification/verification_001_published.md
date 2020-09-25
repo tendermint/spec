@@ -740,10 +740,10 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
         verdict = ValidAndVerified(lightStore.LatestVerified, current)
 
         // Decide whether/how to continue
-        if verdict == OK {
+        if verdict == SUCCESS {
             lightStore.Update(current, StateVerified)
         }
-        else if verdict == CANNOT_VERIFY {
+        else if verdict == NOT_ENOUGH_TRUST {
             // do nothing
    // the light block current passed validation, but the validator
             // set is too different to verify it. We keep the state of
@@ -805,7 +805,7 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
                 - contains signatures by more than two-thirds of the validators
                 - contains no signature from nodes that are not in *trusted.Header.NextValidators*
 - Expected postcondition:
-    - Returns `OK`:
+    - Returns `SUCCESS`:
         - if *untrusted* is the immediate successor of *trusted*, or otherwise,
         - if the signatures of a set of validators that have more than
              *max(1/3,trustThreshold)* of voting power in
@@ -813,7 +813,7 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
              *untrusted.Commit* (that is, header passes the tests
              [**[TMBC-VAL-CONTAINS-CORR.1]**][TMBC-VAL-CONTAINS-CORR-link]
              and [**[TMBC-VAL-COMMIT.1]**][TMBC-VAL-COMMIT-link])
-    - Returns `CANNOT_VERIFY` if:
+    - Returns `NOT_ENOUGH_TRUST` if:
         - *untrusted* is *not* the immediate successor of
            *trusted*
      and the  *max(1/3,trustThreshold)* threshold is not reached
@@ -865,7 +865,7 @@ have the state *StateVerified*.
   [**[TMBC-VAL-CONTAINS-CORR.1]**][TMBC-VAL-CONTAINS-CORR-link] and
   [**[TMBC-VAL-COMMIT.1]**][TMBC-VAL-COMMIT-link] under
   the assumption [**[TMBC-FM-2THIRDS.1]**][TMBC-FM-2THIRDS-link]
-- Only if `ValidAndVerified` returns with `OK`, the state of a light block is
+- Only if `ValidAndVerified` returns with `SUCCESS`, the state of a light block is
   set to *StateVerified*.
 
 #### Argument for [**[LCV-DIST-LIVE.1]**](#lcv-dist-life)
@@ -964,7 +964,7 @@ If on the blockchain the validator set of the block at height
  block
  of height
   *targetHeight*, and *Comp* to check it.
-- as the validator sets are equal, `Verify` returns `OK`, if
+- as the validator sets are equal, `Verify` returns `SUCCESS`, if
   *startHeader.Time > now - trustingPeriod*.
 - that is, if *startTime < startHeader.Header.Time + trustingPeriod -
   2 Delta - Comp*, then core verification terminates successfully
