@@ -58,7 +58,6 @@ needed to be made. In contrast to [version
   lightblock can be used to verify it in one step. This is needed to
   generate verification traces that are needed for IBC.
   
-
 # Outline
 
 - [Part I](#part-i---tendermint-blockchain): Introduction of
@@ -393,12 +392,12 @@ successfully* or it *terminates with failure*.
 #### **[LCV-DIST-STORE.2]**
 
 *Core Verification* returns a data structure called *LightStore* that
-contains light blocks (that contain a header). 
-
+contains light blocks (that contain a header).
 
 #### **[LCV-DIST-INIT.2]**
 
 *Core Verification* is called with
+
 - *primary*: the PeerID of a full node (with verification communicates)
 - *root*: a light block (the root of trust)
 - *targetHeight*: a height (the height of a header that should be obtained)
@@ -508,8 +507,8 @@ type LightStore struct {
 
 ```
 
-
 #### **[LCV-DATA-LS-ROOT.2]**
+
 For each lightblock in a lightstore we record in a field `verification-root` of
 type Height.
 
@@ -517,12 +516,13 @@ type Height.
 > the lightblock in one step
 
 #### **[LCV-INV-LS-ROOT.2]**
+
 At all times, if a lightblock *b* in a lightstore has *b.verification-root = h*,
-then 
+then
+
 - the lightstore contains a lightblock with height *h*, or
 - *b* has the minimal height of all lightblocks in lightstore, then
   b.verification-root should be nil.
-
 
 The LightStore exposes the following functions to query stored LightBlocks.
 
@@ -541,21 +541,22 @@ func (ls LightStore) Get(height Height) (LightBlock, bool)
 ```go
 func (ls LightStore) Latest() LightBlock
 ```
+
 - Expected postcondition
     - returns the highest light block
 
-> 
+>
 
 #### **[LCV-FUNC-STORE.1]**
+
 ```go
-func (ls LightStore) store_chain(newLS LightStore) 
+func (ls LightStore) store_chain(newLS LightStore)
 ```
+
 - Expected postcondition
     - adds `newLS` to the lightStore.
 
-
 ### Functions and data used internally by the verifier
-
 
 #### **[LCV-DATA-LS-STATE.2]**
 
@@ -567,7 +568,7 @@ which of the following states it is.
 > there was also the state `StateTrusted` that
 > was supposed to be used by the attack detector. Therefore, it was
 > planned to expose the State over the API. However, this is not
-> needed with the new design. 
+> needed with the new design.
 
 ```go
 type VerifiedState int
@@ -584,6 +585,7 @@ const (
 ```go
 func (ls LightStore) LatestVerified() LightBlock
 ```
+
 - Expected postcondition
     - returns the highest light block whose state is `StateVerified`
 
@@ -592,6 +594,7 @@ func (ls LightStore) LatestVerified() LightBlock
 ```go
 func (ls LightStore) FilterVerified() LightStore
 ```
+
 - Expected postcondition
     - returns all the lightblocks of the lightstore with state `StateVerified`
 
@@ -601,11 +604,11 @@ func (ls LightStore) FilterVerified() LightStore
 func (ls LightStore) Update(lightBlock LightBlock, verfiedState
 VerifiedState, root-height Height)
 ```
+
 - Expected postcondition
     - the lightblock is part of the lightstore
     - The state of the LightBlock is set to *verifiedState*.
-	- The verification-root of the LightBlock is set to *root-height*
-
+    - The verification-root of the LightBlock is set to *root-height*
 
 ### Inputs
 
@@ -768,7 +771,7 @@ func VerifyToTarget(primary PeerID, root LightBlock,
                     targetHeight Height) (LightStore, Result) {
 
     lightStore = new LightStore;
-	lightStore.Update(root, StateVerified, root.verifiedBy);
+ lightStore.Update(root, StateVerified, root.verifiedBy);
     nextHeight := targetHeight;
 
     for lightStore.LatestVerified.height < targetHeight {
@@ -804,6 +807,7 @@ func VerifyToTarget(primary PeerID, root LightBlock,
     return (lightStore.FilterVerified, ResultSuccess)
 }
 ```
+
 - Expected precondition
     - *root* is within the *trustingPeriod*  **[LCV-PRE-TP.1]**
     - *targetHeight* is greater than the height of *root*
@@ -904,9 +908,7 @@ Analogous to [[001_published]](./verification_001_published.md#solving-the-distr
 
 Analogous to [[001_published]](./verification_001_published.md#liveness-scenarios)
 
-
 # Part V - Supporting the IBC Relayer
-
 
 The above specification focuses on the most common case, which also
 constitutes the most challenging task: using the Tendermint [security
@@ -921,7 +923,7 @@ process of verification `lightStore.LatestVerified()` increases until
 
 For [IBC][ibc-rs] there are two additional challenges:
 
-1.  it might be that some "older" header is needed, that is,
+1. it might be that some "older" header is needed, that is,
 *targetHeight < lightStore.LatestVerified()*.  The
 [supervisor](../supervisor/supervisor.md) checks whether it is in this
 case by calling `LatestPrevious` and `MinVerified` and if so it calls
@@ -934,10 +936,9 @@ case by calling `LatestPrevious` and `MinVerified` and if so it calls
    to be maintained by the light client. In particular
    `VerifyToTarget` and `Backwards` need to take care of setting
    `verification-root`.
-   
-
 
 #### **[LCV-FUNC-LATEST-PREV.2]**
+
 ```go
 func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
 ```
@@ -953,9 +954,11 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
       the LightStore does not contain such an *lb*.
 
 #### **[LCV-FUNC-MIN.2]**
+
 ```go
 func (ls LightStore) MinVerified() (LightBlock, bool)
 ```
+
 - Expected postcondition
     - returns a light block *lb* that satisfies:
         - *lb* is in lightStore
@@ -974,8 +977,8 @@ func Backwards (primary PeerID, root LightBlock, targetHeight Height)
                (LightStore, Result) {
   
     lb := root;
-	lightStore := new LightStore;
-	lightStore.Update(lb, StateVerified, lb.verifiedBy)
+ lightStore := new LightStore;
+ lightStore.Update(lb, StateVerified, lb.verifiedBy)
 
     latest := lb.Header
     for i := lb.Header.height - 1; i >= targetHeight; i-- {
@@ -986,9 +989,9 @@ func Backwards (primary PeerID, root LightBlock, targetHeight Height)
             return (nil, ResultFailure)
         }
         else {
-		    // latest and current are linked together by LastBlockId
-			// therefore it is not relevant which we verified first
-			// for consistency, we store latest was veried using
+      // latest and current are linked together by LastBlockId
+   // therefore it is not relevant which we verified first
+   // for consistency, we store latest was veried using
             // current so that the verifiedBy is always pointing down
             // the chain
             lightStore.Update(current, StateVerified, nil)
