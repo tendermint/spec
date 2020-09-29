@@ -533,7 +533,7 @@ func InitLightClient (initData LCInitData) (LightStore, Error) {
     }
 
     lightStore := new LightStore;
-    lightStore.Add(newBlock); //TODO: add Add to lightstore functions
+    lightStore.Add(newBlock);
     return (lightStore, OK);
 }
 
