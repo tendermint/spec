@@ -822,7 +822,7 @@ func VerifyToTarget(primary PeerID, root LightBlock,
   
 ### Details of the Functions
 
-#### **[LCV-FUNC-VALID.1]**
+#### **[LCV-FUNC-VALID.2]**
 
 ```go
 func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
