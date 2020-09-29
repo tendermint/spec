@@ -4,14 +4,14 @@ Here we describe the data structures in the Tendermint blockchain and the rules 
 
 The Tendermint blockchains consists of a short list of basic data types:
 
--   `Block`
--   `Header`
--   `Version`
--   `BlockID`
--   `Time`
--   `Data` (for transactions)
--   `Commit` and `Vote`
--   `EvidenceData` and `Evidence`
+- `Block`
+- `Header`
+- `Version`
+- `BlockID`
+- `Time`
+- `Data` (for transactions)
+- `Commit` and `Vote`
+- `EvidenceData` and `Evidence`
 
 ## Block
 
@@ -233,15 +233,15 @@ type DuplicateVoteEvidence struct {
 
 Valid Duplicate Vote Evidence must adhere to the following rules:
 
--   Validator Address, Height, Round and Type must be the same for both votes
+- Validator Address, Height, Round and Type must be the same for both votes
 
--   BlockID must be different for both votes (BlockID can be for a nil block)
+- BlockID must be different for both votes (BlockID can be for a nil block)
 
--   Validator must have been in the validator set at that height
+- Validator must have been in the validator set at that height
 
--   Vote signature must be valid (using the chainID)
+- Vote signature must be valid (using the chainID)
 
--   Evidence must not have expired: either age in terms of height or time must be
+- Evidence must not have expired: either age in terms of height or time must be
     less than the age stated in the consensus params. Time is the block time that the
     votes were a part of.
 
@@ -249,23 +249,23 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 ```go
 type LightClientAttackEvidence struct {
-	ConflictingBlock *LightBlock
-	CommonHeight     int64
+ ConflictingBlock *LightBlock
+ CommonHeight     int64
 }
 ```
 
 Valid Light Client Attack Evidence encompasses three types of attack and must adhere to the following rules
 
--   If the header of the light block is invalid, thus indicating a lunatic attack, the node must check that
+- If the header of the light block is invalid, thus indicating a lunatic attack, the node must check that
     they can use `verifySkipping` from their header at the common height to the conflicting header
 
--   If the header is valid, then the validator sets are the same and this is either a form of equivocation
+- If the header is valid, then the validator sets are the same and this is either a form of equivocation
     or amnesia. We therefore check that 2/3 of the validator set also signed the conflicting header
 
--   The trusted header of the node at the same height as the conflicting header must have a different hash to
+- The trusted header of the node at the same height as the conflicting header must have a different hash to
     the conflicting header.
 
--   Evidence must not have expired. The height (and thus the time) is taken from the common height.
+- Evidence must not have expired. The height (and thus the time) is taken from the common height.
 
 ## Validation
 
