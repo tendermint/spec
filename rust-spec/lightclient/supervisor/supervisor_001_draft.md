@@ -577,7 +577,6 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         // No cross-check needed. We trust hashes. Therefore, we
         // directly return the result
         return Backwards(peerList.primary(), lightStore.lowest, targetHeight)
-        // TODO: define lightStore.lowest
     }
     else {
         // Forward verification + detection
