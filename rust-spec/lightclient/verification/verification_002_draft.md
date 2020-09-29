@@ -545,8 +545,16 @@ func (ls LightStore) Latest() LightBlock
 - Expected postcondition
     - returns the highest light block
 
->
-
+#### **[LCV-FUNC-ADD.1]**
+```go
+func (ls LightStore) Add(newBlock)
+```
+- Expected precondition
+    - the lightstore is empty
+- Expected postcondition
+    - adds newBlock into light store
+	
+	
 #### **[LCV-FUNC-STORE.1]**
 
 ```go
@@ -952,6 +960,16 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
           holds *lb.Header.Height >= b.Header.Height*
     - *false* in the second argument if
       the LightStore does not contain such an *lb*.
+---
+
+#### **[LCV-FUNC-LOWEST.2]**
+
+```go
+func (ls LightStore) Lowest() (LightBlock)
+```
+- Expected postcondition
+    - returns the lowest light block within trusting period
+---
 
 #### **[LCV-FUNC-MIN.2]**
 
