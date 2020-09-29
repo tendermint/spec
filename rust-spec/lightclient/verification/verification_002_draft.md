@@ -835,9 +835,6 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
         - *untrusted.Validators = hash(untrusted.Header.Validators)*
         - *untrusted.NextValidators = hash(untrusted.Header.NextValidators)*
     - *trusted.Header.Time > now - trustingPeriod*
-    - *trusted.Commit* is a commit for the header
-     *trusted.Header*, i.e., it contains
-     the correct hash of the header, and +2/3 of signatures
     - the `Height` and `Time` of `trusted` are smaller than the Height and
   `Time` of `untrusted`, respectively
     - the *untrusted.Header* is well-formed (passes the tests from
