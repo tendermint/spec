@@ -4,14 +4,16 @@ Here we describe the data structures in the Tendermint blockchain and the rules 
 
 The Tendermint blockchains consists of a short list of basic data types:
 
-- `Block`
-- `Header`
-- `Version`
-- `BlockID`
-- `Time`
-- `Data` (for transactions)
-- `Commit` and `Vote`
-- `EvidenceData` and `Evidence`
+- [`Block`](#block)
+- [`Header`](#header)
+- [`Version`](#version)
+- [`BlockID`](#blockid)
+- [`Time`](#time)
+- [`Data` (for transactions)](#data)
+- [`Commit`](#commit)
+- [`Vote`](#vote)
+- [`EvidenceData`](#evidence_data)
+- [`Evidence`](#evidence)
 
 ## Block
 
@@ -28,6 +30,14 @@ type Block struct {
 ```
 
 Note the `LastCommit` is the set of signatures of validators that committed the last block.
+
+### Validation
+
+A block is valid if the corresponding fields are valid.
+
+- [Header](#header)
+- [Data](#data)
+- [EvidenceData](#evidence_data)
 
 ## Header
 
@@ -63,6 +73,162 @@ type Header struct {
 
 Further details on each of these fields is described below.
 
+### Validation
+
+A Header is valid if its corresponding fields are valid.
+
+- [Version](#version)
+- ChainID:
+
+    ```go
+    len(block.ChainID) < 50
+    ```
+
+    ChainID must be less than 50 bytes.
+
+- Height:
+
+    ```go
+    block.Header.Height > 0
+    block.Header.Height >= state.InitialHeight
+    block.Header.Height == prevBlock.Header.Height + 1
+    ```
+
+    The height is an incrementing integer. The first block has `block.Header.Height == state.InitialHeight`, derived from the genesis file.
+
+- Time:
+
+    ```go
+    block.Header.Timestamp >= prevBlock.Header.Timestamp + state.consensusParams.Block.TimeIotaMs
+    block.Header.Timestamp == MedianTime(block.LastCommit, state.LastValidators)
+    ```
+
+    The block timestamp must be monotonic.
+    It must equal the weighted median of the timestamps of the valid signatures in the block.LastCommit.
+
+    Note: the timestamp of a vote must be greater by at least one millisecond than that of the
+    block being voted on.
+
+    The timestamp of the first block must be equal to the genesis time (since
+    there's no votes to compute the median).
+
+    ```go
+    if block.Header.Height == state.InitialHeight {
+        block.Header.Timestamp == genesisTime
+    }
+    ```
+
+    See the section on [BFT time](../consensus/bft-time.md) for more details.
+
+- LastBlockID:
+
+    LastBlockID is the previous block's BlockID:
+
+    ```go
+    prevBlockParts := MakeParts(prevBlock)
+    block.Header.LastBlockID == BlockID {
+        Hash: MerkleRoot(prevBlock.Header),
+        PartsHeader{
+            Hash: MerkleRoot(prevBlockParts),
+            Total: len(prevBlockParts),
+        },
+    }
+    ```
+
+    The first block has `block.Header.LastBlockID == BlockID{}`.
+
+- LastCommitHash:
+
+    ```go
+    block.Header.LastCommitHash == MerkleRoot(block.LastCommit.Signatures)
+    ```
+
+    MerkleRoot of the signatures included in the block.
+    These are the commit signatures of the validators that committed the previous
+    block.
+
+    The first block has `block.Header.LastCommitHash == []byte{}`
+
+- DataHash:
+
+    ```go
+    block.Header.DataHash == MerkleRoot(Hashes(block.Txs.Txs))
+    ```
+
+    MerkleRoot of the hashes of transactions included in the block.
+
+    Note the transactions are hashed before being included in the Merkle tree,
+    so the leaves of the Merkle tree are the hashes, not the transactions
+    themselves. This is because transaction hashes are regularly used as identifiers for
+    transactions.
+
+- ValidatorHash:
+
+    ```go
+    block.ValidatorsHash == MerkleRoot(state.Validators)
+    ```
+
+    MerkleRoot of the current validator set that is committing the block.
+    This can be used to validate the `LastCommit` included in the next block.
+    Note that before computing the MerkleRoot the validators are sorted
+    first by voting power (descending), then by address (ascending).
+
+- NextValidatorHash:
+
+    ```go
+    block.NextValidatorsHash == MerkleRoot(state.NextValidators)
+    ```
+
+    MerkleRoot of the next validator set that will be the validator set that commits the next block.
+    This is included so that the current validator set gets a chance to sign the
+    next validator sets Merkle root.
+    Note that before computing the MerkleRoot the validators are sorted
+    first by voting power (descending), then by address (ascending).
+
+- ConsensusHash:
+
+    ```go
+    block.ConsensusHash == type.HashConsensusParams(state.ConsensusParams)
+    ```
+
+    Hash of the proto-encoding of a subset of the consensus parameters.
+
+- AppHash:
+
+    ```go
+    block.AppHash == state.AppHash
+    ```
+
+    Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself.
+
+    The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`.
+
+- LastResultHash:
+
+    ```go
+    block.LastResultsHash == MerkleRoot([]ResponseDeliverTx)
+    ```
+
+    `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored).
+
+    The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.
+
+- EvidenceHash:
+
+    ```go
+    block.EvidenceHash == MerkleRoot(block.Evidence)
+    ```
+
+    MerkleRoot of the evidence of Byzantine behaviour included in this block.
+
+- ProposerAddress:
+
+    ```go
+    block.Header.ProposerAddress in state.Validators
+    ```
+
+    Address of the original proposer of the block. Must be a current validator.
+
 ## Version
 
 ```go
@@ -74,6 +240,15 @@ type Version struct {
 
 The `Version` contains the protocol version for the blockchain and the
 application as two `uint64` values.
+
+### Validation
+
+```go
+block.Version.Block == state.Version.Consensus.Block
+block.Version.App == state.Version.Consensus.App
+```
+
+The block version must match consensus version from the state.
 
 ## BlockID
 
@@ -131,6 +306,37 @@ type Commit struct {
 }
 ```
 
+### Validation
+
+- Height:
+
+    ```go
+    commit.Height > 0
+    ```
+
+- Round:
+
+    ```go
+    commit.Round > 0
+    ```
+
+- [BlockID](#blockid)
+- Signatures:
+
+    ```go
+    len(commit.Signatures) > 0
+    ```
+
+- Signatures:
+
+    ```go
+    for i, commitSig := range commit.Signatures {
+        if err := commitSig.ValidateBasic(); err != nil {
+           error
+        }
+    }
+    ```
+
 ## CommitSig
 
 `CommitSig` represents a signature of a validator, who has voted either for nil,
@@ -161,10 +367,49 @@ NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
 (see
 [ADR-25](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-025-commit.md)).
 
+### Validation
+
+```go
+ switch cs.BlockIDFlag {
+ case BlockIDFlagAbsent:
+ case BlockIDFlagCommit:
+ case BlockIDFlagNil:
+ default:
+  return fmt.Errorf("unknown BlockIDFlag: %v", cs.BlockIDFlag)
+ }
+
+ switch cs.BlockIDFlag {
+ case BlockIDFlagAbsent:
+  if len(cs.ValidatorAddress) != 0 {
+   return errors.New("validator address is present")
+  }
+  if !cs.Timestamp.IsZero() {
+   return errors.New("time is present")
+  }
+  if len(cs.Signature) != 0 {
+   return errors.New("signature is present")
+  }
+ default:
+  if len(cs.ValidatorAddress) != crypto.AddressSize {
+   return fmt.Errorf("expected ValidatorAddress size to be %d bytes, got %d bytes",
+    crypto.AddressSize,
+    len(cs.ValidatorAddress),
+   )
+  }
+  // NOTE: Timestamp validation is subtle and handled elsewhere.
+  if len(cs.Signature) == 0 {
+   return errors.New("signature is missing")
+  }
+  if len(cs.Signature) > MaxSignatureSize {
+   return fmt.Errorf("signature is too big (max: %d)", MaxSignatureSize)
+  }
+    }
+```
+
 ## Vote
 
 A vote is a signed message from a validator for a particular block.
-The vote includes information about the validator signing it.
+The vote includes information about the validator signing it. When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
 
 ```go
 type Vote struct {
@@ -183,6 +428,28 @@ There are two types of votes:
 a _prevote_ has `vote.Type == 1` and
 a _precommit_ has `vote.Type == 2`.
 
+### Validation
+
+For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
+`Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
+the fields.
+
+We define a method `Verify` that returns `true` if the signature verifies against the pubkey for the `SignBytes`
+using the given ChainID:
+
+```go
+func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
+ if !bytes.Equal(pubKey.Address(), vote.ValidatorAddress) {
+  return ErrVoteInvalidValidatorAddress
+ }
+
+ if !pubKey.VerifyBytes(vote.SignBytes(chainID), vote.Signature) {
+  return ErrVoteInvalidSignature
+ }
+ return nil
+}
+```
+
 ## Signature
 
 Signatures in Tendermint are raw bytes representing the underlying signature.
@@ -198,6 +465,18 @@ type EvidenceData struct {
     Evidence []Evidence
 }
 ```
+
+### Validation
+
+```go
+ for i, ev := range EvidenceData.Evidence {
+  if err := ev.ValidateBasic(); err != nil {
+   return fmt.Errorf("invalid evidence (#%d): %v", i, err)
+  }
+    }
+```
+
+For `EvidenceData` to be considered valid all evidence entries must pass there corresponding `validateBasic()` method. `EvidenceData.Evidence` can be nil if there is no evidence to be included in a block.
 
 ## Evidence
 
@@ -286,174 +565,6 @@ Elements of an object are accessed as expected,
 ie. `block.Header`.
 See the [definition of `State`](./state.md).
 
-### Header
-
-A Header is valid if its corresponding fields are valid.
-
-### Version
-
-```go
-block.Version.Block == state.Version.Consensus.Block
-block.Version.App == state.Version.Consensus.App
-```
-
-The block version must match consensus version from the state.
-
-### ChainID
-
-```go
-len(block.ChainID) < 50
-```
-
-ChainID must be less than 50 bytes.
-
-### Height
-
-```go
-block.Header.Height > 0
-block.Header.Height >= state.InitialHeight
-block.Header.Height == prevBlock.Header.Height + 1
-```
-
-The height is an incrementing integer. The first block has `block.Header.Height == state.InitialHeight`, derived from the genesis file.
-
-### Time
-
-```go
-block.Header.Timestamp >= prevBlock.Header.Timestamp + state.consensusParams.Block.TimeIotaMs
-block.Header.Timestamp == MedianTime(block.LastCommit, state.LastValidators)
-```
-
-The block timestamp must be monotonic.
-It must equal the weighted median of the timestamps of the valid signatures in the block.LastCommit.
-
-Note: the timestamp of a vote must be greater by at least one millisecond than that of the
-block being voted on.
-
-The timestamp of the first block must be equal to the genesis time (since
-there's no votes to compute the median).
-
-```go
-if block.Header.Height == state.InitialHeight {
-    block.Header.Timestamp == genesisTime
-}
-```
-
-See the section on [BFT time](../consensus/bft-time.md) for more details.
-
-### LastBlockID
-
-LastBlockID is the previous block's BlockID:
-
-```go
-prevBlockParts := MakeParts(prevBlock)
-block.Header.LastBlockID == BlockID {
-    Hash: MerkleRoot(prevBlock.Header),
-    PartsHeader{
-        Hash: MerkleRoot(prevBlockParts),
-        Total: len(prevBlockParts),
-    },
-}
-```
-
-The first block has `block.Header.LastBlockID == BlockID{}`.
-
-### LastCommitHash
-
-```go
-block.Header.LastCommitHash == MerkleRoot(block.LastCommit.Signatures)
-```
-
-MerkleRoot of the signatures included in the block.
-These are the commit signatures of the validators that committed the previous
-block.
-
-The first block has `block.Header.LastCommitHash == []byte{}`
-
-### DataHash
-
-```go
-block.Header.DataHash == MerkleRoot(Hashes(block.Txs.Txs))
-```
-
-MerkleRoot of the hashes of transactions included in the block.
-
-Note the transactions are hashed before being included in the Merkle tree,
-so the leaves of the Merkle tree are the hashes, not the transactions
-themselves. This is because transaction hashes are regularly used as identifiers for
-transactions.
-
-### ValidatorsHash
-
-```go
-block.ValidatorsHash == MerkleRoot(state.Validators)
-```
-
-MerkleRoot of the current validator set that is committing the block.
-This can be used to validate the `LastCommit` included in the next block.
-Note that before computing the MerkleRoot the validators are sorted
-first by voting power (descending), then by address (ascending).
-
-### NextValidatorsHash
-
-```go
-block.NextValidatorsHash == MerkleRoot(state.NextValidators)
-```
-
-MerkleRoot of the next validator set that will be the validator set that commits the next block.
-This is included so that the current validator set gets a chance to sign the
-next validator sets Merkle root.
-Note that before computing the MerkleRoot the validators are sorted
-first by voting power (descending), then by address (ascending).
-
-### ConsensusHash
-
-```go
-block.ConsensusHash == state.ConsensusParams.Hash()
-```
-
-Hash of the amino-encoding of a subset of the consensus parameters.
-
-### AppHash
-
-```go
-block.AppHash == state.AppHash
-```
-
-Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself.
-
-The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`.
-
-### LastResultsHash
-
-```go
-block.LastResultsHash == MerkleRoot([]ResponseDeliverTx)
-```
-
-`LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored).
-
-The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.
-
-## EvidenceHash
-
-```go
-block.EvidenceHash == MerkleRoot(block.Evidence)
-```
-
-MerkleRoot of the evidence of Byzantine behaviour included in this block.
-
-### ProposerAddress
-
-```go
-block.Header.ProposerAddress in state.Validators
-```
-
-Address of the original proposer of the block. Must be a current validator.
-
-## Txs
-
-Arbitrary length array of arbitrary length byte-arrays.
-
 ## LastCommit
 
 The first height is an exception - it requires the `LastCommit` to be empty:
@@ -493,30 +604,6 @@ The sum total of the voting power of the validators that voted
 must be greater than 2/3 of the total voting power of the complete validator set.
 
 The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
-
-### Vote
-
-A vote is a signed message broadcast in the consensus for a particular block at a particular height and round.
-When stored in the blockchain or propagated over the network, votes are encoded in Amino.
-For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
-`Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
-the fields.
-
-We define a method `Verify` that returns `true` if the signature verifies against the pubkey for the `SignBytes`
-using the given ChainID:
-
-```go
-func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
- if !bytes.Equal(pubKey.Address(), vote.ValidatorAddress) {
-  return ErrVoteInvalidValidatorAddress
- }
-
- if !pubKey.VerifyBytes(vote.SignBytes(chainID), vote.Signature) {
-  return ErrVoteInvalidSignature
- }
- return nil
-}
-```
 
 where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
 against the given signature and message bytes.
