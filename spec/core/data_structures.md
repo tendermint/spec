@@ -38,6 +38,89 @@ A block is valid if the corresponding fields are valid.
 - [Header](#header)
 - [Data](#data)
 - [EvidenceData](#evidence_data)
+- LastCommit:
+
+The first height is an exception - it requires the `LastCommit` to be empty:
+
+```go
+if block.Header.Height == state.InitialHeight {
+  len(b.LastCommit) == 0
+}
+```
+
+Otherwise, we require:
+
+```go
+len(block.LastCommit) == len(state.LastValidators)
+
+talliedVotingPower := 0
+for i, commitSig := range block.LastCommit.Signatures {
+  if commitSig.Absent() {
+    continue
+  }
+
+  vote.BlockID == block.LastBlockID
+
+  val := state.LastValidators[i]
+  vote.Verify(block.ChainID, val.PubKey) == true
+
+  talliedVotingPower += val.VotingPower
+}
+
+talliedVotingPower > (2/3)*TotalVotingPower(state.LastValidators)
+```
+
+Includes one vote for every current validator.
+All votes must either be for the previous block, nil or absent.
+All votes must have a valid signature from the corresponding validator.
+The sum total of the voting power of the validators that voted
+must be greater than 2/3 of the total voting power of the complete validator set.
+
+The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
+
+where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
+against the given signature and message bytes.
+
+## Execution
+
+Once a block is validated, it can be executed against the state.
+
+The state follows this recursive equation:
+
+```go
+state(initialHeight) = InitialState
+state(h+1) <- Execute(state(h), ABCIApp, block(h))
+```
+
+where `InitialState` includes the initial consensus parameters and validator set,
+and `ABCIApp` is an ABCI application that can return results and changes to the validator
+set (TODO). Execute is defined as:
+
+```go
+func Execute(s State, app ABCIApp, block Block) State {
+ // Fuction ApplyBlock executes block of transactions against the app and returns the new root hash of the app state,
+ // modifications to the validator set and the changes of the consensus parameters.
+ AppHash, ValidatorChanges, ConsensusParamChanges := app.ApplyBlock(block)
+
+ nextConsensusParams := UpdateConsensusParams(state.ConsensusParams, ConsensusParamChanges)
+ return State{
+  ChainID:         state.ChainID,
+  InitialHeight:   state.InitialHeight,
+  LastResults:     abciResponses.DeliverTxResults,
+  AppHash:         AppHash,
+  InitialHeight:   state.InitialHeight,
+  LastValidators:  state.Validators,
+  Validators:      state.NextValidators,
+  NextValidators:  UpdateValidators(state.NextValidators, ValidatorChanges),
+  ConsensusParams: nextConsensusParams,
+  Version: {
+   Consensus: {
+    AppVersion: nextConsensusParams.Version.AppVersion,
+   },
+  },
+ }
+}
+```
 
 ## Header
 
@@ -369,42 +452,43 @@ NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
 
 ### Validation
 
-```go
- switch cs.BlockIDFlag {
- case BlockIDFlagAbsent:
- case BlockIDFlagCommit:
- case BlockIDFlagNil:
- default:
-  return fmt.Errorf("unknown BlockIDFlag: %v", cs.BlockIDFlag)
- }
+- BlockIDFlag:
 
- switch cs.BlockIDFlag {
- case BlockIDFlagAbsent:
-  if len(cs.ValidatorAddress) != 0 {
-   return errors.New("validator address is present")
-  }
-  if !cs.Timestamp.IsZero() {
-   return errors.New("time is present")
-  }
-  if len(cs.Signature) != 0 {
-   return errors.New("signature is present")
-  }
- default:
-  if len(cs.ValidatorAddress) != crypto.AddressSize {
-   return fmt.Errorf("expected ValidatorAddress size to be %d bytes, got %d bytes",
-    crypto.AddressSize,
-    len(cs.ValidatorAddress),
-   )
-  }
-  // NOTE: Timestamp validation is subtle and handled elsewhere.
-  if len(cs.Signature) == 0 {
-   return errors.New("signature is missing")
-  }
-  if len(cs.Signature) > MaxSignatureSize {
-   return fmt.Errorf("signature is too big (max: %d)", MaxSignatureSize)
-  }
+    ```go
+    BlockIDFLAG == BlockIDFlagAbsent || BlockIDFlagCommit || BlockIDFlagNil
+    ```
+
+- ValidatorAddress:
+
+    ```go
+    if BlockIDFLAG == BlockIDFlagAbsent{
+        if len(cs.ValidatorAddress) != 0 {
+            return errors.New("validator address is present")
+        }
+        if !cs.Timestamp.IsZero() {
+            return errors.New("time is present")
+        }
+        if len(cs.Signature) != 0 {
+            return errors.New("signature is present")
+        }
+    } else {
+        if len(cs.ValidatorAddress) != crypto.AddressSize {
+            return fmt.Errorf("expected ValidatorAddress size to be %d bytes, got %d bytes", crypto.AddressSize, len(cs.ValidatorAddress))
+        }
     }
-```
+    ```
+
+- Signature:
+
+    ```go
+    // NOTE: Timestamp validation is subtle and handled elsewhere.
+    if len(cs.Signature) == 0 {
+        return errors.New("signature is missing")
+    }
+    if len(cs.Signature) > MaxSignatureSize {
+        return fmt.Errorf("signature is too big (max: %d)", MaxSignatureSize)
+    }
+    ```
 
 ## Vote
 
@@ -429,6 +513,47 @@ a _prevote_ has `vote.Type == 1` and
 a _precommit_ has `vote.Type == 2`.
 
 ### Validation
+
+A Vote is valid if its corresponding fields are valid.
+
+- Type:
+
+    ```go
+    Type == PrevoteType || PrecommitType || ProposalType
+    ```
+
+- Height:
+
+    ```go
+    Height > 0
+    ```
+
+- Round:
+
+    ```go
+    Round > 0
+    ```
+
+- [BlockID](#blockid)
+
+- ValidatorAddress
+
+    ```go
+    len(vote.ValidatorAddress) == 20
+    ```
+
+- ValidatorIndex
+
+    ```go
+    vote.ValidatorIndex > 0
+    ```
+
+- Signature
+
+    ```go
+    len(vote.Signature) > 0
+    len(vote.Signature) < MaxSignatureSize
+    ```
 
 For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
 `Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
@@ -545,106 +670,3 @@ Valid Light Client Attack Evidence encompasses three types of attack and must ad
     the conflicting header.
 
 - Evidence must not have expired. The height (and thus the time) is taken from the common height.
-
-## Validation
-
-Here we describe the validation rules for every element in a block.
-Blocks which do not satisfy these rules are considered invalid.
-
-We abuse notation by using something that looks like Go, supplemented with English.
-A statement such as `x == y` is an assertion - if it fails, the item is invalid.
-
-We refer to certain globally available objects:
-`block` is the block under consideration,
-`prevBlock` is the `block` at the previous height,
-and `state` keeps track of the validator set, the consensus parameters
-and other results from the application. At the point when `block` is the block under consideration,
-the current version of the `state` corresponds to the state
-after executing transactions from the `prevBlock`.
-Elements of an object are accessed as expected,
-ie. `block.Header`.
-See the [definition of `State`](./state.md).
-
-## LastCommit
-
-The first height is an exception - it requires the `LastCommit` to be empty:
-
-```go
-if block.Header.Height == state.InitialHeight {
-  len(b.LastCommit) == 0
-}
-```
-
-Otherwise, we require:
-
-```go
-len(block.LastCommit) == len(state.LastValidators)
-
-talliedVotingPower := 0
-for i, commitSig := range block.LastCommit.Signatures {
-  if commitSig.Absent() {
-    continue
-  }
-
-  vote.BlockID == block.LastBlockID
-
-  val := state.LastValidators[i]
-  vote.Verify(block.ChainID, val.PubKey) == true
-
-  talliedVotingPower += val.VotingPower
-}
-
-talliedVotingPower > (2/3)*TotalVotingPower(state.LastValidators)
-```
-
-Includes one vote for every current validator.
-All votes must either be for the previous block, nil or absent.
-All votes must have a valid signature from the corresponding validator.
-The sum total of the voting power of the validators that voted
-must be greater than 2/3 of the total voting power of the complete validator set.
-
-The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
-
-where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
-against the given signature and message bytes.
-
-## Execution
-
-Once a block is validated, it can be executed against the state.
-
-The state follows this recursive equation:
-
-```go
-state(initialHeight) = InitialState
-state(h+1) <- Execute(state(h), ABCIApp, block(h))
-```
-
-where `InitialState` includes the initial consensus parameters and validator set,
-and `ABCIApp` is an ABCI application that can return results and changes to the validator
-set (TODO). Execute is defined as:
-
-```go
-func Execute(s State, app ABCIApp, block Block) State {
- // Fuction ApplyBlock executes block of transactions against the app and returns the new root hash of the app state,
- // modifications to the validator set and the changes of the consensus parameters.
- AppHash, ValidatorChanges, ConsensusParamChanges := app.ApplyBlock(block)
-
- nextConsensusParams := UpdateConsensusParams(state.ConsensusParams, ConsensusParamChanges)
- return State{
-  ChainID:         state.ChainID,
-  InitialHeight:   state.InitialHeight,
-  LastResults:     abciResponses.DeliverTxResults,
-  AppHash:         AppHash,
-  InitialHeight:   state.InitialHeight,
-  LastValidators:  state.Validators,
-  Validators:      state.NextValidators,
-  NextValidators:  UpdateValidators(state.NextValidators, ValidatorChanges),
-  ConsensusParams: nextConsensusParams,
-  Version: {
-   Consensus: {
-    AppVersion: nextConsensusParams.Version.AppVersion,
-   },
-  },
- }
-}
-```
