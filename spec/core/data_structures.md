@@ -555,8 +555,8 @@ A Vote is valid if its corresponding fields are valid.
     len(vote.Signature) < MaxSignatureSize
     ```
 
-For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
-`Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
+For signing, votes are represented via [`CanonicalVote`](#canonicalvote) and also encoded using protobuf via
+`type.SignBytes` which includes the `ChainID`, and uses a different ordering of
 the fields.
 
 We define a method `Verify` that returns `true` if the signature verifies against the pubkey for the `SignBytes`
@@ -572,6 +572,19 @@ func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
   return ErrVoteInvalidSignature
  }
  return nil
+}
+```
+
+## CanonicalVote
+
+```proto
+message CanonicalVote {
+  SignedMsgType             type      = 1;
+  sfixed64                  height    = 2;
+  sfixed64                  round     = 3;
+  CanonicalBlockID          block_id  = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string                    chain_id  = 6;
 }
 ```
 
