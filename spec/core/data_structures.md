@@ -20,25 +20,16 @@ The Tendermint blockchains consists of a short list of basic data types:
 A block consists of a header, transactions, votes (the commit),
 and a list of evidence of malfeasance (ie. signing conflicting votes).
 
-```go
-type Block struct {
-    Header      Header
-    Txs         Data
-    Evidence    EvidenceData
-    LastCommit  Commit
-}
-```
+| Name       | Type                           | Validation                     |
+|------------|--------------------------------|--------------------------------|
+| Header     | [Header](#header)              | [Header](#header)              |
+| Data       | [Data](#data)                  | [data](#data)                  |
+| Evidence   | [EvidenceData](#evidence_data) | [EvidenceData](#evidence_data) |
+| LastCommit | [Commit](#commit)              | [Commit](#commit)              |
 
 Note the `LastCommit` is the set of signatures of validators that committed the last block.
 
-### Validation
-
-A block is valid if the corresponding fields are valid.
-
-- [Header](#header)
-- [Data](#data)
-- [EvidenceData](#evidence_data)
-- LastCommit:
+Extra validation for `LastCommit`:
 
 The first height is an exception - it requires the `LastCommit` to be empty:
 
@@ -127,57 +118,27 @@ func Execute(s State, app ABCIApp, block Block) State {
 A block header contains metadata about the block and about the consensus, as well as commitments to
 the data in the current block, the previous block, and the results returned by the application:
 
-```go
-type Header struct {
- // basic block info
- Version  Version
- ChainID  string
- Height   int64
- Time     Time
-
- // prev block info
- LastBlockID BlockID
-
- // hashes of block data
- LastCommitHash []byte // commit from validators from the last block
- DataHash       []byte // MerkleRoot of transaction hashes
-
- // hashes from the app output from the prev block
- ValidatorsHash     []byte // validators for the current block
- NextValidatorsHash []byte // validators for the next block
- ConsensusHash      []byte // consensus params for current block
- AppHash            []byte // state after txs from the previous block
- LastResultsHash    []byte // root hash of all results from the txs from the previous block
-
- // consensus info
- EvidenceHash    []byte // evidence included in the block
- ProposerAddress []byte // original proposer of the block
-```
-
-Further details on each of these fields is described below.
+| Name        | Type                | Validation                                                                                                                                                                                                             |
+|-------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Version     | [Version](#version) | [Version](#version)                                                                                                                                                                                                    |
+| ChainID     | String              | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
+| Height      | int64               | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
+| Time        | [Time](#time)       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs. The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md) |
+| LastBlockID | [BlockID](#blockid) | [BlockID](#blockid)                                                                                                                                                                                                    |
+| LastCommitHash | slice of bytes |  MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.   |
+| DataHash | slice of bytes |  MerkleRoot of the hash of transactions. **Note**: The transactions are hashed before being included in the merkle tree, the leaves of the Merkle tree are the hashes, not the transactions themselves.   |
+| ValidatorHash | slice of bytes |  MerkleRoot of the current validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot. |
+| NextValidatorHash | slice of bytes |  MerkleRoot of the next validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot. |
+| ConsensusHash | slice of bytes |  Hash of the proto-encoding of the consensus parameters. |
+|AppHash| slice of bytes | Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself. The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`.|
+| LastResultHash | slice of bytes |   `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored).
+The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance. |
+|EvidenceHash |slice of bytes |MerkleRoot of the evidence of Byzantine behaviour included in this block.|
+|ProposerAddress| slice of bytes | Address of the original proposer of the block. Must be a current validator.|
 
 ### Validation
 
 A Header is valid if its corresponding fields are valid.
-
-- [Version](#version)
-- ChainID:
-
-    ```go
-    len(block.ChainID) < 50
-    ```
-
-    ChainID must be less than 50 bytes.
-
-- Height:
-
-    ```go
-    block.Header.Height > 0
-    block.Header.Height >= state.InitialHeight
-    block.Header.Height == prevBlock.Header.Height + 1
-    ```
-
-    The height is an incrementing integer. The first block has `block.Header.Height == state.InitialHeight`, derived from the genesis file.
 
 - Time:
 
@@ -220,118 +181,13 @@ A Header is valid if its corresponding fields are valid.
 
     The first block has `block.Header.LastBlockID == BlockID{}`.
 
-- LastCommitHash:
-
-    ```go
-    block.Header.LastCommitHash == MerkleRoot(block.LastCommit.Signatures)
-    ```
-
-    MerkleRoot of the signatures included in the block.
-    These are the commit signatures of the validators that committed the previous
-    block.
-
-    The first block has `block.Header.LastCommitHash == []byte{}`
-
-- DataHash:
-
-    ```go
-    block.Header.DataHash == MerkleRoot(Hashes(block.Txs.Txs))
-    ```
-
-    MerkleRoot of the hashes of transactions included in the block.
-
-    Note the transactions are hashed before being included in the Merkle tree,
-    so the leaves of the Merkle tree are the hashes, not the transactions
-    themselves. This is because transaction hashes are regularly used as identifiers for
-    transactions.
-
-- ValidatorHash:
-
-    ```go
-    block.ValidatorsHash == MerkleRoot(state.Validators)
-    ```
-
-    MerkleRoot of the current validator set that is committing the block.
-    This can be used to validate the `LastCommit` included in the next block.
-    Note that before computing the MerkleRoot the validators are sorted
-    first by voting power (descending), then by address (ascending).
-
-- NextValidatorHash:
-
-    ```go
-    block.NextValidatorsHash == MerkleRoot(state.NextValidators)
-    ```
-
-    MerkleRoot of the next validator set that will be the validator set that commits the next block.
-    This is included so that the current validator set gets a chance to sign the
-    next validator sets Merkle root.
-    Note that before computing the MerkleRoot the validators are sorted
-    first by voting power (descending), then by address (ascending).
-
-- ConsensusHash:
-
-    ```go
-    block.ConsensusHash == type.HashConsensusParams(state.ConsensusParams)
-    ```
-
-    Hash of the proto-encoding of a subset of the consensus parameters.
-
-- AppHash:
-
-    ```go
-    block.AppHash == state.AppHash
-    ```
-
-    Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself.
-
-    The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`.
-
-- LastResultHash:
-
-    ```go
-    block.LastResultsHash == MerkleRoot([]ResponseDeliverTx)
-    ```
-
-    `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored).
-
-    The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.
-
-- EvidenceHash:
-
-    ```go
-    block.EvidenceHash == MerkleRoot(block.Evidence)
-    ```
-
-    MerkleRoot of the evidence of Byzantine behaviour included in this block.
-
-- ProposerAddress:
-
-    ```go
-    block.Header.ProposerAddress in state.Validators
-    ```
-
-    Address of the original proposer of the block. Must be a current validator.
-
 ## Version
 
-```go
-type Version struct {
- Block uint64
- App   uint64
-}
-```
-
-The `Version` contains the protocol version for the blockchain and the
-application as two `uint64` values.
-
-### Validation
-
-```go
-block.Version.Block == state.Version.Consensus.Block
-block.Version.App == state.Version.Consensus.App
-```
-
-The block version must match consensus version from the state.
+| Name  | type   | Validation                                                                                                       |
+|-------|--------|------------------------------------------------------------------------------------------------------------------|
+| Block | uint64 | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
+| App   | uint64 | `block.Version.App == state.Version.Consensus.App`                                                               |
+****
 
 ## BlockID
 
@@ -344,81 +200,43 @@ cut into parts (ie. `MerkleRoot(MakeParts(block))`).
 The `BlockID` includes these two hashes, as well as the number of
 parts (ie. `len(MakeParts(block))`)
 
-```go
-type BlockID struct {
-    Hash []byte
-    PartsHeader PartSetHeader
-}
-
-type PartSetHeader struct {
-    Total int32
-    Hash []byte
-}
-```
+| Name        | Type                        | Validation                  |
+|-------------|-----------------------------|-----------------------------|
+| Hash        | slice of bytes              | hash must be of length 32   |
+| PartsHeader | [PartsHeader](#PartsHeader) | [PartsHeader](#PartsHeader) |
 
 See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 
+## PartSetHeader
+
+| Name  | Type           | Validation           |
+|-------|----------------|----------------------|
+| Total | int32          | -                    |
+| Hash  | slice of bytes | Must be of length 32 |
+
 ## Time
 
-Tendermint uses the
-[Google.Protobuf.WellKnownTypes.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/timestamp)
+Tendermint uses the [Google.Protobuf.WellKnownTypes.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/timestamp)
 format, which uses two integers, one for Seconds and for Nanoseconds.
 
 ## Data
 
-Data is just a wrapper for a list of transactions, where transactions are
-arbitrary byte arrays:
+Data is just a wrapper for a list of transactions, where transactions are arbitrary byte arrays:
 
-```go
-type Data struct {
-    Txs [][]byte
-}
-```
+| Name | Type                       | Validation |
+|------|----------------------------|------------|
+| Txs  | Matrix of bytes ([][]byte) | -          |
 
 ## Commit
 
-Commit is a simple wrapper for a list of signatures, with one for each
-validator. It also contains the relevant BlockID, height and round:
+Commit is a simple wrapper for a list of signatures, with one for each validator. It also contains the relevant BlockID, height and round:
 
-```go
-type Commit struct {
- Height     int64
- Round      int
- BlockID    BlockID
- Signatures []CommitSig
-}
-```
-
-### Validation
-
-- Height:
-
-    ```go
-    commit.Height > 0
-    ```
-
-- Round:
-
-    ```go
-    commit.Round > 0
-    ```
-
-- [BlockID](#blockid)
-- Signatures:
-
-    ```go
-    len(commit.Signatures) > 0
-    ```
-
-- Signatures:
-
-    ```go
-    for i, commitSig := range commit.Signatures {
-        if err := commitSig.ValidateBasic(); err != nil {
-           error
-        }
-    }
-    ```
+| Name       | Type                             | Validation                                                                                               |
+|------------|----------------------------------|----------------------------------------------------------------------------------------------------------|
+| Height     | int64                            | Must be > 0                                                                                              |
+| Round      | int32                            | Must be > 0                                                                                              |
+| BlockID    | [BlockID](#blockid)              | [BlockID](#blockid)                                                                                      |
+| Signatures | Array of [CommitSig](#commitsig) | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
 
 ## CommitSig
 
@@ -426,37 +244,16 @@ type Commit struct {
 a particular `BlockID` or was absent. It's a part of the `Commit` and can be used
 to reconstruct the vote set given the validator set.
 
-```go
-type BlockIDFlag byte
-
-const (
- // BlockIDFlagAbsent - no vote was received from a validator.
- BlockIDFlagAbsent BlockIDFlag = 0x01
- // BlockIDFlagCommit - voted for the Commit.BlockID.
- BlockIDFlagCommit = 0x02
- // BlockIDFlagNil - voted for nil.
- BlockIDFlagNil = 0x03
-)
-
-type CommitSig struct {
- BlockIDFlag      BlockIDFlag
- ValidatorAddress Address
- Timestamp        time.Time
- Signature        []byte
-}
-```
-
+| Name             | Type                        | Validation                                            |
+|------------------|-----------------------------|-------------------------------------------------------|
+| BlockIDFlag      | [BlockIDFlag](#blockidflag) |                Must be one of the fields in the [BlockIDFlag](#blockidflag) enum                                     |
+| ValidatorAddress | [Address](#address)         |                                                       |
+| Timestamp        | [Time](#time)               |                                                       |
+| Signature        | [Signature](#signature)     | The length of the signaute must be > 0 and < than  64 |
 NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
-(see
-[ADR-25](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-025-commit.md)).
+(see [ADR-25](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-025-commit.md)).
 
 ### Validation
-
-- BlockIDFlag:
-
-    ```go
-    BlockIDFLAG == BlockIDFlagAbsent || BlockIDFlagCommit || BlockIDFlagNil
-    ```
 
 - ValidatorAddress:
 
@@ -478,35 +275,36 @@ NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
     }
     ```
 
-- Signature:
+## BlockIDFlag
 
-    ```go
-    // NOTE: Timestamp validation is subtle and handled elsewhere.
-    if len(cs.Signature) == 0 {
-        return errors.New("signature is missing")
-    }
-    if len(cs.Signature) > MaxSignatureSize {
-        return fmt.Errorf("signature is too big (max: %d)", MaxSignatureSize)
-    }
-    ```
+```go
+type BlockIDFlag byte
+
+const (
+ // BlockIDFlagAbsent - no vote was received from a validator.
+ BlockIDFlagAbsent BlockIDFlag = 0x01
+ // BlockIDFlagCommit - voted for the Commit.BlockID.
+ BlockIDFlagCommit = 0x02
+ // BlockIDFlagNil - voted for nil.
+ BlockIDFlagNil = 0x03
+)
+```
 
 ## Vote
 
 A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it. When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
 
-```go
-type Vote struct {
- Type             byte
- Height           int64
- Round            int
- BlockID          BlockID
- Timestamp        Time
- ValidatorAddress []byte
- ValidatorIndex   int
- Signature        []byte
-}
-```
+| Name             | Type                            | Validation          |
+|------------------|---------------------------------|---------------------|
+| Type             | [SignedMsgType](#signedmsgtype) |                     |
+| Height           | int64                           | Must be > 0         |
+| Round            | int32                           | Must be > 0         |
+| BlockID          | [BlockID](#blockid)             | [BlockID](#blockid) |
+| Timestamp        | [Time](#Time)                   | [Time](#time)       |
+| ValidatorAddress | slice of bytes (`[]byte`)       |          Length must be equal to 20           |
+| ValidatorIndex   | int32                           |        must be > 0             |
+| Signature        | slice of bytes (`[]byte`)       |    Length of signature must be > 0 and < 64                 |
 
 There are two types of votes:
 a _prevote_ has `vote.Type == 1` and
@@ -520,39 +318,6 @@ A Vote is valid if its corresponding fields are valid.
 
     ```go
     Type == PrevoteType || PrecommitType || ProposalType
-    ```
-
-- Height:
-
-    ```go
-    Height > 0
-    ```
-
-- Round:
-
-    ```go
-    Round > 0
-    ```
-
-- [BlockID](#blockid)
-
-- ValidatorAddress
-
-    ```go
-    len(vote.ValidatorAddress) == 20
-    ```
-
-- ValidatorIndex
-
-    ```go
-    vote.ValidatorIndex > 0
-    ```
-
-- Signature
-
-    ```go
-    len(vote.Signature) > 0
-    len(vote.Signature) < MaxSignatureSize
     ```
 
 For signing, votes are represented via [`CanonicalVote`](#canonicalvote) and also encoded using protobuf via
@@ -598,11 +363,9 @@ See the [signature spec](./encoding.md#key-types) for more.
 
 EvidenceData is a simple wrapper for a list of evidence:
 
-```go
-type EvidenceData struct {
-    Evidence []Evidence
-}
-```
+| Name     | Type                           | Validation                                                      |
+|----------|--------------------------------|-----------------------------------------------------------------|
+| Evidence | Array of [Evidence](#evidence) | Validation adheres to individual types of [Evidence](#evidence) |
 
 ### Validation
 
@@ -619,20 +382,8 @@ For `EvidenceData` to be considered valid all evidence entries must pass there c
 ## Evidence
 
 Evidence in Tendermint is used to indicate breaches in the consensus by a validator.
-It is implemented as the following interface.
 
-```go
-type Evidence interface {
- Height() int64                                     // height of the equivocation
- Bytes() []byte                                     // bytes which comprise the evidence
- Hash() []byte                                      // hash of the evidence (this is also used for equality)
- ValidateBasic() error                              // consistency check of the data
- String() string                                    // string representation of the evidence
-}
-```
-
-All evidence can be encoded and decoded to and from Protobuf with the `EvidenceToProto()`
-and `EvidenceFromProto()` functions. The [Fork Accountability](../consensus/light-client/accountability.md)
+The [Fork Accountability](../consensus/light-client/accountability.md)
 document provides a good overview for the types of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`. Each evidence uses
 the timestamp of the block that the evidence occured at to indicate the age of the evidence.
 
@@ -641,12 +392,10 @@ the timestamp of the block that the evidence occured at to indicate the age of t
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
 
-```go
-type DuplicateVoteEvidence struct {
-    VoteA  *Vote
-    VoteB  *Vote
-}
-```
+| Name  | Type          | Validation                                          |
+|-------|---------------|-----------------------------------------------------|
+| VoteA | [Vote](#vote) | VoteA must adhere to [Vote](#vote) validation rules |
+| Voteb | [Vote](#vote) | VoteB must adhere to [Vote](#vote) validation rules |
 
 Valid Duplicate Vote Evidence must adhere to the following rules:
 
