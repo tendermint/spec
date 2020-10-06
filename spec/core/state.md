@@ -118,6 +118,7 @@ message ConsensusParams {
   BlockParams     block     = 1;
   EvidenceParams  evidence  = 2;
   ValidatorParams validator = 3;
+  VersionParams   version   = 4;
 }
 ```
 

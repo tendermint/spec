@@ -188,7 +188,6 @@ enum SignedMsgType {
   // Proposals
   PROPOSAL_TYPE = 32;
 }
-}
 ```
 
 There are two types of votes:
