@@ -187,7 +187,6 @@ A Header is valid if its corresponding fields are valid.
 |-------|--------|------------------------------------------------------------------------------------------------------------------|
 | Block | uint64 | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
 | App   | uint64 | `block.Version.App == state.Version.Consensus.App`                                                               |
-****
 
 ## BlockID
 
@@ -367,18 +366,6 @@ EvidenceData is a simple wrapper for a list of evidence:
 |----------|--------------------------------|-----------------------------------------------------------------|
 | Evidence | Array of [Evidence](#evidence) | Validation adheres to individual types of [Evidence](#evidence) |
 
-### Validation
-
-```go
- for i, ev := range EvidenceData.Evidence {
-  if err := ev.ValidateBasic(); err != nil {
-   return fmt.Errorf("invalid evidence (#%d): %v", i, err)
-  }
-    }
-```
-
-For `EvidenceData` to be considered valid all evidence entries must pass there corresponding `validateBasic()` method. `EvidenceData.Evidence` can be nil if there is no evidence to be included in a block.
-
 ## Evidence
 
 Evidence in Tendermint is used to indicate breaches in the consensus by a validator.
@@ -413,12 +400,10 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 ### LightClientAttackEvidence
 
-```go
-type LightClientAttackEvidence struct {
- ConflictingBlock *LightBlock
- CommonHeight     int64
-}
-```
+| Name             | Type                      | Description | Validation |
+|------------------|---------------------------|-------------|------------|
+| ConflictingBlock | [LightBlock](#LightBlock) |             |            |
+| CommonHeight     | int64                     |             |            |
 
 Valid Light Client Attack Evidence encompasses three types of attack and must adhere to the following rules
 
@@ -432,3 +417,33 @@ Valid Light Client Attack Evidence encompasses three types of attack and must ad
     the conflicting header.
 
 - Evidence must not have expired. The height (and thus the time) is taken from the common height.
+
+## LightBlock
+
+| Name         | Type                          | Description | Validation                    |
+|--------------|-------------------------------|-------------|-------------------------------|
+| SignedHeader | [SignedHeader](#signedheader) |             | [SignedHeader](#signedheader) |
+| ValidatorSet | [ValidatorSet](#validatorset) |             |                               |
+
+## SignedHeader
+
+| Name   | Type              | Description       | Validation                                                                      |
+|--------|-------------------|-------------------|---------------------------------------------------------------------------------|
+| Header | [Header](#Header) | [Header](#Header) | Header cannot be nil & must adhere to the [Header](#Header) validation criteria |
+| Commit | [Commit](#commit) | [Commit](#commit) | Commit cannot be nil & must adhere to the [Commit](#commit) criteria            |
+
+## ValidatorSet
+
+| Name       | Type                             | Description | Validation |
+|------------|----------------------------------|-------------|------------|
+| Validators | Array of [validator](#validator) |             |            |
+| Proposer   | Array of [validator](#validator) |             |            |
+
+## Validator
+
+| Name             | Type                      | Description | Validation |
+|------------------|---------------------------|-------------|------------|
+| Address          | slice of bytes (`[]byte`) |             |            |
+| Pubkey           | slice of bytes (`[]byte`) |             |            |
+| VotingPower      | int64                     |             |            |
+| ProposerPriority | int64                     |             |            |
