@@ -362,9 +362,9 @@ See the [signature spec](./encoding.md#key-types) for more.
 
 EvidenceData is a simple wrapper for a list of evidence:
 
-| Name     | Type                           | Validation                                                      |
-|----------|--------------------------------|-----------------------------------------------------------------|
-| Evidence | Array of [Evidence](#evidence) | Validation adheres to individual types of [Evidence](#evidence) |
+| Name     | Type                           | Description| Validation                                                      |
+|----------|--------------------------------|--|---------------------------------------------------------------|
+| Evidence | Array of [Evidence](#evidence) | A list of verified [evidence](#evidence)|Validation adheres to individual types of [Evidence](#evidence) |
 
 ## Evidence
 
@@ -372,17 +372,17 @@ Evidence in Tendermint is used to indicate breaches in the consensus by a valida
 
 The [Fork Accountability](../consensus/light-client/accountability.md)
 document provides a good overview for the types of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`. Each evidence uses
-the timestamp of the block that the evidence occured at to indicate the age of the evidence.
+the timestamp of the block that the evidence occurred at to indicate the age of the evidence.
 
 ### DuplicateVoteEvidence
 
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
 
-| Name  | Type          | Validation                                          |
-|-------|---------------|-----------------------------------------------------|
-| VoteA | [Vote](#vote) | VoteA must adhere to [Vote](#vote) validation rules |
-| Voteb | [Vote](#vote) | VoteB must adhere to [Vote](#vote) validation rules |
+| Name  | Type          | Description                                                     | Validation                                          |
+|-------|---------------|-----------------------------------------------------------------|-----------------------------------------------------|
+| VoteA | [Vote](#vote) | One of the votes submitted by a validator when they equivocated | VoteA must adhere to [Vote](#vote) validation rules |
+| VoteB | [Vote](#vote) | The second vote submitted by a validator when they equivocated  | VoteB must adhere to [Vote](#vote) validation rules |
 
 Valid Duplicate Vote Evidence must adhere to the following rules:
 
@@ -400,10 +400,15 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 ### LightClientAttackEvidence
 
+ LightClientAttackEvidence is a generalized evidence that captures all forms of known attacks on
+a light client such that a full node can verify, propose and commit the evidence on-chain for
+punishment of the malicious validators. There are three forms of attacks: Lunatic, Equivocation
+and Amnesia. These attacks are exhaustive. You can find a more detailed overview of this [here](../light-client/accountability#the_misbehavior_of_faulty_validators)
+
 | Name             | Type                      | Description | Validation |
 |------------------|---------------------------|-------------|------------|
-| ConflictingBlock | [LightBlock](#LightBlock) |             |            |
-| CommonHeight     | int64                     |             |            |
+| ConflictingBlock | [LightBlock](#LightBlock) | Read Below  | Read Below |
+| CommonHeight     | int64                     | Read Below  | Read Below |
 
 Valid Light Client Attack Evidence encompasses three types of attack and must adhere to the following rules
 
@@ -420,30 +425,36 @@ Valid Light Client Attack Evidence encompasses three types of attack and must ad
 
 ## LightBlock
 
-| Name         | Type                          | Description | Validation                    |
-|--------------|-------------------------------|-------------|-------------------------------|
-| SignedHeader | [SignedHeader](#signedheader) |             | [SignedHeader](#signedheader) |
-| ValidatorSet | [ValidatorSet](#validatorset) |             |                               |
+| Name         | Type                          | Description                                 | Validation                    |
+|--------------|-------------------------------|---------------------------------------------|-------------------------------|
+| SignedHeader | [SignedHeader](#signedheader) | The header with the commit for verification | Must not be nil and adhere to the validation rules of [signedHeader](#signedheader) |
+| ValidatorSet | [ValidatorSet](#validatorset) |                                             |     Must not be nil and adhere to the validation rules of [validatorset](#validatorset)                           |
 
 ## SignedHeader
 
+The SignedhHeader is the [header](#header) accompanied by the commit to prove it.
+
 | Name   | Type              | Description       | Validation                                                                      |
 |--------|-------------------|-------------------|---------------------------------------------------------------------------------|
-| Header | [Header](#Header) | [Header](#Header) | Header cannot be nil & must adhere to the [Header](#Header) validation criteria |
+| Header | [Header](#Header) | [Header](#header) | Header cannot be nil & must adhere to the [Header](#Header) validation criteria |
 | Commit | [Commit](#commit) | [Commit](#commit) | Commit cannot be nil & must adhere to the [Commit](#commit) criteria            |
 
 ## ValidatorSet
 
-| Name       | Type                             | Description | Validation |
-|------------|----------------------------------|-------------|------------|
-| Validators | Array of [validator](#validator) |             |            |
-| Proposer   | Array of [validator](#validator) |             |            |
+| Name       | Type                             | Description                                        | Validation                                                                                                        |
+|------------|----------------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| Validators | Array of [validator](#validator) | List of the active validators at a specific height | The list of validators can not be empty or nil and must adhere to the validation rules of [validator](#validator) |
+| Proposer   | Array of [validator](#validator) | The block proposer for the current block           | The proposer cannot be nil and must adhere to the validation rules of  [validator](#validator)                    |
 
 ## Validator
 
-| Name             | Type                      | Description | Validation |
-|------------------|---------------------------|-------------|------------|
-| Address          | slice of bytes (`[]byte`) |             |            |
-| Pubkey           | slice of bytes (`[]byte`) |             |            |
-| VotingPower      | int64                     |             |            |
-| ProposerPriority | int64                     |             |            |
+| Name             | Type                      | Description                                                                                       | Validation                      |
+|------------------|---------------------------|---------------------------------------------------------------------------------------------------|---------------------------------|
+| Address          | [Address](#address)       | Validators Address                                                                                | Length must be of size 20       |
+| Pubkey           | slice of bytes (`[]byte`) | Validators Public Key                                                                             | must be a length greater than 0 |
+| VotingPower      | int64                     | Validators voting power                                                                           | cannot be < 0                   |
+| ProposerPriority | int64                     | Validators proposer priority. This is used to gauge when a validator is up next to propose blocks |  No validation, value can be negative and positive                               |
+
+## Address
+
+Address is a type alias of a slice of bytes. The address is calculated by hashing the bytes using sha256 and truncating it to only use the first 20 bytes of the slice.
