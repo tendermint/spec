@@ -151,6 +151,10 @@ message EvidenceParams {
 message ValidatorParams {
   repeated string pub_key_types = 1;
 }
+
+message VersionParams {
+  uint64 AppVersion = 1;
+}
 ```
 
 #### Block
