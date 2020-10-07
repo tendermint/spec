@@ -15,8 +15,11 @@ CONSTANTS
     (* an index of the block header that the light client tries to verify *)
   TRUSTING_PERIOD,
     (* the period within which the validators are trusted *)
-  IS_PRIMARY_CORRECT
+  IS_PRIMARY_CORRECT,
     (* is primary correct? *)  
+  FAULTY_RATIO
+    (* a pair <<a, b>> that limits that ratio of faulty validator in the blockchain
+       from above (exclusive). Tendermint security model prescribes 1 / 3. *)
 
 VARIABLES       (* see TypeOK below for the variable types *)
   state,        (* the current state of the light client *)
@@ -71,7 +74,7 @@ bcvars == <<now, blockchain, Faulty>>
  *) 
 ULTIMATE_HEIGHT == TARGET_HEIGHT + 1 
  
-BC == INSTANCE Blockchain_002_draft WITH
+BC == INSTANCE Blockchain_003_draft WITH
   now <- now, blockchain <- blockchain, Faulty <- Faulty
 
 (************************** Lite client ************************************)
@@ -274,7 +277,7 @@ VerifyToTargetDone ==
 (********************* Lite client + Blockchain *******************)
 Init ==
     \* the blockchain is initialized immediately to the ULTIMATE_HEIGHT
-    /\ BC!InitToHeight
+    /\ BC!InitToHeight(FAULTY_RATIO)
     \* the light client starts
     /\ LCInit
 
@@ -333,6 +336,14 @@ CorrectnessInv ==
     \A h \in DOMAIN fetchedLightBlocks:
         lightBlockStatus[h] = "StateVerified" =>
             fetchedLightBlocks[h].header = blockchain[h]
+
+(**
+ 
+ *)
+NoTrustOnFaultyBlockInv ==
+    (state = "finishedSuccess"
+        /\ fetchedLightBlocks[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT])
+        => CorrectnessInv
 
 (**
  Check that the sequence of the headers in storedLightBlocks satisfies ValidAndVerified = "SUCCESS" pairwise

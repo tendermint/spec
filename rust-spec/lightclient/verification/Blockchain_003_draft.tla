@@ -91,26 +91,39 @@ TwoThirds(pVS, pNodes) ==
 (*
  Given a set of FaultyNodes, test whether the voting power of the correct nodes in D
  is more than 2/3 of the voting power of the faulty nodes in D.
+
+ Parameters:
+   - pFaultyNodes is a set of nodes that are considered faulty
+   - pVS is a set of all validators, maybe including Faulty, intersecting with it, etc.
+   - pMaxFaultRatio is a pair <<a, b>> that limits the ratio a / b of the faulty
+     validators from above (exclusive)
  *)
-IsCorrectPower(pFaultyNodes, pVS) ==
+FaultyValidatorsFewerThan(pFaultyNodes, pVS, maxRatio) ==
     LET FN == pFaultyNodes \intersect pVS   \* faulty nodes in pNodes
         CN == pVS \ pFaultyNodes            \* correct nodes in pNodes
         CP == Cardinality(CN)               \* power of the correct nodes
         FP == Cardinality(FN)               \* power of the faulty nodes
     IN
-    \* CP + FP = TP is the total voting power, so we write CP > 2.0 / 3 * TP as follows:
-    CP > 2 * FP \* Note: when FP = 0, this implies CP > 0.
+    \* CP + FP = TP is the total voting power
+    LET TP == CP + FP IN
+    FP * maxRatio[2] < TP * maxRatio[1]
 
 (* Can a block be produced by a correct peer, or an authenticated Byzantine peer *)
 IsLightBlockAllowedByDigitalSignatures(ht, block) == 
     \/ block.header = blockchain[ht] \* signed by correct and faulty (maybe)
-    \/ block.Commits \subseteq Faulty /\ block.header.height = ht /\ block.header.time >= 0 \* signed only by faulty
+    \/ /\ block.Commits \subseteq Faulty
+       /\ block.header.height = ht
+       /\ block.header.time >= 0 \* signed only by faulty
 
 (*
  Initialize the blockchain to the ultimate height right in the initial states.
  We pick the faulty validators statically, but that should not affect the light client.
+
+ Parameters:
+    - pMaxFaultyRatioExclusive is a pair <<a, b>> that bound the number of
+        faulty validators in each block by the ratio a / b (exclusive)
  *)            
-InitToHeight ==
+InitToHeight(pMaxFaultyRatioExclusive) ==
   /\ Faulty \in SUBSET AllNodes \* some nodes may fail
   \* pick the validator sets and last commits
   /\ \E vs, lastCommit \in [Heights -> SUBSET AllNodes]:
@@ -124,7 +137,8 @@ InitToHeight ==
         /\ \A h \in Heights \ {1}:
           /\ lastCommit[h] \subseteq vs[h - 1]   \* the non-validators cannot commit 
           /\ TwoThirds(vs[h - 1], lastCommit[h]) \* the commit has >2/3 of validator votes
-          /\ IsCorrectPower(Faulty, vs[h])       \* the correct validators have >2/3 of power
+            \* the faulty validators have the power below the threshold
+          /\ FaultyValidatorsFewerThan(Faulty, vs[h], pMaxFaultyRatioExclusive)
           /\ timestamp[h] > timestamp[h - 1]     \* the time grows monotonically
           /\ timestamp[h] < timestamp[h - 1] + TRUSTING_PERIOD    \* but not too fast
         \* form the block chain out of validator sets and commits (this makes apalache faster)
