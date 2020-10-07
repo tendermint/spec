@@ -20,12 +20,12 @@ The Tendermint blockchains consists of a short list of basic data types:
 A block consists of a header, transactions, votes (the commit),
 and a list of evidence of malfeasance (ie. signing conflicting votes).
 
-| Name       | Type                           | Validation                     |
-|------------|--------------------------------|--------------------------------|
-| Header     | [Header](#header)              | [Header](#header)              |
-| Data       | [Data](#data)                  | [data](#data)                  |
-| Evidence   | [EvidenceData](#evidence_data) | [EvidenceData](#evidence_data) |
-| LastCommit | [Commit](#commit)              | [Commit](#commit)              |
+| Name       | Type                           | Description | Validation                     |
+|------------|--------------------------------|-------------|--------------------------------|
+| Header     | [Header](#header)              |             | [Header](#header)              |
+| Data       | [Data](#data)                  |             | [data](#data)                  |
+| Evidence   | [EvidenceData](#evidence_data) |             | [EvidenceData](#evidence_data) |
+| LastCommit | [Commit](#commit)              |             | [Commit](#commit)              |
 
 Note the `LastCommit` is the set of signatures of validators that committed the last block.
 
@@ -118,23 +118,22 @@ func Execute(s State, app ABCIApp, block Block) State {
 A block header contains metadata about the block and about the consensus, as well as commitments to
 the data in the current block, the previous block, and the results returned by the application:
 
-| Name        | Type                | Validation                                                                                                                                                                                                             |
-|-------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Version     | [Version](#version) | [Version](#version)                                                                                                                                                                                                    |
-| ChainID     | String              | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
-| Height      | int64               | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
-| Time        | [Time](#time)       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs. The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md) |
-| LastBlockID | [BlockID](#blockid) | [BlockID](#blockid)                                                                                                                                                                                                    |
-| LastCommitHash | slice of bytes |  MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.   |
-| DataHash | slice of bytes |  MerkleRoot of the hash of transactions. **Note**: The transactions are hashed before being included in the merkle tree, the leaves of the Merkle tree are the hashes, not the transactions themselves.   |
-| ValidatorHash | slice of bytes |  MerkleRoot of the current validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot. |
-| NextValidatorHash | slice of bytes |  MerkleRoot of the next validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot. |
-| ConsensusHash | slice of bytes |  Hash of the proto-encoding of the consensus parameters. |
-|AppHash| slice of bytes | Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself. The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`.|
-| LastResultHash | slice of bytes |   `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored).
-The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance. |
-|EvidenceHash |slice of bytes |MerkleRoot of the evidence of Byzantine behaviour included in this block.|
-|ProposerAddress| slice of bytes | Address of the original proposer of the block. Must be a current validator.|
+| Name              | Type                |                                                                                                                                                                                                                                                                                                                                                                                       | Validation                                                                                                                                                                                                             |
+|-------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Version           | [Version](#version) |                                                                                                                                                                                                                                                                                                                                                                                       | [Version](#version)                                                                                                                                                                                                    |
+| ChainID           | String              |                                                                                                                                                                                                                                                                                                                                                                                       | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
+| Height            | int64               |                                                                                                                                                                                                                                                                                                                                                                                       | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
+| Time              | [Time](#time)       |                                                                                                                                                                                                                                                                                                                                                                                       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs. The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md) |
+| LastBlockID       | [BlockID](#blockid) |                                                                                                                                                                                                                                                                                                                                                                                       | [BlockID](#blockid)                                                                                                                                                                                                    |
+| LastCommitHash    | slice of bytes      | MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.                                                                                                                                                                                                       |                                                                                                                                                                                                                        |
+| DataHash          | slice of bytes      | MerkleRoot of the hash of transactions. **Note**: The transactions are hashed before being included in the merkle tree, the leaves of the Merkle tree are the hashes, not the transactions themselves.                                                                                                                                                                                |                                                                                                                                                                                                                        |
+| ValidatorHash     | slice of bytes      | MerkleRoot of the current validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot.                                                                                                                                                                                                                 |                                                                                                                                                                                                                        |
+| NextValidatorHash | slice of bytes      | MerkleRoot of the next validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot.                                                                                                                                                                                                                    |                                                                                                                                                                                                                        |
+| ConsensusHash     | slice of bytes      | Hash of the proto-encoding of the consensus parameters.                                                                                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                        |
+| AppHash           | slice of bytes      | Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself. The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`. |                                                                                                                                                                                                                        |
+| LastResultHash    | slice of bytes      | `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored). The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.                                                                                               |                                                                                                                                                                                                                        |
+| EvidenceHash      | slice of bytes      | MerkleRoot of the evidence of Byzantine behaviour included in this block.                                                                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                        |
+| ProposerAddress   | slice of bytes      | Address of the original proposer of the block. Must be a current validator.                                                                                                                                                                                                                                                                                                           |                                                                                                                                                                                                                        |
 
 ### Validation
 
@@ -183,10 +182,10 @@ A Header is valid if its corresponding fields are valid.
 
 ## Version
 
-| Name  | type   | Validation                                                                                                       |
-|-------|--------|------------------------------------------------------------------------------------------------------------------|
-| Block | uint64 | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
-| App   | uint64 | `block.Version.App == state.Version.Consensus.App`                                                               |
+| Name  | type   | Description | Validation                                                                                                       |
+|-------|--------|-------------|------------------------------------------------------------------------------------------------------------------|
+| Block | uint64 |             | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
+| App   | uint64 |             | `block.Version.App == state.Version.Consensus.App`                                                               |
 
 ## BlockID
 
@@ -208,10 +207,10 @@ See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 
 ## PartSetHeader
 
-| Name  | Type           | Validation           |
-|-------|----------------|----------------------|
-| Total | int32          | -                    |
-| Hash  | slice of bytes | Must be of length 32 |
+| Name  | Type           | Description | Validation           |
+|-------|----------------|-------------|----------------------|
+| Total | int32          |             | Must be > 0          |
+| Hash  | slice of bytes |             | Must be of length 32 |
 
 ## Time
 
@@ -230,12 +229,12 @@ Data is just a wrapper for a list of transactions, where transactions are arbitr
 
 Commit is a simple wrapper for a list of signatures, with one for each validator. It also contains the relevant BlockID, height and round:
 
-| Name       | Type                             | Validation                                                                                               |
-|------------|----------------------------------|----------------------------------------------------------------------------------------------------------|
-| Height     | int64                            | Must be > 0                                                                                              |
-| Round      | int32                            | Must be > 0                                                                                              |
-| BlockID    | [BlockID](#blockid)              | [BlockID](#blockid)                                                                                      |
-| Signatures | Array of [CommitSig](#commitsig) | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
+| Name       | Type                             | Description | Validation                                                                                               |
+|------------|----------------------------------|-------------|----------------------------------------------------------------------------------------------------------|
+| Height     | int64                            |             | Must be > 0                                                                                              |
+| Round      | int32                            |             | Must be > 0                                                                                              |
+| BlockID    | [BlockID](#blockid)              |             | [BlockID](#blockid)                                                                                      |
+| Signatures | Array of [CommitSig](#commitsig) |             | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
 
 ## CommitSig
 
@@ -243,12 +242,13 @@ Commit is a simple wrapper for a list of signatures, with one for each validator
 a particular `BlockID` or was absent. It's a part of the `Commit` and can be used
 to reconstruct the vote set given the validator set.
 
-| Name             | Type                        | Validation                                            |
-|------------------|-----------------------------|-------------------------------------------------------|
-| BlockIDFlag      | [BlockIDFlag](#blockidflag) |                Must be one of the fields in the [BlockIDFlag](#blockidflag) enum                                     |
-| ValidatorAddress | [Address](#address)         |                                                       |
-| Timestamp        | [Time](#time)               |                                                       |
-| Signature        | [Signature](#signature)     | The length of the signaute must be > 0 and < than  64 |
+| Name             | Type                        | Descriptioin | Validation                                                        |
+|------------------|-----------------------------|--------------|-------------------------------------------------------------------|
+| BlockIDFlag      | [BlockIDFlag](#blockidflag) |              | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
+| ValidatorAddress | [Address](#address)         |              |                                                                   |
+| Timestamp        | [Time](#time)               |              |                                                                   |
+| Signature        | [Signature](#signature)     |              | The length of the signaute must be > 0 and < than  64             |
+
 NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
 (see [ADR-25](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-025-commit.md)).
 
@@ -294,16 +294,16 @@ const (
 A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it. When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
 
-| Name             | Type                            | Validation          |
-|------------------|---------------------------------|---------------------|
-| Type             | [SignedMsgType](#signedmsgtype) |                     |
-| Height           | int64                           | Must be > 0         |
-| Round            | int32                           | Must be > 0         |
-| BlockID          | [BlockID](#blockid)             | [BlockID](#blockid) |
-| Timestamp        | [Time](#Time)                   | [Time](#time)       |
-| ValidatorAddress | slice of bytes (`[]byte`)       |          Length must be equal to 20           |
-| ValidatorIndex   | int32                           |        must be > 0             |
-| Signature        | slice of bytes (`[]byte`)       |    Length of signature must be > 0 and < 64                 |
+| Name             | Type                            |   | Validation                               |
+|------------------|---------------------------------|---|------------------------------------------|
+| Type             | [SignedMsgType](#signedmsgtype) |   |                                          |
+| Height           | int64                           |   | Must be > 0                              |
+| Round            | int32                           |   | Must be > 0                              |
+| BlockID          | [BlockID](#blockid)             |   | [BlockID](#blockid)                      |
+| Timestamp        | [Time](#Time)                   |   | [Time](#time)                            |
+| ValidatorAddress | slice of bytes (`[]byte`)       |   | Length must be equal to 20               |
+| ValidatorIndex   | int32                           |   | must be > 0                              |
+| Signature        | slice of bytes (`[]byte`)       |   | Length of signature must be > 0 and < 64 |
 
 There are two types of votes:
 a _prevote_ has `vote.Type == 1` and
