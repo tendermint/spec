@@ -118,11 +118,11 @@ func Execute(s State, app ABCIApp, block Block) State {
 A block header contains metadata about the block and about the consensus, as well as commitments to
 the data in the current block, the previous block, and the results returned by the application:
 
-| Name              | Type                |                                                                                                                                                                                                                                                                                                                                                                                       | Validation                                                                                                                                                                                                             |
+| Name              | Type                |                                                                                                                             Description                                                                                                                                                                                                                                                          | Validation                                                                                                                                                                                                             |
 |-------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Version           | [Version](#version) |                                                                                                                                                                                                                                                                                                                                                                                       | [Version](#version)                                                                                                                                                                                                    |
-| ChainID           | String              |                                                                                                                                                                                                                                                                                                                                                                                       | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
-| Height            | int64               |                                                                                                                                                                                                                                                                                                                                                                                       | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
+| Version           | [Version](#version) |                                                                                                                                                                                                                                                                                                                                               Version defines the application and protocol verion being used.                                        | [Version](#version)                                                                                                                                                                                                    |
+| ChainID           | String              |                                                     ChainID is the ID of the chain. This must be unique to your chain.                                                                                                                                                                                                                                                                                                                                   | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
+| Height            | int64               |      Height is the height for this header.                                                                                                                                                                                                                                                                                                                                                                                 | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
 | Time              | [Time](#time)       |                                                                                                                                                                                                                                                                                                                                                                                       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs. The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md) |
 | LastBlockID       | [BlockID](#blockid) |                                                                                                                                                                                                                                                                                                                                                                                       | [BlockID](#blockid)                                                                                                                                                                                                    |
 | LastCommitHash    | slice of bytes      | MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.                                                                                                                                                                                                       |                                                                                                                                                                                                                        |
@@ -184,33 +184,31 @@ A Header is valid if its corresponding fields are valid.
 
 | Name  | type   | Description | Validation                                                                                                       |
 |-------|--------|-------------|------------------------------------------------------------------------------------------------------------------|
-| Block | uint64 |             | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
-| App   | uint64 |             | `block.Version.App == state.Version.Consensus.App`                                                               |
+| Block | uint64 |    Block protocol version. This number must be the same throughout a operational network         | Must be equal to protocol version being used in a network `block.Version.Block == state.Version.Consensus.Block` |
+| App   | uint64 |  App version is decided on by the application. It is populated through the response of `abci.Info`           | `block.Version.App == state.Version.Consensus.App`                                                               |
 
 ## BlockID
 
 The `BlockID` contains two distinct Merkle roots of the block.
-The first, used as the block's main hash, is the MerkleRoot
-of all the fields in the header (ie. `MerkleRoot(header)`.
 The second, used for secure gossipping of the block during consensus,
 is the MerkleRoot of the complete serialized block
 cut into parts (ie. `MerkleRoot(MakeParts(block))`).
 The `BlockID` includes these two hashes, as well as the number of
 parts (ie. `len(MakeParts(block))`)
 
-| Name        | Type                        | Validation                  |
-|-------------|-----------------------------|-----------------------------|
-| Hash        | slice of bytes              | hash must be of length 32   |
-| PartsHeader | [PartsHeader](#PartsHeader) | [PartsHeader](#PartsHeader) |
+| Name        | Type                        | Description | Validation                  |
+|-------------|-----------------------------|-------------|-----------------------------|
+| Hash        | slice of bytes              |     MerkleRoot of all the fields in the header (ie. `MerkleRoot(header)`.        | hash must be of length 32   |
+| PartsHeader | [PartsHeader](#PartsHeader) |     Used for secure gossipping of the block during consensus, is the MerkleRoot of the complete serialized block cut into parts (ie. `MerkleRoot(MakeParts(block))`).        | [PartsHeader](#PartsHeader) |
 
 See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 
 ## PartSetHeader
 
-| Name  | Type           | Description | Validation           |
-|-------|----------------|-------------|----------------------|
-| Total | int32          |             | Must be > 0          |
-| Hash  | slice of bytes |             | Must be of length 32 |
+| Name  | Type           | Description                       | Validation           |
+|-------|----------------|-----------------------------------|----------------------|
+| Total | int32          | Total amount of parts for a block | Must be > 0          |
+| Hash  | slice of bytes |    MerkleRoot of a serialized block                               | Must be of length 32 |
 
 ## Time
 
@@ -221,9 +219,9 @@ format, which uses two integers, one for Seconds and for Nanoseconds.
 
 Data is just a wrapper for a list of transactions, where transactions are arbitrary byte arrays:
 
-| Name | Type                       | Validation |
-|------|----------------------------|------------|
-| Txs  | Matrix of bytes ([][]byte) | -          |
+| Name | Type                       | Description            | Validation                                                                  |
+|------|----------------------------|------------------------|-----------------------------------------------------------------------------|
+| Txs  | Matrix of bytes ([][]byte) | Array of transactions. | Validation does not occur on this field, this data is unknown to Tendermint |
 
 ## Commit
 
@@ -231,7 +229,7 @@ Commit is a simple wrapper for a list of signatures, with one for each validator
 
 | Name       | Type                             | Description | Validation                                                                                               |
 |------------|----------------------------------|-------------|----------------------------------------------------------------------------------------------------------|
-| Height     | int64                            |             | Must be > 0                                                                                              |
+| Height     | int64                            |      Height at which this commit was created       | Must be > 0                                                                                              |
 | Round      | int32                            |             | Must be > 0                                                                                              |
 | BlockID    | [BlockID](#blockid)              |             | [BlockID](#blockid)                                                                                      |
 | Signatures | Array of [CommitSig](#commitsig) |             | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
@@ -294,16 +292,16 @@ const (
 A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it. When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
 
-| Name             | Type                            |   | Validation                               |
-|------------------|---------------------------------|---|------------------------------------------|
-| Type             | [SignedMsgType](#signedmsgtype) |   |                                          |
-| Height           | int64                           |   | Must be > 0                              |
-| Round            | int32                           |   | Must be > 0                              |
-| BlockID          | [BlockID](#blockid)             |   | [BlockID](#blockid)                      |
-| Timestamp        | [Time](#Time)                   |   | [Time](#time)                            |
-| ValidatorAddress | slice of bytes (`[]byte`)       |   | Length must be equal to 20               |
-| ValidatorIndex   | int32                           |   | must be > 0                              |
-| Signature        | slice of bytes (`[]byte`)       |   | Length of signature must be > 0 and < 64 |
+| Name             | Type                            | Description | Validation                               |
+|------------------|---------------------------------|-------------|------------------------------------------|
+| Type             | [SignedMsgType](#signedmsgtype) |             |                                          |
+| Height           | int64                           |             | Must be > 0                              |
+| Round            | int32                           |             | Must be > 0                              |
+| BlockID          | [BlockID](#blockid)             |             | [BlockID](#blockid)                      |
+| Timestamp        | [Time](#Time)                   |             | [Time](#time)                            |
+| ValidatorAddress | slice of bytes (`[]byte`)       |             | Length must be equal to 20               |
+| ValidatorIndex   | int32                           |             | must be > 0                              |
+| Signature        | slice of bytes (`[]byte`)       |             | Length of signature must be > 0 and < 64 |
 
 There are two types of votes:
 a _prevote_ has `vote.Type == 1` and
