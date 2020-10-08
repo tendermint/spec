@@ -2,8 +2,6 @@
 
 ## TODOs
 
-- move part I of verification here (or copy)
-
 - move evidence submission into detector spec **QUESTION** Initially I wanted to have evidence submission here. Somewhat it feels at it should be visible at the supervisor. But the evidence is generated within the attack detector. Therefore all the definitions are there. Where should we put it?
 
 
@@ -443,7 +441,8 @@ func Sequential-Supervisor (initdata LCInitData) (Error) {
         lightStore,result := VerifyAndDetect(lightStore, nextHeight);
   
         if result == OK {
-            output(LightStore);
+            output(LightStore.Get(targetHeight));
+			// we only output a trusted lightblock
         }
         else {
             return result
@@ -564,13 +563,22 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
 
     b1, r1 = lightStore.Get(targetHeight)
     if r1 = true {
-        // block already there
-        return (lightStore, ResultSuccess)
+	    if b1.State == StateTrusted {
+            // block already there and trusted
+            return (lightStore, ResultSuccess)
+		}
+		else {
+		    // TODO: get trusted smaller than b1 on b1s verification chain
+			//       GetTrustedBase()
+			// TODO: get verification chain
+			// TODO: call Attackdetector see below
+		}
     }
 
     // get the lightblock with maximum height smaller than targetHeight
     // would typically be the heighest, if we always move forward
     root_of_trust, r2 = lightStore.LatestPrevious(targetHeight);
+	// TODO: In verification: latestprev returns trusted block
     if r2 = false {
         // there is no lightblock from which we can do forward
         // (skipping) verification. Thus we have to go backwards.
@@ -595,6 +603,7 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         Evidences := AttackDetector(root_of_trust, verifiedLS);
         if Evidences.Empty {
             // no attack detected, we trust the new lightblock
+			// TODO: set last block in verifiedLS to trusted
             lightStore.store_chain(verifidLS);
             return (lightStore, OK);
         }
