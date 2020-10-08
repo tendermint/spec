@@ -568,10 +568,26 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
             return (lightStore, ResultSuccess)
 		}
 		else {
-		    // TODO: get trusted smaller than b1 on b1s verification chain
-			//       GetTrustedBase()
-			// TODO: get verification chain
+		    root_of_trust := // TODO: get trusted smaller than b1 on
+			                 // b1s verification chain
+			                 // GetTrustedBase()
+			verifiedLS := // TODO: get verification chain
 			// TODO: call Attackdetector see below
+            // Cross-check
+            Evidences := AttackDetector(root_of_trust, verifiedLS);
+            if Evidences.Empty {
+                // no attack detected, we trust the new lightblock
+			    // TODO: States in verification spec (make it visibla + trusted)
+                verifiedLS.Update(verfiedLS.Latest(), 
+			                      StateTrusted, 
+                                  verfiedLS.Latest().verification-root);
+                lightStore.store_chain(verifidLS);
+                return (lightStore, OK);
+            }
+            else {
+                // there is an attack, we exit
+                return(lightStore, ErrorAttack);
+            }
 		}
     }
 
@@ -603,7 +619,10 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         Evidences := AttackDetector(root_of_trust, verifiedLS);
         if Evidences.Empty {
             // no attack detected, we trust the new lightblock
-			// TODO: set last block in verifiedLS to trusted
+			// TODO: States in verification spec (make it visibla + trusted)
+			verifiedLS.Update(verfiedLS.Latest(), 
+			                  StateTrusted, 
+							  verfiedLS.Latest().verification-root);
             lightStore.store_chain(verifidLS);
             return (lightStore, OK);
         }
