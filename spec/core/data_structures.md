@@ -112,8 +112,8 @@ the data in the current block, the previous block, and the results returned by t
 | Version           | [Version](#version) | Version defines the application and protocol verion being used.                                                                                                                                                                                                                                                                                                                       | Must adhere to the validation rules of [Version](#version)                                                                                                                                                                                                    |
 | ChainID           | String              | ChainID is the ID of the chain. This must be unique to your chain.                                                                                                                                                                                                                                                                                                                    | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
 | Height            | int64               | Height is the height for this header.                                                                                                                                                                                                                                                                                                                                                 | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
-| Time              | [Time](#time)       |                                                                                                                                                                                                                                                                                                                                                                                       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs. The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md) |
-| LastBlockID       | [BlockID](#blockid) |               BlockID of the previos block.  <!-- TODO: why is it last?****-->                                                                                                                                                                                                                                                                                                                                                                        | [BlockID](#blockid)                                                                                                                                                                                                    |
+| Time              | [Time](#time)       |                   The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md). Note: the timestamp of a vote must be greater by at least one millisecond than that of the block being voted on.                                                                                                                                                                                                                                                                                                                                                                    | Time must be >= previous header timestamp + consensus parameters TimeIotaMs.  The timestamp of the first block must be equal to the genesis time (since there's no votes to compute the median).  |
+| LastBlockID       | [BlockID](#blockid) |               BlockID of the previos block.  <!-- TODO: why is it last?-->                                                                                                                                                                                                                                                                                                                                                                        | Must adhere to the validation rules of [blockID](#blockid). The first block has `block.Header.LastBlockID == BlockID{}`.                                                                                                                                                                                                    |
 | LastCommitHash    | slice of bytes (`[]byte`)     | MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.                                                                                                                                                                                                       | Must  be of length 32                                                                                                                                                                                                  |
 | DataHash          | slice of bytes (`[]byte`)     | MerkleRoot of the hash of transactions. **Note**: The transactions are hashed before being included in the merkle tree, the leaves of the Merkle tree are the hashes, not the transactions themselves.                                                                                                                                                                                | Must  be of length 32                                                                                                                                                                                                  |
 | ValidatorHash     | slice of bytes (`[]byte`)     | MerkleRoot of the current validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot.                                                                                                                                                                                                                 | Must  be of length 32                                                                                                                                                                                                  |
@@ -123,43 +123,6 @@ the data in the current block, the previous block, and the results returned by t
 | LastResultHash    | slice of bytes (`[]byte`)     | `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored). The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.                                                                                               | Must  be of length 32                                                                                                                                                                                                  |
 | EvidenceHash      | slice of bytes (`[]byte`)      | MerkleRoot of the evidence of Byzantine behaviour included in this block.                                                                                                                                                                                                                                                                                                             | Must  be of length 32                                                                                                                                                                                                  |
 | ProposerAddress   | slice of bytes (`[]byte`)      | Address of the original proposer of the block. Must be a current validator.                                                                                                                                                                                                                                                                                                           | Must  be of length 20                                                                                                                                                                                                  |
-
-### Validation
-
-A Header is valid if its corresponding fields are valid.
-
-- Time:
-
-    Note: the timestamp of a vote must be greater by at least one millisecond than that of the
-    block being voted on.
-
-    The timestamp of the first block must be equal to the genesis time (since
-    there's no votes to compute the median).
-
-    ```go
-    if block.Header.Height == state.InitialHeight {
-        block.Header.Timestamp == genesisTime
-    }
-    ```
-
-    See the section on [BFT time](../consensus/bft-time.md) for more details.
-
-- LastBlockID:
-
-    LastBlockID is the previous block's BlockID:
-
-    ```go
-    prevBlockParts := MakeParts(prevBlock)
-    block.Header.LastBlockID == BlockID {
-        Hash: MerkleRoot(prevBlock.Header),
-        PartsHeader{
-            Hash: MerkleRoot(prevBlockParts),
-            Total: len(prevBlockParts),
-        },
-    }
-    ```
-
-    The first block has `block.Header.LastBlockID == BlockID{}`.
 
 ## Version
 
@@ -184,7 +147,7 @@ See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 | Name  | Type           | Description                       | Validation           |
 |-------|----------------|-----------------------------------|----------------------|
 | Total | int32          | Total amount of parts for a block | Must be > 0          |
-| Hash  |  (`[]byte`) | MerkleRoot of a serialized block  | Must be of length 32 |
+| Hash  | slice of bytes (`[]byte`) | MerkleRoot of a serialized block  | Must be of length 32 |
 
 ## Time
 
