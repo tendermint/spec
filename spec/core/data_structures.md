@@ -20,46 +20,12 @@ The Tendermint blockchains consists of a short list of basic data types:
 A block consists of a header, transactions, votes (the commit),
 and a list of evidence of malfeasance (ie. signing conflicting votes).
 
-| Name       | Type                           | Description | Validation                     |
-|------------|--------------------------------|-------------|--------------------------------|
-| Header     | [Header](#header)              | Header corresponding to the block. This field contains information used throughout consensus and other areas of the protocol. To find out what it contains, visit [header] (#header)            | Must adhere to the validation rules of [header](#header)              |
-| Data       | [Data](#data)                  |   Data contains a list of transactions. The contents of the transaction is unknown to Tendermint.           | This field can be empty or populated, but the data is unknown to Tendermint                  |
-| Evidence   | [EvidenceData](#evidence_data) |   Evidence contains a list of infractions committed by validators.          | Can be empty, but when populated the validations rules from [evidenceData](#evidence_data) apply |
-| LastCommit | [Commit](#commit)              |    The `LastCommit` is the set of signatures of validators that committed the last block.       | Can be empty for the initial height and must adhere to the validation rules of [commit](#commit)              |
-
-<!-- TODO: -->
-Otherwise, we require:
-
-```go
-len(block.LastCommit) == len(state.LastValidators)
-
-talliedVotingPower := 0
-for i, commitSig := range block.LastCommit.Signatures {
-  if commitSig.Absent() {
-    continue
-  }
-
-  vote.BlockID == block.LastBlockID
-
-  val := state.LastValidators[i]
-  vote.Verify(block.ChainID, val.PubKey) == true
-
-  talliedVotingPower += val.VotingPower
-}
-
-talliedVotingPower > (2/3)*TotalVotingPower(state.LastValidators)
-```
-
-Includes one vote for every current validator.
-All votes must either be for the previous block, nil or absent.
-All votes must have a valid signature from the corresponding validator.
-The sum total of the voting power of the validators that voted
-must be greater than 2/3 of the total voting power of the complete validator set.
-
-The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
-
-where `pubKey.Verify` performs the appropriate digital signature verification of the `pubKey`
-against the given signature and message bytes.
+| Name       | Type                           | Description                                                                                                                                                                          | Validation                                                                                       |
+|------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| Header     | [Header](#header)              | Header corresponding to the block. This field contains information used throughout consensus and other areas of the protocol. To find out what it contains, visit [header] (#header) | Must adhere to the validation rules of [header](#header)                                         |
+| Data       | [Data](#data)                  | Data contains a list of transactions. The contents of the transaction is unknown to Tendermint.                                                                                      | This field can be empty or populated, but the data is unknown to Tendermint                      |
+| Evidence   | [EvidenceData](#evidence_data) | Evidence contains a list of infractions committed by validators.                                                                                                                     | Can be empty, but when populated the validations rules from [evidenceData](#evidence_data) apply |
+| LastCommit | [Commit](#commit)              | `LastCommit` includes one vote for every current validator.  All votes must either be for the previous block, nil or absent. All votes must have a valid signature from the corresponding validator.  The sum total of the voting power of the validators that voted must be greater than 2/3 of the total voting power of the complete validator set. The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).                                                                                             | Can be empty for the initial height and must adhere to the validation rules of [commit](#commit).  |
 
 ## Execution
 
@@ -113,7 +79,7 @@ the data in the current block, the previous block, and the results returned by t
 | ChainID           | String              | ChainID is the ID of the chain. This must be unique to your chain.                                                                                                                                                                                                                                                                                                                    | ChainID must be less than 50 bytes.                                                                                                                                                                                    |
 | Height            | int64               | Height is the height for this header.                                                                                                                                                                                                                                                                                                                                                 | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                                                |
 | Time              | [Time](#time)       |                   The timestamp is equal to the weighted median of honest validators. Read more on time in the [BFT-time section](../consensus/bft-time.md). Note: the timestamp of a vote must be greater by at least one millisecond than that of the block being voted on.                                                                                                                                                                                                                                                                                                                                                                    | Time must be >= previous header timestamp + consensus parameters TimeIotaMs.  The timestamp of the first block must be equal to the genesis time (since there's no votes to compute the median).  |
-| LastBlockID       | [BlockID](#blockid) |               BlockID of the previos block.  <!-- TODO: why is it last?-->                                                                                                                                                                                                                                                                                                                                                                        | Must adhere to the validation rules of [blockID](#blockid). The first block has `block.Header.LastBlockID == BlockID{}`.                                                                                                                                                                                                    |
+| LastBlockID       | [BlockID](#blockid) |               BlockID of the previous block.                                                                                                                                                                                                                                                                                                                                                                        | Must adhere to the validation rules of [blockID](#blockid). The first block has `block.Header.LastBlockID == BlockID{}`.                                                                                                                                                                                                    |
 | LastCommitHash    | slice of bytes (`[]byte`)     | MerkleRoot of the lastCommit's signatures. The signatures represent the validators that committed to the last block. The first block has an empty slices of bytes for the hash.                                                                                                                                                                                                       | Must  be of length 32                                                                                                                                                                                                  |
 | DataHash          | slice of bytes (`[]byte`)     | MerkleRoot of the hash of transactions. **Note**: The transactions are hashed before being included in the merkle tree, the leaves of the Merkle tree are the hashes, not the transactions themselves.                                                                                                                                                                                | Must  be of length 32                                                                                                                                                                                                  |
 | ValidatorHash     | slice of bytes (`[]byte`)     | MerkleRoot of the current validator set. The validators are first sorted by voting power (descending), then by address (ascending) prior to computing the MerkleRoot.                                                                                                                                                                                                                 | Must  be of length 32                                                                                                                                                                                                  |
@@ -135,18 +101,18 @@ the data in the current block, the previous block, and the results returned by t
 
 The `BlockID` contains two distinct Merkle roots of the block. The `BlockID` includes these two hashes, as well as the number of parts (ie. `len(MakeParts(block))`)
 
-| Name        | Type                        | Description | Validation                  |
-|-------------|-----------------------------|-------------|-----------------------------|
-| Hash        | slice of bytes (`[]byte`)              |     MerkleRoot of all the fields in the header (ie. `MerkleRoot(header)`.        | hash must be of length 32   |
-| PartsHeader | [PartsHeader](#PartsHeader) |     Used for secure gossiping of the block during consensus, is the MerkleRoot of the complete serialized block cut into parts (ie. `MerkleRoot(MakeParts(block))`).        | Must adhere to the validation rules of [PartsHeader](#PartsHeader) |
+| Name        | Type                        | Description                                                                                                                                                      | Validation                                                         |
+|-------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| Hash        | slice of bytes (`[]byte`)   | MerkleRoot of all the fields in the header (ie. `MerkleRoot(header)`.                                                                                            | hash must be of length 32                                          |
+| PartsHeader | [PartsHeader](#PartsHeader) | Used for secure gossiping of the block during consensus, is the MerkleRoot of the complete serialized block cut into parts (ie. `MerkleRoot(MakeParts(block))`). | Must adhere to the validation rules of [PartsHeader](#PartsHeader) |
 
 See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 
 ## PartSetHeader
 
-| Name  | Type           | Description                       | Validation           |
-|-------|----------------|-----------------------------------|----------------------|
-| Total | int32          | Total amount of parts for a block | Must be > 0          |
+| Name  | Type                      | Description                       | Validation           |
+|-------|---------------------------|-----------------------------------|----------------------|
+| Total | int32                     | Total amount of parts for a block | Must be > 0          |
 | Hash  | slice of bytes (`[]byte`) | MerkleRoot of a serialized block  | Must be of length 32 |
 
 ## Time
@@ -166,12 +132,12 @@ Data is just a wrapper for a list of transactions, where transactions are arbitr
 
 Commit is a simple wrapper for a list of signatures, with one for each validator. It also contains the relevant BlockID, height and round:
 
-| Name       | Type                             | Description | Validation                                                                                               |
-|------------|----------------------------------|-------------|----------------------------------------------------------------------------------------------------------|
-| Height     | int64                            |      Height at which this commit was created       | Must be > 0                                                                                              |
-| Round      | int32                            |             | Must be > 0                                                                                              |
-| BlockID    | [BlockID](#blockid)              |             | [BlockID](#blockid)                                                                                      |
-| Signatures | Array of [CommitSig](#commitsig) |    Array of commit signatures that correspond to current validator set.         | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
+| Name       | Type                             | Description                                                          | Validation                                                                                               |
+|------------|----------------------------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| Height     | int64                            | Height at which this commit was created.                              | Must be > 0                                                                                              |
+| Round      | int32                            | Round that the commit corresponds to.                                | Must be > 0                                                                                              |
+| BlockID    | [BlockID](#blockid)              | The blockID of the corresponding block.                              | Must adhere to the validation rules of [BlockID](#blockid).                                              |
+| Signatures | Array of [CommitSig](#commitsig) | Array of commit signatures that correspond to current validator set. | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
 
 ## CommitSig
 
@@ -179,51 +145,27 @@ Commit is a simple wrapper for a list of signatures, with one for each validator
 a particular `BlockID` or was absent. It's a part of the `Commit` and can be used
 to reconstruct the vote set given the validator set.
 
-| Name             | Type                        | Descriptioin                                                             | Validation                                                        |
-|------------------|-----------------------------|--------------------------------------------------------------------------|-------------------------------------------------------------------|
-| BlockIDFlag      | [BlockIDFlag](#blockidflag) | Represents the way the validator voted, if the validator missed the voting period an absent flag will be set.                                                                          | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
-| ValidatorAddress | [Address](#address)         | Address of the validator                                                 |                                                                   |
-| Timestamp        | [Time](#time)               |                                                                          |                                                                   |
-| Signature        | [Signature](#signature)     | Signature corresponding to the validators participation in consensus. | The length of the signature must be > 0 and < than  64            |
+| Name             | Type                        | Description                                                                                                  | Validation                                                        |
+|------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| BlockIDFlag      | [BlockIDFlag](#blockidflag) | Represents the way the validator voted, if the validator missed the voting period an absent flag will be set. | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
+| ValidatorAddress | [Address](#address)         | Address of the validator                                                                                      | Must be of length 20                                              |
+| Timestamp        | [Time](#time)               | This field will vary from `CommitSig` to `CommitSig`. It represents the timestamp of the validator.               | [Time](#time)                                                     |
+| Signature        | [Signature](#signature)     | Signature corresponding to the validators participation in consensus.                                         | The length of the signature must be > 0 and < than  64            |
 
 NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
 (see [ADR-25](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-025-commit.md)).
 
-### Validation
-
-- ValidatorAddress:
-
-    ```go
-    if BlockIDFLAG == BlockIDFlagAbsent{
-        if len(cs.ValidatorAddress) != 0 {
-            return errors.New("validator address is present")
-        }
-        if !cs.Timestamp.IsZero() {
-            return errors.New("time is present")
-        }
-        if len(cs.Signature) != 0 {
-            return errors.New("signature is present")
-        }
-    } else {
-        if len(cs.ValidatorAddress) != crypto.AddressSize {
-            return fmt.Errorf("expected ValidatorAddress size to be %d bytes, got %d bytes", crypto.AddressSize, len(cs.ValidatorAddress))
-        }
-    }
-    ```
-
 ## BlockIDFlag
 
-```go
-type BlockIDFlag byte
+BlockIDFlag represents which BlockID the [signature](#commitsig) is for.
 
-const (
- // BlockIDFlagAbsent - no vote was received from a validator.
- BlockIDFlagAbsent BlockIDFlag = 0x01
- // BlockIDFlagCommit - voted for the Commit.BlockID.
- BlockIDFlagCommit = 0x02
- // BlockIDFlagNil - voted for nil.
- BlockIDFlagNil = 0x03
-)
+```go
+enum BlockIDFlag {
+  BLOCK_ID_FLAG_UNKNOWN = 0;
+  BLOCK_ID_FLAG_ABSENT  = 1;
+  BLOCK_ID_FLAG_COMMIT  = 2;
+  BLOCK_ID_FLAG_NIL     = 3;
+}
 ```
 
 ## Vote
@@ -231,16 +173,16 @@ const (
 A vote is a signed message from a validator for a particular block.
 The vote includes information about the validator signing it. When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
 
-| Name             | Type                            | Description                                                                                 | Validation                               |
-|------------------|---------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------|
-| Type             | [SignedMsgType](#signedmsgtype) |        [SignedMsgType](#signedmsgtype)                                                                                     |    A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype)                                      |
-| Height           | int64                           | Height for which this vote was created for                                                  | Must be > 0                              |
-| Round            | int32                           |                                                                                             | Must be > 0                              |
-| BlockID          | [BlockID](#blockid)             |                                                                                             | [BlockID](#blockid)                      |
-| Timestamp        | [Time](#Time)                   |                                                                                             | [Time](#time)                            |
-| ValidatorAddress | slice of bytes (`[]byte`)       | Address of the validator                                                                    | Length must be equal to 20               |
-| ValidatorIndex   | int32                           | Index at a specific block height that corresponds to the Index of the validator in the set. | must be > 0                              |
-| Signature        | slice of bytes (`[]byte`)       | Signature by the validator if they participated in consensus for the associated bock.       | Length of signature must be > 0 and < 64 |
+| Name             | Type                            | Description                                                                                 | Validation                                                                                           |
+|------------------|---------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| Type             | [SignedMsgType](#signedmsgtype) | [SignedMsgType](#signedmsgtype)                                                             | A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype) |
+| Height           | int64                           | Height for which this vote was created for                                                  | Must be > 0                                                                                          |
+| Round            | int32                           | Round that the commit corresponds to.                                                       | Must be > 0                                                                                          |
+| BlockID          | [BlockID](#blockid)             | The blockID of the corresponding block.                                                     | [BlockID](#blockid)                                                                                  |
+| Timestamp        | [Time](#Time)                   | Timestamp represents the time at which a validator signed.                                  | [Time](#time)                                                                                        |
+| ValidatorAddress | slice of bytes (`[]byte`)       | Address of the validator                                                                    | Length must be equal to 20                                                                           |
+| ValidatorIndex   | int32                           | Index at a specific block height that corresponds to the Index of the validator in the set. | must be > 0                                                                                          |
+| Signature        | slice of bytes (`[]byte`)       | Signature by the validator if they participated in consensus for the associated bock.       | Length of signature must be > 0 and < 64                                                             |
 
 There are two types of votes:
 a _prevote_ has `vote.Type == 1` and
@@ -347,15 +289,15 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 ### LightClientAttackEvidence
 
- LightClientAttackEvidence is a generalized evidence that captures all forms of known attacks on
+LightClientAttackEvidence is a generalized evidence that captures all forms of known attacks on
 a light client such that a full node can verify, propose and commit the evidence on-chain for
 punishment of the malicious validators. There are three forms of attacks: Lunatic, Equivocation
 and Amnesia. These attacks are exhaustive. You can find a more detailed overview of this [here](../light-client/accountability#the_misbehavior_of_faulty_validators)
 
 | Name             | Type                      | Description | Validation |
 |------------------|---------------------------|-------------|------------|
-| ConflictingBlock | [LightBlock](#LightBlock) | Read Below  | Read Below |
-| CommonHeight     | int64                     | Read Below  | Read Below |
+| ConflictingBlock | [LightBlock](#LightBlock) | Read Below  | Must adhere to the validation rules of [lightBlock](#lightblock) |
+| CommonHeight     | int64                     | Read Below  | must be > 0 |
 
 Valid Light Client Attack Evidence encompasses three types of attack and must adhere to the following rules
 
@@ -372,10 +314,10 @@ Valid Light Client Attack Evidence encompasses three types of attack and must ad
 
 ## LightBlock
 
-| Name         | Type                          | Description                                 | Validation                    |
-|--------------|-------------------------------|---------------------------------------------|-------------------------------|
-| SignedHeader | [SignedHeader](#signedheader) | The header and commit, these are used for verification pruposes. To find out more visit [light client docs](../light-client/README.md) | Must not be nil and adhere to the validation rules of [signedHeader](#signedheader) |
-| ValidatorSet | [ValidatorSet](#validatorset) |       The validatorSet is used to help with verify that the validators in that committed the infraction were truly in the validator set.                                      |     Must not be nil and adhere to the validation rules of [validatorset](#validatorset)                           |
+| Name         | Type                          | Description                                                                                                                            | Validation                                                                          |
+|--------------|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| SignedHeader | [SignedHeader](#signedheader) | The header and commit, these are used for verification purposes. To find out more visit [light client docs](../light-client/README.md) | Must not be nil and adhere to the validation rules of [signedHeader](#signedheader) |
+| ValidatorSet | [ValidatorSet](#validatorset) | The validatorSet is used to help with verify that the validators in that committed the infraction were truly in the validator set.     | Must not be nil and adhere to the validation rules of [validatorset](#validatorset) |
 
 ## SignedHeader
 
@@ -383,8 +325,8 @@ The SignedhHeader is the [header](#header) accompanied by the commit to prove it
 
 | Name   | Type              | Description       | Validation                                                                      |
 |--------|-------------------|-------------------|---------------------------------------------------------------------------------|
-| Header | [Header](#Header) | [Header](#header) | Header cannot be nil & must adhere to the [Header](#Header) validation criteria |
-| Commit | [Commit](#commit) | [Commit](#commit) | Commit cannot be nil & must adhere to the [Commit](#commit) criteria            |
+| Header | [Header](#Header) | [Header](#header) | Header cannot be nil and must adhere to the [Header](#Header) validation criteria |
+| Commit | [Commit](#commit) | [Commit](#commit) | Commit cannot be nil and must adhere to the [Commit](#commit) criteria            |
 
 ## ValidatorSet
 
