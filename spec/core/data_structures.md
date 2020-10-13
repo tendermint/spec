@@ -175,7 +175,7 @@ The vote includes information about the validator signing it. When stored in the
 
 | Name             | Type                            | Description                                                                                 | Validation                                                                                           |
 |------------------|---------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| Type             | [SignedMsgType](#signedmsgtype) | [SignedMsgType](#signedmsgtype)                                                             | A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype) |
+| Type             | [SignedMsgType](#signedmsgtype) | Either prevote or precommit. [SignedMsgType](#signedmsgtype)                                                             | A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype) |
 | Height           | int64                           | Height for which this vote was created for                                                  | Must be > 0                                                                                          |
 | Round            | int32                           | Round that the commit corresponds to.                                                       | Must be > 0                                                                                          |
 | BlockID          | [BlockID](#blockid)             | The blockID of the corresponding block.                                                     | [BlockID](#blockid)                                                                                  |
@@ -183,10 +183,6 @@ The vote includes information about the validator signing it. When stored in the
 | ValidatorAddress | slice of bytes (`[]byte`)       | Address of the validator                                                                    | Length must be equal to 20                                                                           |
 | ValidatorIndex   | int32                           | Index at a specific block height that corresponds to the Index of the validator in the set. | must be > 0                                                                                          |
 | Signature        | slice of bytes (`[]byte`)       | Signature by the validator if they participated in consensus for the associated bock.       | Length of signature must be > 0 and < 64                                                             |
-
-There are two types of votes:
-a _prevote_ has `vote.Type == 1` and
-a _precommit_ has `vote.Type == 2`.
 
 ## SignedMsgType
 
@@ -260,7 +256,7 @@ EvidenceData is a simple wrapper for a list of evidence:
 
 Evidence in Tendermint is used to indicate breaches in the consensus by a validator.
 
-The [Fork Accountability](../consensus/light-client/accountability.md) document provides a good overview for the types of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`. Each evidence uses
+The [Fork Accountability](../light-client/accountability.md) document provides a good overview of evidence and how they occur. For evidence to be committed onchain, it must adhere to the validation rules of each evidence and must not be expired. The expiration age, measured in both block height and time is set in `EvidenceParams`. Each evidence uses
 the timestamp of the block that the evidence occurred at to indicate the age of the evidence.
 
 ### DuplicateVoteEvidence
@@ -314,10 +310,14 @@ Valid Light Client Attack Evidence must adhere to the following rules:
 
 ## LightBlock
 
+LightBlock is the core data structure of the [light client](../light-client/README.md). It combines two data structures needed for verification ([signedHeader](#signedheader) & [validatorSet](#validatorset)).
+
 | Name         | Type                          | Description                                                                                                                            | Validation                                                                          |
 |--------------|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
 | SignedHeader | [SignedHeader](#signedheader) | The header and commit, these are used for verification purposes. To find out more visit [light client docs](../light-client/README.md) | Must not be nil and adhere to the validation rules of [signedHeader](#signedheader) |
-| ValidatorSet | [ValidatorSet](#validatorset) | The validatorSet is used to help with verify that the validators in that committed the infraction were truly in the validator set.     | Must not be nil and adhere to the validation rules of [validatorset](#validatorset) |
+| ValidatorSet | [ValidatorSet](#validatorset) | The validatorSet is used to help with verify that the validators in that committed the infraction were truly in the validator set.     | Must not be nil and adhere to the validation rules of [validatorSet](#validatorset) |
+
+The `SignedHeader` and `ValidatorSet` are linked by the hash of the validator set(`SignedHeader.ValidatorsHash == ValidatorSet.Hash()`.
 
 ## SignedHeader
 
