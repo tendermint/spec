@@ -88,13 +88,13 @@ the data in the current block, the previous block, and the results returned by t
 | AppHash           | slice of bytes (`[]byte`)     | Arbitrary byte array returned by the application after executing and commiting the previous block. It serves as the basis for validating any merkle proofs that comes from the ABCI application and represents the state of the actual application rather than the state of the blockchain itself. The first block's `block.Header.AppHash` is given by `ResponseInitChain.app_hash`. | This hash is determined by the application, Tendermint can not perform validation on it.                                                                                                                              |
 | LastResultHash    | slice of bytes (`[]byte`)     | `LastResultsHash` is the root hash of a Merkle tree built from `ResponseDeliverTx` responses (`Log`,`Info`, `Codespace` and `Events` fields are ignored). The first block has `block.Header.ResultsHash == MerkleRoot(nil)`, i.e. the hash of an empty input, for RFC-6962 conformance.                                                                                               | Must  be of length 32                                                                                                                                                                                                  |
 | EvidenceHash      | slice of bytes (`[]byte`)      | MerkleRoot of the evidence of Byzantine behaviour included in this block.                                                                                                                                                                                                                                                                                                             | Must  be of length 32                                                                                                                                                                                                  |
-| ProposerAddress   | slice of bytes (`[]byte`)      | Address of the original proposer of the block. Must be a current validator.                                                                                                                                                                                                                                                                                                           | Must  be of length 20                                                                                                                                                                                                  |
+| ProposerAddress   | slice of bytes (`[]byte`)      | Address of the original proposer of the block. Validator must be in the current validatorSet.                                                                                                                                                                                                                                                                                                           | Must  be of length 20                                                                                                                                                                                                  |
 
 ## Version
 
 | Name  | type   | Description | Validation                                                                                                       |
 |-------|--------|-------------|------------------------------------------------------------------------------------------------------------------|
-| Block | uint64 |     This number represents the version of the block protocol and must be the same throughout a operational network         | Must be equal to protocol version being used in a network (`block.Version.Block == state.Version.Consensus.Block`) |
+| Block | uint64 |     This number represents the version of the block protocol and must be the same throughout an operational network         | Must be equal to protocol version being used in a network (`block.Version.Block == state.Version.Consensus.Block`) |
 | App   | uint64 |  App version is decided on by the application. Read [here](../abci/abci.md#info)         | `block.Version.App == state.Version.Consensus.App`                                                               |
 
 ## BlockID
@@ -126,7 +126,7 @@ Data is just a wrapper for a list of transactions, where transactions are arbitr
 
 | Name | Type                       | Description            | Validation                                                                  |
 |------|----------------------------|------------------------|-----------------------------------------------------------------------------|
-| Txs  | Matrix of bytes ([][]byte) | Array of transactions. | Validation does not occur on this field, this data is unknown to Tendermint |
+| Txs  | Matrix of bytes ([][]byte) | Slice of transactions. | Validation does not occur on this field, this data is unknown to Tendermint |
 
 ## Commit
 
@@ -333,7 +333,7 @@ The SignedhHeader is the [header](#header) accompanied by the commit to prove it
 | Name       | Type                             | Description                                        | Validation                                                                                                        |
 |------------|----------------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
 | Validators | Array of [validator](#validator) | List of the active validators at a specific height | The list of validators can not be empty or nil and must adhere to the validation rules of [validator](#validator) |
-| Proposer   | Array of [validator](#validator) | The block proposer for the current block           | The proposer cannot be nil and must adhere to the validation rules of  [validator](#validator)                    |
+| Proposer   | Array of [validator](#validator) | The block proposer for the corresponding block           | The proposer cannot be nil and must adhere to the validation rules of  [validator](#validator)                    |
 
 ## Validator
 
@@ -347,3 +347,14 @@ The SignedhHeader is the [header](#header) accompanied by the commit to prove it
 ## Address
 
 Address is a type alias of a slice of bytes. The address is calculated by hashing the bytes using sha256 and truncating it to only use the first 20 bytes of the slice.
+
+```go
+const (
+  TruncatedSize = 20
+)
+
+func SumTruncated(bz []byte) []byte {
+  hash := sha256.Sum256(bz)
+  return hash[:TruncatedSize]
+}
+```
