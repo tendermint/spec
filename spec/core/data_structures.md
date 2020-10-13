@@ -147,7 +147,7 @@ to reconstruct the vote set given the validator set.
 
 | Name             | Type                        | Description                                                                                                  | Validation                                                        |
 |------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
-| BlockIDFlag      | [BlockIDFlag](#blockidflag) | Represents the way the validator voted, if the validator missed the voting period an absent flag will be set. | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
+| BlockIDFlag      | [BlockIDFlag](#blockidflag) | Represents the validators participation in consensus: Either voted for the block that received the majority, voted for another block, voted nil or did not vote | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
 | ValidatorAddress | [Address](#address)         | Address of the validator                                                                                      | Must be of length 20                                              |
 | Timestamp        | [Time](#time)               | This field will vary from `CommitSig` to `CommitSig`. It represents the timestamp of the validator.               | [Time](#time)                                                     |
 | Signature        | [Signature](#signature)     | Signature corresponding to the validators participation in consensus.                                         | The length of the signature must be > 0 and < than  64            |
