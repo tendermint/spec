@@ -162,7 +162,7 @@ BlockIDFlag represents which BlockID the [signature](#commitsig) is for.
 ```go
 enum BlockIDFlag {
   BLOCK_ID_FLAG_UNKNOWN = 0;
-  BLOCK_ID_FLAG_ABSENT  = 1;
+  BLOCK_ID_FLAG_ABSENT  = 1; // signatures for other blocks are also considered absent
   BLOCK_ID_FLAG_COMMIT  = 2;
   BLOCK_ID_FLAG_NIL     = 3;
 }
