@@ -85,63 +85,9 @@ HEIGHTS == TRUSTED_HEIGHT..TARGET_HEIGHT
 (* the control states of the lite client *) 
 States == { "working", "finishedSuccess", "finishedFailure" }
 
-(**
- Check the precondition of ValidAndVerified.
- 
- [LCV-FUNC-VALID.1::TLA-PRE.1]
- *)
-ValidAndVerifiedPre(trusted, untrusted) ==
-  LET thdr == trusted.header
-      uhdr == untrusted.header
-  IN
-  /\ BC!InTrustingPeriod(thdr)
-  /\ thdr.height < uhdr.height
-     \* the trusted block has been created earlier (no drift here)
-  /\ thdr.time < uhdr.time
-     \* the untrusted block is not from the future
-  /\ uhdr.time < now
-  /\ untrusted.Commits \subseteq uhdr.VS
-  /\ LET TP == Cardinality(uhdr.VS)
-         SP == Cardinality(untrusted.Commits)
-     IN
-     3 * SP > 2 * TP     
-  /\ thdr.height + 1 = uhdr.height => thdr.NextVS = uhdr.VS
-  (* As we do not have explicit hashes we ignore these three checks of the English spec:
-   
-     1. "trusted.Commit is a commit is for the header trusted.Header,
-      i.e. it contains the correct hash of the header".
-     2. untrusted.Validators = hash(untrusted.Header.Validators)
-     3. untrusted.NextValidators = hash(untrusted.Header.NextValidators)
-   *)
-
-(**
-  * Check that the commits in an untrusted block form 1/3 of the next validators
-  * in a trusted header.
- *)
-SignedByOneThirdOfTrusted(trusted, untrusted) ==
-  LET TP == Cardinality(trusted.header.NextVS)
-      SP == Cardinality(untrusted.Commits \intersect trusted.header.NextVS)
-  IN
-  3 * SP > TP     
-
-(**
- Check, whether an untrusted block is valid and verifiable w.r.t. a trusted header.
- 
- [LCV-FUNC-VALID.1::TLA.1]
- *)   
-ValidAndVerified(trusted, untrusted) ==
-    IF ~ValidAndVerifiedPre(trusted, untrusted)
-    THEN "INVALID"
-    ELSE IF ~BC!InTrustingPeriod(untrusted.header)
-    (* We leave the following test for the documentation purposes.
-       The implementation should do this test, as signature verification may be slow.
-       In the TLA+ specification, ValidAndVerified happens in no time.
-     *) 
-    THEN "FAILED_TRUSTING_PERIOD" 
-    ELSE IF untrusted.header.height = trusted.header.height + 1
-             \/ SignedByOneThirdOfTrusted(trusted, untrusted)
-         THEN "SUCCESS"
-         ELSE "NOT_ENOUGH_TRUST"
+\* The verification functions are implemented in the API
+API == INSTANCE LCVerificationApi_003_draft
+    WITH IS_PEER_CORRECT <- IS_PRIMARY_CORRECT
 
 (*
  Initial states of the light client.
@@ -232,7 +178,7 @@ VerifyToTargetLoop ==
         \* Record that one more probe has been done (for complexity and model checking)
         /\ nprobes' = nprobes + 1
         \* Verify the current block
-        /\ LET verdict == ValidAndVerified(latestVerified, current) IN
+        /\ LET verdict == API!ValidAndVerified(latestVerified, current) IN
            NextMonitor(latestVerified, current, now, verdict) /\
            \* Decide whether/how to continue
            CASE verdict = "SUCCESS" ->
@@ -324,6 +270,15 @@ NeverFinishNegativeWhenTrusted ==
 NeverFinishPositive ==
     state /= "finishedSuccess"
 
+
+(**
+ Check that the target height has been reached upon successful termination.
+ *)
+TargetHeightOnSuccessInv ==
+    state = "finishedSuccess" =>
+        /\ TARGET_HEIGHT \in DOMAIN fetchedLightBlocks
+        /\ lightBlockStatus[TARGET_HEIGHT] = "StateVerified"
+
 (**
   Correctness states that all the obtained headers are exactly like in the blockchain.
  
@@ -338,7 +293,8 @@ CorrectnessInv ==
             fetchedLightBlocks[h].header = blockchain[h]
 
 (**
- 
+ No faulty block was used to construct a proof. This invariant holds,
+ only if FAULTY_RATIO < 1/3.
  *)
 NoTrustOnFaultyBlockInv ==
     (state = "finishedSuccess"
@@ -358,7 +314,7 @@ StoredHeadersAreVerifiedInv ==
             \/ \E mh \in DOMAIN fetchedLightBlocks:
                 lh < mh /\ mh < rh
                \* or we can verify the right one using the left one
-            \/ "SUCCESS" = ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
+            \/ "SUCCESS" = API!ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
 
 \* An improved version of StoredHeadersAreSound, assuming that a header may be not trusted.
 \* This invariant candidate is also violated,
@@ -372,7 +328,7 @@ StoredHeadersAreVerifiedOrNotTrustedInv ==
             \/ \E mh \in DOMAIN fetchedLightBlocks:
                 lh < mh /\ mh < rh
                \* or we can verify the right one using the left one
-            \/ "SUCCESS" = ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
+            \/ "SUCCESS" = API!ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
                \* or the left header is outside the trusting period, so no guarantees
             \/ ~BC!InTrustingPeriod(fetchedLightBlocks[lh].header) 
 
@@ -395,7 +351,7 @@ ProofOfChainOfTrustInv ==
                \* or the left header is outside the trusting period, so no guarantees
             \/ ~(BC!InTrustingPeriod(fetchedLightBlocks[lh].header))
                \* or we can verify the right one using the left one
-            \/ "SUCCESS" = ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
+            \/ "SUCCESS" = API!ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
 
 (**
  * When the light client terminates, there are no failed blocks. (Otherwise, someone lied to us.) 
@@ -463,6 +419,14 @@ Complexity ==
     LET N == TARGET_HEIGHT - TRUSTED_HEIGHT + 1 IN
     state /= "working" =>
         (2 * nprobes <= N * (N - 1)) 
+
+(**
+ If the light client has terminated, then the expected postcondition holds true.
+ *)
+ApiInv ==
+    state /= "working" =>
+        API!VerifyToTargetPost(TRUSTED_HEIGHT, TARGET_HEIGHT, state)
+
 
 (*
  We omit termination, as the algorithm deadlocks in the end.

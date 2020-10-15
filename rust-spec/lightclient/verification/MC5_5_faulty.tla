@@ -1,4 +1,4 @@
------------------ MODULE MC5_5_faulty_peers_two_thirds_faulty ---------------------
+----------------- MODULE MC5_5_faulty ---------------------
 
 AllNodes == {"n1", "n2", "n3", "n4", "n5"}
 TRUSTED_HEIGHT == 1
