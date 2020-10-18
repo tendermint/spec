@@ -25,17 +25,18 @@ NextVerifyToTarget ==
     /\ \/ state' = "EnterLoop" \* replace primary
        \/ state' = "EnterDetect"
        \/ state' = "ExhaustedPeersPrimary"
+    /\ UNCHANGED output
 
 NextAttackDetector ==
     /\ state = "EnterDetect"
     /\ \/ state' = "NoEvidence"
        \/ state' = "EvidenceFound"
        \/ state' = "ExhaustedPeersSecondaries"      
-       
+    /\ UNCHANGED output
+
 NextVerifyAndDetect ==
     \/ NextVerifyToTarget
     \/ NextAttackDetector
-    /\ UNCHANGED output
     
 NextOutput ==
     /\ state = "NoEvidence"
