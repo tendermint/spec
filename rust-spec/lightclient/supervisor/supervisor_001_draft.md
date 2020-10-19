@@ -562,27 +562,26 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
                      (LightStore, Result) {
 
     b1, r1 = lightStore.Get(targetHeight)
-    if r1 = true {
+    if r1 = true &&
 	    if b1.State == StateTrusted {
             // block already there and trusted
             return (lightStore, ResultSuccess)
 		}
 		else {
-		    root_of_trust := lightStore.GetRootOf(b1);
- 			// TODO: get trusted smaller than b1 on
-			// b1s verification chain
-			                 
-			verifiedLS, result := VerifyToTarget(primary, root_of_trust, targetHeight);
-			// TODO: call Attackdetector see below
+		    // We have a lightblock in the store, but it has not been 
+			// cross-checked by now. We do that now.
+		    root_of_trust, auxLS := lightstore.TraceTo(b1);
+			// TODO: add spec in verification:
+			// get a verification trace, starting from a trusted root_of_trust
+			
             // Cross-check
-            Evidences := AttackDetector(root_of_trust, verifiedLS);
+            Evidences := AttackDetector(root_of_trust, auxLS);
             if Evidences.Empty {
                 // no attack detected, we trust the new lightblock
-			    // TODO: States in verification spec (make it visibla + trusted)
-                verifiedLS.Update(verfiedLS.Latest(), 
+			    // TODO: Check that states in verification spec (make it visible + trusted)
+                lightStore.Update(auxLS.Latest(), 
 			                      StateTrusted, 
                                   verfiedLS.Latest().verification-root);
-                lightStore.store_chain(verifidLS);
                 return (lightStore, OK);
             }
             else {
@@ -601,18 +600,23 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         // (skipping) verification. Thus we have to go backwards.
         // No cross-check needed. We trust hashes. Therefore, we
         // directly return the result
-        return Backwards(peerList.primary(), lightStore.lowest, targetHeight)
+        return Backwards(primary, lightStore.Lowest(), targetHeight)
+		// TODO: in verification: lowest returns trusted block
+		// TODO: backwards sets all to trusted
     }
     else {
         // Forward verification + detection
         result := NoResult;
         while result != ResultSuccess {
-            verifiedLS,result := VerifyToTarget(peerList.primary(),
+            verifiedLS,result := VerifyToTarget(primary,
                                                 root_of_trust,
                                                 nextHeight);
             if result == ResultFailure {
                 // pick new primary (promote a secondary to primary)
                 Replace_Primary(root_of_trust);
+            }
+			else if result == ResultExpired {
+					return (lightStore, result)
             }
         }
   
