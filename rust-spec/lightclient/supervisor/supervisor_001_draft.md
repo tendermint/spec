@@ -568,10 +568,11 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
             return (lightStore, ResultSuccess)
 		}
 		else {
-		    root_of_trust := // TODO: get trusted smaller than b1 on
-			                 // b1s verification chain
-			                 // GetTrustedBase()
-			verifiedLS := // TODO: get verification chain
+		    root_of_trust := lightStore.GetRootOf(b1);
+ 			// TODO: get trusted smaller than b1 on
+			// b1s verification chain
+			                 
+			verifiedLS, result := VerifyToTarget(primary, root_of_trust, targetHeight);
 			// TODO: call Attackdetector see below
             // Cross-check
             Evidences := AttackDetector(root_of_trust, verifiedLS);
