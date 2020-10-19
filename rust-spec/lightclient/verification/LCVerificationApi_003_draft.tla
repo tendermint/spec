@@ -8,25 +8,18 @@ EXTENDS Integers, FiniteSets
 
 \* the parameters of Light Client
 CONSTANTS
-    (* an index of the block header that the light client tries to verify *)
   TRUSTING_PERIOD,
     (* the period within which the validators are trusted *)
-  IS_PEER_CORRECT,
-    (* is the peer correct? *)  
   FAULTY_RATIO
     (* a pair <<a, b>> that limits that ratio of faulty validator in the blockchain
        from above (exclusive). Tendermint security model prescribes 1 / 3. *)
 
 VARIABLES  
-  blockchain,           (* the reference blockchain *)
-  fetchedLightBlocks,   (* a function from heights to LightBlocks *)
-  lightBlockStatus,     (* a function from heights to block statuses *)
-  now                   (* current time *)
+  now (* current time *)
 
 (* the header is still within the trusting period *)
 InTrustingPeriod(header) ==
     now < header.time + TRUSTING_PERIOD
-    
 
 (**
   * Check that the commits in an untrusted block form 1/3 of the next validators
@@ -90,7 +83,7 @@ ValidAndVerified(trusted, untrusted) ==
 (**
   The invariant of the light store that is not related to the blockchain
  *)
-LightStoreInv ==
+LightStoreInv(fetchedLightBlocks, lightBlockStatus) ==
     \A lh, rh \in DOMAIN fetchedLightBlocks:
             \* for every pair of stored headers that have been verified
         \/ lh >= rh
@@ -100,9 +93,13 @@ LightStoreInv ==
         \/ \E mh \in DOMAIN fetchedLightBlocks:
             lh < mh /\ mh < rh /\ lightBlockStatus[mh] = "StateVerified"
            \* or the left header is outside the trusting period, so no guarantees
-        \/ ~(InTrustingPeriod(fetchedLightBlocks[lh].header))
+        \/ LET lhdr == fetchedLightBlocks[lh]
+               rhdr == fetchedLightBlocks[rh]
+           IN
+           \/ ~(InTrustingPeriod(fetchedLightBlocks[lh].header))
+                /\ lhdr.header.time < rhdr.header.time \* FIXME: new invariant!
            \* or we can verify the right one using the left one
-        \/ "SUCCESS" = ValidAndVerified(fetchedLightBlocks[lh], fetchedLightBlocks[rh])
+           \/ "SUCCESS" = ValidAndVerified(lhdr, rhdr)
 
 (**
   Correctness states that all the obtained headers are exactly like in the blockchain.
@@ -112,7 +109,7 @@ LightStoreInv ==
   
   [LCV-DIST-SAFE.1::CORRECTNESS-INV.1]
  *)  
-CorrectnessInv ==
+CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus) ==
     \A h \in DOMAIN fetchedLightBlocks:
         lightBlockStatus[h] = "StateVerified" =>
             fetchedLightBlocks[h].header = blockchain[h]
@@ -120,22 +117,29 @@ CorrectnessInv ==
 (**
  * When the light client terminates, there are no failed blocks. (Otherwise, someone lied to us.) 
  *)            
-NoFailedBlocksOnSuccessInv ==
+NoFailedBlocksOnSuccessInv(fetchedLightBlocks, lightBlockStatus) ==
      \A h \in DOMAIN fetchedLightBlocks:
         lightBlockStatus[h] /= "StateFailed"            
 
 (**
  The expected post-condition of VerifyToTarget.
  *)
-VerifyToTargetPost(trustedHeight, targetHeight, finalState) ==
+VerifyToTargetPost(blockchain, isPeerCorrect,
+                   fetchedLightBlocks, lightBlockStatus,
+                   trustedHeight, targetHeight, finalState) ==
+    \* The light client is not lying us on the trusted block.
+    \* It is straightforward to detect.
     /\ lightBlockStatus[trustedHeight] = "StateVerified"
     /\ trustedHeight \in DOMAIN fetchedLightBlocks
+    /\ fetchedLightBlocks[trustedHeight].header = blockchain[trustedHeight]
+    \* the invariants we have found in the light client verification
     /\ finalState = "finishedSuccess" =>
         /\ lightBlockStatus[targetHeight] = "StateVerified"
         /\ targetHeight \in DOMAIN fetchedLightBlocks
-        /\ IS_PEER_CORRECT => CorrectnessInv
-        /\ NoFailedBlocksOnSuccessInv
-    /\ LightStoreInv
+        /\ isPeerCorrect
+          => CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus)
+        /\ NoFailedBlocksOnSuccessInv(fetchedLightBlocks, lightBlockStatus)
+    /\ LightStoreInv(fetchedLightBlocks, lightBlockStatus)
 
 
 ==================================================================================

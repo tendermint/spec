@@ -42,15 +42,7 @@ ULTIMATE_HEIGHT == TARGET_HEIGHT + 1
 BC == INSTANCE Blockchain_003_draft
     WITH ULTIMATE_HEIGHT <- (TARGET_HEIGHT + 1)
 
-LC1 == INSTANCE LCVerificationApi_003_draft WITH
-    IS_PEER_CORRECT <- IS_PRIMARY_CORRECT,
-    fetchedLightBlocks <- fetchedLightBlocks1,
-    lightBlockStatus <- lightBlockStatus1
-
-LC2 == INSTANCE LCVerificationApi_003_draft WITH
-    IS_PEER_CORRECT <- IS_SECONDARY_CORRECT,
-    fetchedLightBlocks <- fetchedLightBlocks2,
-    lightBlockStatus <- lightBlockStatus2
+LC == INSTANCE LCVerificationApi_003_draft
 
 InitLightBlocks(lb, Heights) ==
     \* BC!LightBlocks is an infinite set, as time is not restricted.
@@ -84,7 +76,9 @@ Init ==
         \* an unverified block, there is a filtered trace that only has verified
         \* blocks. This is a deep observation.
         /\ lightBlockStatus1 \in [Heights1 -> {"StateVerified"}]
-        /\ LC1!VerifyToTargetPost(TRUSTED_HEIGHT, TARGET_HEIGHT, "finishedSuccess")
+        /\ LC!VerifyToTargetPost(blockchain, IS_PRIMARY_CORRECT,
+                                 fetchedLightBlocks1, lightBlockStatus1,
+                                 TRUSTED_HEIGHT, TARGET_HEIGHT, "finishedSuccess")
     \* initialize the data structures of the secondary
     /\ LET trustedBlock == blockchain[TRUSTED_HEIGHT]
            trustedLightBlock == [header |-> trustedBlock, Commits |-> AllNodes]
@@ -139,25 +133,21 @@ CompareLast ==
         /\ FetchLightBlockInto(IS_SECONDARY_CORRECT, latest, TARGET_HEIGHT)
         /\  IF latest.header = fetchedLightBlocks1[TARGET_HEIGHT].header
             THEN /\ state' = "FinishedNoEvidence"
+                 \* save the retrieved block for further analysis
+                 /\ fetchedLightBlocks2' =
+                        [h \in (DOMAIN fetchedLightBlocks2) \union {TARGET_HEIGHT} |->
+                            IF h = TARGET_HEIGHT THEN latest ELSE fetchedLightBlocks2[h]]
                  /\ UNCHANGED <<commonHeight, nextHeightToTry>>
-            ELSE /\ state' = "CreateEvidence"
-                 /\ commonHeight' = TRUSTED_HEIGHT
+            ELSE /\ commonHeight' = TRUSTED_HEIGHT
                  /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks1, TRUSTED_HEIGHT)
+                 /\ state' = IF nextHeightToTry' >= 0
+                             THEN "CreateEvidence"
+                             ELSE "FaultyPeer"
+                 /\ UNCHANGED fetchedLightBlocks2
 
-    /\ UNCHANGED <<blockchain, now, Faulty,
+    /\ UNCHANGED <<blockchain, Faulty,
                    fetchedLightBlocks1, lightBlockStatus1,
-                   fetchedLightBlocks2, lightBlockStatus2>>
-
-
-\* a quick loop termination upon entering
-CreateEvidenceForSecondaryFinish ==
-    /\ state = "CreateEvidence"
-    /\ nextHeightToTry = -1
-    /\ state' = "FaultyPeer"
-    /\ UNCHANGED <<blockchain, now, Faulty,
-                   fetchedLightBlocks1, lightBlockStatus1,
-                   fetchedLightBlocks2, lightBlockStatus2,
-                   commonHeight, nextHeightToTry>>
+                   lightBlockStatus2>>
 
 
 \* the actual loop in CreateEvidence
@@ -177,7 +167,9 @@ CreateEvidenceForSecondaryLoop ==
         /\ lightBlockStatus2' \in
             [Heights2 -> {"StateVerified", "StateUnverified", "StateFailed"}]
         /\ \E result \in {"finishedSuccess", "finishedFailure"}:
-            /\ LC2!VerifyToTargetPost(commonHeight, nextHeightToTry, result)
+            /\ LC!VerifyToTargetPost(blockchain, IS_SECONDARY_CORRECT,
+                                     fetchedLightBlocks2', lightBlockStatus2',
+                                     commonHeight, nextHeightToTry, result)
             /\ \/ /\ result /= "finishedSuccess"
                   /\ state' = "FaultyPeer"
                   /\ UNCHANGED <<commonHeight, nextHeightToTry>>
@@ -188,10 +180,13 @@ CreateEvidenceForSecondaryLoop ==
                        /\ state' = "FoundEvidence"
                        /\ UNCHANGED <<commonHeight, nextHeightToTry>>
                      ELSE
-                       /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks1, nextHeightToTry)
+                       /\ nextHeightToTry' =
+                        PickNextHeight(fetchedLightBlocks1, nextHeightToTry)
                        /\ commonHeight' = nextHeightToTry
-                       /\ state' = IF nextHeightToTry' >= 0 THEN state ELSE "NoEvidence"
-    /\ UNCHANGED <<blockchain, now, Faulty,
+                       /\ state' = IF nextHeightToTry' >= 0
+                                   THEN state
+                                   ELSE "NoEvidence"
+    /\ UNCHANGED <<blockchain, Faulty,
                    fetchedLightBlocks1, lightBlockStatus1>>
     
 
@@ -204,16 +199,40 @@ CreateEvidenceForPrimary ==
  [LCD-FUNC-DETECTOR.2::LOOP.1]
  *)
 Next ==
-    \/ CompareLast
-    \/ CreateEvidenceForSecondaryFinish
-    \/ CreateEvidenceForSecondaryLoop
-    \/ CreateEvidenceForPrimary
+    \* the global clock is advanced by zero or more time units
+    /\ \E tm \in Int: tm >= now /\ now' = tm
+    /\ \/ CompareLast
+       \/ CreateEvidenceForSecondaryLoop
+    \* \/ CreateEvidenceForPrimary
+
 
 
 \* simple invariants to try
+NeverFinishedNoEvidence == state /= "FinishedNoEvidence"
 NeverNoEvidence == state /= "NoEvidence"
 NeverFoundEvidence == state /= "FoundEvidence"
 NeverFaultyPeer == state /= "FaultyPeer"
 NeverCreateEvidence == state /= "CreateEvidence"
+
+NeverReachTargetHeight == nextHeightToTry < TARGET_HEIGHT
+
+PrecisionInv1 ==
+  ((now < blockchain[TARGET_HEIGHT].time + TRUSTING_PERIOD)
+    /\ state = "FinishedNoEvidence"
+    \*/\ (IS_PRIMARY_CORRECT \/ IS_SECONDARY_CORRECT)
+    )
+        =>
+    (fetchedLightBlocks1[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT]
+      /\ fetchedLightBlocks2[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT])
+
+
+PrecisionInv2 ==
+  ((now < blockchain[TARGET_HEIGHT].time + TRUSTING_PERIOD)
+    /\ state = "NoEvidence"
+    \*/\ (IS_PRIMARY_CORRECT \/ IS_SECONDARY_CORRECT)
+    )
+        =>
+    (fetchedLightBlocks1[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT]
+      /\ fetchedLightBlocks2[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT])
 
 ====================================================================================

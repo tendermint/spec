@@ -155,7 +155,7 @@ InitToHeight(pMaxFaultyRatioExclusive) ==
   Advance the clock by zero or more time units.
   *)
 AdvanceTime ==
-  \E tm \in Int: tm >= now /\ now' = tm
+  /\ \E tm \in Int: tm >= now /\ now' = tm
   /\ UNCHANGED <<blockchain, Faulty>>
 
 =============================================================================
