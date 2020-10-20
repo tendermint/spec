@@ -15,16 +15,16 @@ Ed25519 keys are the only supported key types for Tendermint validators currentl
 ## Proposal
 
 - Tendermint-Go would adopt [hdevalence/ed25519consensus](https://github.com/hdevalence/ed25519consensus).
-    - This library is implemented as an extension of the go standard library.
-    -
+    - This library is implements `ed25519.Verify()` in accordance to zip-215. Tendermint-go will continue to use `crypto/ed25519` for signing and key generation.
+
 - Tendermint-rs would adopt [ed25519-zebra](https://github.com/ZcashFoundation/ed25519-zebra)
     - related [issue](https://github.com/informalsystems/tendermint-rs/issues/355)
 
-As signature verification is one of the major bottlenecks of Tendermint-go, if ZIP 215 is adopted batch verification of signatures will be safe in consensus critical areas.
+Signature verification is one of the major bottlenecks of Tendermint-go, batch verification can not be used unless it has the same consensus rules, ZIP 215 makes verification safe in consensus critical areas.
 
-The change has been recommended to be done in a major release. Although it is not a breaking change if this change were to be rolled out in a minor release a node could construct signatures which could only be verified by nodes which have received updates to the verification function resulting in a possible network halt.
+This change constitutes a breaking changes, therefore must be done in a major release. No changes to validator keys or operations will be needed for this change to be enabled.
 
-This change will have no impact on signature aggregation because to enable this feature Tendermint will have to use a different curve i.e [BLS](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
+This change has no impact on signature aggregation. To enable this signature aggregation Tendermint will have to use a different curve i.e [BLS](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
 
 As part of the acceptance of this proposal it would be best to contract or discuss with a third party the process of conducting a security review of the go library.
 
@@ -37,11 +37,7 @@ Proposed
 ### Positive
 
 - Consistent signature verification across implementations
-
-#### Tendermint-Go
-
 - Enable safe batch verification
-    - This has not yet been implemented.
 
 ### Negative
 
@@ -57,4 +53,4 @@ Proposed
 
 ## References
 
-> Are there any relevant PR comments, issues that led up to this, or articles referenced for why we made the given design choice? If so link them here!
+[It’s 255:19AM. Do you know what your validation criteria are?](https://hdevalence.ca/blog/2020-10-04-its-25519am)
