@@ -502,8 +502,6 @@ const (
 )
 ```
 
-**TODO** verifiedBy
-
 
 > Only the detector module sets a lightBlock state to `StateTrusted`
 > and only if it was `StateVerified` before.

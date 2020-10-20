@@ -50,10 +50,6 @@ needed to be made. In contrast to [version
 - `VerifyToTarget` and `Backwards` are called with a single lightblock
   as root of trust in contrast to passing the complete lightstore.
 
-- Lightblocks in a lightstore only have a state internal to
-  verification (StateVerified, StateTrusted, etc. are not visible
-  externally).
-  
 - During verification, we record for each lightblock which other
   lightblock can be used to verify it in one step. This is needed to
   generate verification traces that are needed for IBC.
@@ -526,6 +522,19 @@ then
 
 The LightStore exposes the following functions to query stored LightBlocks.
 
+#### **[LCV-DATA-LS-STATE.1]**
+Each LightBlock is in one of the following states:
+```go
+type VerifiedState int
+
+const (
+ StateUnverified = iota + 1
+ StateVerified
+ StateFailed
+ StateTrusted
+)
+```
+
 #### **[LCV-FUNC-GET.1]**
 
 ```go
@@ -564,29 +573,7 @@ func (ls LightStore) store_chain(newLS LightStore)
 - Expected postcondition
     - adds `newLS` to the lightStore.
 
-### Functions and data used internally by the verifier
 
-#### **[LCV-DATA-LS-STATE.2]**
-
-Internally, the verification logic records for each LightBlock in
-which of the following states it is.
-
-> In the previous version
-> [[001_published]](./verification_001_published.md)
-> there was also the state `StateTrusted` that
-> was supposed to be used by the attack detector. Therefore, it was
-> planned to expose the State over the API. However, this is not
-> needed with the new design.
-
-```go
-type VerifiedState int
-
-const (
- StateUnverified = iota + 1
- StateVerified
- StateFailed
-)
-```
 
 #### **[LCV-FUNC-LATEST-VERIF.2]**
 
@@ -617,6 +604,19 @@ VerifiedState, root-height Height)
     - the lightblock is part of the lightstore
     - The state of the LightBlock is set to *verifiedState*.
     - The verification-root of the LightBlock is set to *root-height*
+
+
+```go
+func (ls LightStore) TraceTo(lightBlock LightBlock) (LightBlock, LightStore)
+```
+- Expected postcondition
+    - returns a **trusted** lightblock `root` from the lightstore with a height
+      less than `lightBlock`
+	- returns a lightstore that contains lightblocks that constitute a
+      [verification trace](TODOlinkToDetectorSpecOnceThere) from
+      `root` to `lightBlock` (including `lightBlock`)
+	  
+
 
 ### Inputs
 
@@ -951,9 +951,10 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
 - Expected postcondition
     - returns a light block *lb* that satisfies:
         - *lb* is in lightStore
+        - *lb* is in StateTrusted
         - *lb* is not expired
         - *lb.Header.Height < height*
-        - for all *b* in lightStore s.t. *b* is verified and not expired it
+        - for all *b* in lightStore s.t. *b* is trusted and not expired it
           holds *lb.Header.Height >= b.Header.Height*
     - *false* in the second argument if
       the LightStore does not contain such an *lb*.
@@ -992,8 +993,8 @@ func Backwards (primary PeerID, root LightBlock, targetHeight Height)
                (LightStore, Result) {
   
     lb := root;
- lightStore := new LightStore;
- lightStore.Update(lb, StateVerified, lb.verifiedBy)
+    lightStore := new LightStore;
+    lightStore.Update(lb, StateTrusted, lb.verifiedBy)
 
     latest := lb.Header
     for i := lb.Header.height - 1; i >= targetHeight; i-- {
@@ -1004,13 +1005,13 @@ func Backwards (primary PeerID, root LightBlock, targetHeight Height)
             return (nil, ResultFailure)
         }
         else {
-      // latest and current are linked together by LastBlockId
-   // therefore it is not relevant which we verified first
-   // for consistency, we store latest was veried using
+            // latest and current are linked together by LastBlockId
+            // therefore it is not relevant which we verified first
+            // for consistency, we store latest was veried using
             // current so that the verifiedBy is always pointing down
             // the chain
-            lightStore.Update(current, StateVerified, nil)
-            lightStore.Update(latest, StateVerified, current.Header.Height)
+            lightStore.Update(current, StateTrusted, nil)
+            lightStore.Update(latest, StateTrusted, current.Header.Height)
         }
         latest = current
     }
