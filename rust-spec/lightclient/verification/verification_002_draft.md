@@ -966,7 +966,7 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
 func (ls LightStore) Lowest() (LightBlock)
 ```
 - Expected postcondition
-    - returns the lowest light block within trusting period
+    - returns the lowest trusted light block within trusting period
 ---
 
 #### **[LCV-FUNC-MIN.2]**
