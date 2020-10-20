@@ -91,7 +91,7 @@ upcoming PRs.
 
 # Part I - Tendermint Blockchain
 
-TODO
+See [verification spec](addLinksWhenDone)
 
 # Part II - Sequential Problem Definition
 
@@ -304,7 +304,7 @@ type LightStore struct {
 
 ```
 
-The LightStore exposes functions to query stored LightBlocks, which
+We use the functions that the LightStore exposes, which
 are defined in the [verification specification](TODO).
 
 
@@ -571,14 +571,11 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
 		    // We have a lightblock in the store, but it has not been 
 			// cross-checked by now. We do that now.
 		    root_of_trust, auxLS := lightstore.TraceTo(b1);
-			// TODO: add spec in verification:
-			// get a verification trace, starting from a trusted root_of_trust
 			
             // Cross-check
             Evidences := AttackDetector(root_of_trust, auxLS);
             if Evidences.Empty {
                 // no attack detected, we trust the new lightblock
-			    // TODO: Check that states in verification spec (make it visible + trusted)
                 lightStore.Update(auxLS.Latest(), 
 			                      StateTrusted, 
                                   verfiedLS.Latest().verification-root);
@@ -594,15 +591,13 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
     // get the lightblock with maximum height smaller than targetHeight
     // would typically be the heighest, if we always move forward
     root_of_trust, r2 = lightStore.LatestPrevious(targetHeight);
-	// TODO: In verification: latestprev returns trusted block
+
     if r2 = false {
         // there is no lightblock from which we can do forward
         // (skipping) verification. Thus we have to go backwards.
         // No cross-check needed. We trust hashes. Therefore, we
         // directly return the result
         return Backwards(primary, lightStore.Lowest(), targetHeight)
-		// TODO: in verification: lowest returns trusted block
-		// TODO: backwards sets all to trusted
     }
     else {
         // Forward verification + detection
@@ -624,7 +619,6 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         Evidences := AttackDetector(root_of_trust, verifiedLS);
         if Evidences.Empty {
             // no attack detected, we trust the new lightblock
-			// TODO: States in verification spec (make it visibla + trusted)
 			verifiedLS.Update(verfiedLS.Latest(), 
 			                  StateTrusted, 
 							  verfiedLS.Latest().verification-root);
@@ -654,55 +648,3 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
 
 
 
-# Part V:  Discussions on Changes Semantics of the LightStore
-
-In a previous version (TODO: versioning, link),
-a lightblock in the lightstore can be in one of the
-following states:
-
-- StateUnverified
-- StateVerified
-- StateFailed
-- StateTrusted
-
-The intuition is that `StateVerified` captures that the lightblock has
-been verified with the primary, and `StateTrusted` is the state after
-successful cross-checking with the secondaries.
-
-Assuming there is **always one correct node among primary and
-secondaries**, and there is no fork on the blockchain, lightblocks that
-are in `StateTrusted` can be used by the user with the guarantee of
-"finality". If a block in  `StateVerified` is used, it might be that
-detection later finds a fork, and a roll-back might be needed.
-
-**Remark:** The assumption of one correct node, does not render
-verification useless. It is true that if the primary and the
-secondaries return the same block we may trust it. However, if there
-is a node that provides a different block, the light node still needs
-verification to understand whether there is a fork, or whether the
-different block is just bogus (without any support of some previous
-validator set).
-
-**Remark:** A light node may choose the full nodes it communicates
-with (the light node and the full node might even belong to the same
-stakeholder) so the assumption might be justified in some cases.
-
-In the future, we will do the following changes
-
-- we assume that only from time to time, the light node is
-     connected to a correct full node
-- this means for some limited time, the light node might have no
-     means to defend against light client attacks
-- as a result we do not have finality
-- once the light node reconnects with a correct full node, it
-     should detect the light client attack and submit evidence.
-
-Under these assumptions, `StateTrusted` loses its meaning. As a
-result, it should be removed from the API. We suggest that we replace
-it with a flag "trusted" that can be used
-
-- internally for efficiency reasons (to maintain
-  [LCD-INV-TRUSTED-AGREED.1] until a fork is detected)
-- by light client based on the "one correct full node" assumption
-
-----
