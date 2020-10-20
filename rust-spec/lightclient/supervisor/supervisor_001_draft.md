@@ -2,19 +2,10 @@
 
 ## TODOs
 
-- move evidence submission into detector spec **QUESTION** Initially I wanted to have evidence submission here. Somewhat it feels at it should be visible at the supervisor. But the evidence is generated within the attack detector. Therefore all the definitions are there. Where should we put it?
+This specification in done in parallel with updates on the
+verification specification. So some hyperlinks have to be placed to
+the correct files eventually.
 
-
-- replace links to [TODO](https://informal.systems) with proper links
-
-check that all is addressed:
-
-- <https://github.com/informalsystems/tendermint-rs/issues/499>
-- <https://github.com/informalsystems/tendermint-rs/pull/509>
-- <https://github.com/tendermint/spec/issues/131>
-- <https://github.com/informalsystems/tendermint-rs/issues/461>
-
-- links to verification and detection specs
 
 # Light Client Sequential Supervisor
 
