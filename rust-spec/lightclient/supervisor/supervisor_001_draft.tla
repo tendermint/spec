@@ -1,4 +1,8 @@
 ------------------------- MODULE supervisor_001_draft ------------------------
+(*
+This is the beginning of a spec that will eventually use verification and detector API
+*)
+
 EXTENDS Integers, FiniteSets
 
 VARIABLES
