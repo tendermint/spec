@@ -779,7 +779,7 @@ func VerifyToTarget(primary PeerID, root LightBlock,
                     targetHeight Height) (LightStore, Result) {
 
     lightStore = new LightStore;
- lightStore.Update(root, StateVerified, root.verifiedBy);
+    lightStore.Update(root, StateVerified, root.verifiedBy);
     nextHeight := targetHeight;
 
     for lightStore.LatestVerified.height < targetHeight {
