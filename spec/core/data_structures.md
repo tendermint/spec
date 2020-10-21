@@ -2,18 +2,30 @@
 
 Here we describe the data structures in the Tendermint blockchain and the rules for validating them.
 
-The Tendermint blockchains consists of a short list of basic data types:
+The Tendermint blockchains consists of a short list of data types:
 
 - [`Block`](#block)
 - [`Header`](#header)
 - [`Version`](#version)
 - [`BlockID`](#blockid)
+- [`PartSetHeader`](#partsetheader)
 - [`Time`](#time)
 - [`Data` (for transactions)](#data)
 - [`Commit`](#commit)
+- [`CommitSig`](#commitsig)
+- [`BlockIDFlag`](#blockidflag)
 - [`Vote`](#vote)
+- [`CanonicalVote`](#canonicalvote)
+- [`SignedMsgType`](#signedmsgtype)
 - [`EvidenceData`](#evidence_data)
 - [`Evidence`](#evidence)
+- [`DuplicateVoteEvidence`](#duplicatevoteevidence)
+- [`LightClientAttackEvidence`](#lightclientattackevidence)
+- [`LightBlock](#lightblock)
+- [`SignedHeader`](#signedheader)
+- [`Validator`](#validator)
+- [`ValidatorSet`](#validatorset)
+- [`Address`](#address)
 
 ## Block
 
@@ -25,7 +37,7 @@ and a list of evidence of malfeasance (ie. signing conflicting votes).
 | Header     | [Header](#header)              | Header corresponding to the block. This field contains information used throughout consensus and other areas of the protocol. To find out what it contains, visit [header] (#header) | Must adhere to the validation rules of [header](#header)                                         |
 | Data       | [Data](#data)                  | Data contains a list of transactions. The contents of the transaction is unknown to Tendermint.                                                                                      | This field can be empty or populated, but no validation is performed. Applications can perform validation on individual transactions prior to block creation using [checkTx](../abci/abci.md#checktx).
 | Evidence   | [EvidenceData](#evidence_data) | Evidence contains a list of infractions committed by validators.                                                                                                                     | Can be empty, but when populated the validations rules from [evidenceData](#evidence_data) apply |
-| LastCommit | [Commit](#commit)              | `LastCommit` includes one vote for every current validator.  All votes must either be for the previous block, nil or absent. All votes must have a valid signature from the corresponding validator.  The sum total of the voting power of the validators that voted must be greater than 2/3 of the total voting power of the complete validator set. The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).                                                                                             | Must be empty for the initial height and must adhere to the validation rules of [commit](#commit).  |
+| LastCommit | [Commit](#commit)              | `LastCommit` includes one vote for every validator.  All votes must either be for the previous block, nil or absent. If a vote is for the previous block it must have a valid signature from the corresponding validator. The sum of the voting power of the validators that voted must be greater than 2/3 of the total voting power of the complete validator set. The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).                                                                                             | Must be empty for the initial height and must adhere to the validation rules of [commit](#commit).  |
 
 ## Execution
 
@@ -184,23 +196,6 @@ The vote includes information about the validator signing it. When stored in the
 | ValidatorIndex   | int32                           | Index at a specific block height that corresponds to the Index of the validator in the set. | must be > 0                                                                                          |
 | Signature        | slice of bytes (`[]byte`)       | Signature by the validator if they participated in consensus for the associated bock.       | Length of signature must be > 0 and < 64                                                             |
 
-## SignedMsgType
-
-Signed message type represents a signed messages in consensus.
-
-```proto
-enum SignedMsgType {
-
-  SIGNED_MSG_TYPE_UNKNOWN = 0;
-  // Votes
-  SIGNED_MSG_TYPE_PREVOTE   = 1;
-  SIGNED_MSG_TYPE_PRECOMMIT = 2;
-
-  // Proposal
-  SIGNED_MSG_TYPE_PROPOSAL = 32;
-}
-```
-
 ## CanonicalVote
 
 For signing, votes are represented via `CanonicalVote` and also encoded using protobuf via
@@ -235,6 +230,23 @@ func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
   return ErrVoteInvalidSignature
  }
  return nil
+}
+```
+
+## SignedMsgType
+
+Signed message type represents a signed messages in consensus.
+
+```proto
+enum SignedMsgType {
+
+  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  // Votes
+  SIGNED_MSG_TYPE_PREVOTE   = 1;
+  SIGNED_MSG_TYPE_PRECOMMIT = 2;
+
+  // Proposal
+  SIGNED_MSG_TYPE_PROPOSAL = 32;
 }
 ```
 
