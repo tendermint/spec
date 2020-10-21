@@ -80,6 +80,25 @@ func Execute(s State, app ABCIApp, block Block) State {
 }
 ```
 
+Validating a new block is first done prior to the `prevote`, `precommit` & `finalizeCommit` stages.
+
+The steps to validate a new block are:
+
+- Check the validity rules of the block and its fields.
+- Check the versions (Block & App) are the same as in local state.
+- Check the chainID's match.
+- Check the height is correct.
+- Check the `LastBlockID` corresponds to BlockID currently in state.
+- Check the hashes in the header match those in state.
+- Verify the LastCommit against state, this step is skipped for the initial height.
+    - This is where checking the signatures correspond to the correct block will be made.
+- Make sure the proposer is part of the validator set.
+- Validate bock time.
+    - Make sure the new blocks time is after the previous blocks time.
+    - Calculate the medianTime and check it against the blocks time.
+    - If the blocks height is the initial height then check if it matches the genesis time.
+- Validate the evidence in the block. Note: Evidence can be empty
+
 ## Header
 
 A block header contains metadata about the block and about the consensus, as well as commitments to
