@@ -26,16 +26,21 @@ VARIABLES
   lightBlockStatus1,    (* a function from heights to block statuses *)
   fetchedLightBlocks2,  (* a function from heights to LightBlocks *)
   lightBlockStatus2,    (* a function from heights to block statuses *)
+  fetchedLightBlocks1b,  (* a function from heights to LightBlocks *)
+  lightBlockStatus1b,    (* a function from heights to block statuses *)
   commonHeight,         (* the height that is trusted in CreateEvidenceForPeer *)
-  nextHeightToTry       (* the index in CreateEvidenceForPeer *)
+  nextHeightToTry,      (* the index in CreateEvidenceForPeer *)
+  evidences             (* a set of evidences *)
 
 vars == <<state, blockchain, now, Faulty,
           fetchedLightBlocks1, lightBlockStatus1,
           fetchedLightBlocks2, lightBlockStatus2,
-          commonHeight, nextHeightToTry>>
+          fetchedLightBlocks1b, lightBlockStatus1b,
+          commonHeight, nextHeightToTry, evidences >>
 
 \* (old) type annotations in Apalache
 a <: b == a
+
 
 ULTIMATE_HEIGHT == TARGET_HEIGHT + 1 
  
@@ -43,6 +48,9 @@ BC == INSTANCE Blockchain_003_draft
     WITH ULTIMATE_HEIGHT <- (TARGET_HEIGHT + 1)
 
 LC == INSTANCE LCVerificationApi_003_draft
+
+\* evidence type
+ET == [peer |-> STRING, header |-> BC!LBT, commonHeight |-> Int]
 
 InitLightBlocks(lb, Heights) ==
     \* BC!LightBlocks is an infinite set, as time is not restricted.
@@ -66,7 +74,8 @@ InitLightBlocks(lb, Heights) ==
 Init ==
     \* initialize the blockchain to TARGET_HEIGHT + 1
     /\ BC!InitToHeight(FAULTY_RATIO)
-    /\ state = "Init" /\ commonHeight = 0 /\ nextHeightToTry = 0
+    /\ state = <<"Init", "SECONDARY">> /\ commonHeight = 0 /\ nextHeightToTry = 0
+    /\ evidences = {} <: {ET}
     \* precompute a possible result of light client verification for the primary
     /\ \E Heights1 \in SUBSET(TRUSTED_HEIGHT..TARGET_HEIGHT):
         /\ TRUSTED_HEIGHT \in Heights1
@@ -83,8 +92,10 @@ Init ==
     /\ LET trustedBlock == blockchain[TRUSTED_HEIGHT]
            trustedLightBlock == [header |-> trustedBlock, Commits |-> AllNodes]
        IN
-       fetchedLightBlocks2 = [h \in {TRUSTED_HEIGHT} |-> trustedLightBlock]
-    /\ lightBlockStatus2 = [h \in {TRUSTED_HEIGHT} |-> "StateVerified"]
+       /\ fetchedLightBlocks2 =  [h \in {TRUSTED_HEIGHT} |-> trustedLightBlock]
+       /\ fetchedLightBlocks1b = [h \in {TRUSTED_HEIGHT} |-> trustedLightBlock]
+       /\ lightBlockStatus2 =    [h \in {TRUSTED_HEIGHT} |-> "StateVerified"]
+       /\ lightBlockStatus1b =   [h \in {TRUSTED_HEIGHT} |-> "StateVerified"]
 
 \* block should contain a copy of the block from the reference chain, with a matching commit
 \* XXX: copied from Lightclient_003_draft, extract to another module?
@@ -125,14 +136,14 @@ PickNextHeight(fetchedBlocks, height) ==
  Check, whether the target header matches at the secondary and primary.
  *)
 CompareLast ==
-    /\ state = "Init"
+    /\ state = <<"Init", "SECONDARY">>
     \* fetch a block from the secondary:
     \* non-deterministically pick a block that matches the constraints
     /\ \E latest \in BC!LightBlocks:
         \* for the moment, we ignore the possibility of a timeout when fetching a block
         /\ FetchLightBlockInto(IS_SECONDARY_CORRECT, latest, TARGET_HEIGHT)
         /\  IF latest.header = fetchedLightBlocks1[TARGET_HEIGHT].header
-            THEN /\ state' = "FinishedNoEvidence"
+            THEN /\ state' = <<"FinishedNoEvidence", "SECONDARY">>
                  \* save the retrieved block for further analysis
                  /\ fetchedLightBlocks2' =
                         [h \in (DOMAIN fetchedLightBlocks2) \union {TARGET_HEIGHT} |->
@@ -141,58 +152,86 @@ CompareLast ==
             ELSE /\ commonHeight' = TRUSTED_HEIGHT
                  /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks1, TRUSTED_HEIGHT)
                  /\ state' = IF nextHeightToTry' >= 0
-                             THEN "CreateEvidence"
-                             ELSE "FaultyPeer"
+                             THEN <<"CreateEvidence", "SECONDARY">>
+                             ELSE <<"FaultyPeer", "SECONDARY">>
                  /\ UNCHANGED fetchedLightBlocks2
 
     /\ UNCHANGED <<blockchain, Faulty,
                    fetchedLightBlocks1, lightBlockStatus1,
-                   lightBlockStatus2>>
+                   fetchedLightBlocks1b, lightBlockStatus1b,
+                   lightBlockStatus2, evidences>>
 
 
 \* the actual loop in CreateEvidence
-CreateEvidenceForSecondaryLoop ==
-    /\ state = "CreateEvidence"
+\* TODO: Josef adds a tag
+CreateEvidence(peer, isPeerCorrect, refBlocks, refStatus, targetBlocks, targetStatus) ==
+    /\ state = <<"CreateEvidence", peer>>
     \* precompute a possible result of light client verification for the secondary
     \* we have to introduce HeightRange, because Apalache can only handle a..b
     \* for constant a and b
     /\ LET HeightRange == { h \in TRUSTED_HEIGHT..TARGET_HEIGHT:
                                 commonHeight <= h /\ h <= nextHeightToTry } IN
-      \E Heights2 \in SUBSET(HeightRange):
-        /\ commonHeight \in Heights2 /\ nextHeightToTry \in Heights2
-        /\ InitLightBlocks(fetchedLightBlocks2', Heights2)
+      \E HeightsRange \in SUBSET(HeightRange):
+        /\ commonHeight \in HeightsRange /\ nextHeightToTry \in HeightsRange
+        /\ InitLightBlocks(targetBlocks, HeightsRange)
         \* As we have a non-deterministic scheduler, for every trace that has
         \* an unverified block, there is a filtered trace that only has verified
         \* blocks. This is a deep observation.
-        /\ lightBlockStatus2' \in
-            [Heights2 -> {"StateVerified", "StateUnverified", "StateFailed"}]
+        /\ targetStatus \in
+            [HeightsRange -> {"StateVerified", "StateUnverified", "StateFailed"}]
         /\ \E result \in {"finishedSuccess", "finishedFailure"}:
-            /\ LC!VerifyToTargetPost(blockchain, IS_SECONDARY_CORRECT,
-                                     fetchedLightBlocks2', lightBlockStatus2',
+            /\ LC!VerifyToTargetPost(blockchain, isPeerCorrect,
+                                     targetBlocks, targetStatus,
                                      commonHeight, nextHeightToTry, result)
             /\ \/ /\ result /= "finishedSuccess"
-                  /\ state' = "FaultyPeer"
-                  /\ UNCHANGED <<commonHeight, nextHeightToTry>>
+                  /\ state' = <<"FaultyPeer", peer>>
+                  /\ UNCHANGED <<commonHeight, nextHeightToTry, evidences>>
                \/ /\ result = "finishedSuccess"
-                  /\ IF fetchedLightBlocks2'[nextHeightToTry].header
-                          /= fetchedLightBlocks1[nextHeightToTry].header
+                  /\ LET block1 == refBlocks[nextHeightToTry] IN
+                     LET block2 == targetBlocks[nextHeightToTry] IN
+                     IF block1.header /= block2.header
                      THEN
-                       /\ state' = "FoundEvidence"
+                       /\ state' = <<"FoundEvidence", peer>>
+                       /\ evidences' = evidences \union
+                            {[peer |-> peer,
+                              header |-> block1,
+                              commonHeight |-> commonHeight]}
                        /\ UNCHANGED <<commonHeight, nextHeightToTry>>
                      ELSE
-                       /\ nextHeightToTry' =
-                        PickNextHeight(fetchedLightBlocks1, nextHeightToTry)
+                       /\ nextHeightToTry' = PickNextHeight(refBlocks, nextHeightToTry)
                        /\ commonHeight' = nextHeightToTry
                        /\ state' = IF nextHeightToTry' >= 0
                                    THEN state
-                                   ELSE "NoEvidence"
-    /\ UNCHANGED <<blockchain, Faulty,
-                   fetchedLightBlocks1, lightBlockStatus1>>
-    
+                                   ELSE <<"NoEvidence", peer>>
+                       /\ UNCHANGED evidences  
+
+SwitchToPrimary ==
+    /\ state = <<"FoundEvidence", "SECONDARY">>
+    /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks2, commonHeight)
+    /\ state' = <<"CreateEvidence", "PRIMARY">>
+    /\ UNCHANGED <<blockchain, now, Faulty,
+                   fetchedLightBlocks1, lightBlockStatus1,
+                   fetchedLightBlocks2, lightBlockStatus2,
+                   fetchedLightBlocks1b, lightBlockStatus1b,
+                   commonHeight, evidences >>
+
+
+CreateEvidenceForSecondary ==
+  /\ CreateEvidence("SECONDARY", IS_SECONDARY_CORRECT,
+                    fetchedLightBlocks1, lightBlockStatus1,
+                    fetchedLightBlocks2', lightBlockStatus2')
+  /\ UNCHANGED <<blockchain, Faulty,
+        fetchedLightBlocks1, lightBlockStatus1,
+        fetchedLightBlocks1b, lightBlockStatus1b>>
 
 CreateEvidenceForPrimary ==
-    UNCHANGED vars
-
+  /\ CreateEvidence("PRIMARY", IS_PRIMARY_CORRECT,
+                    fetchedLightBlocks2, lightBlockStatus2,
+                    fetchedLightBlocks1b', lightBlockStatus1b')
+  /\ UNCHANGED <<blockchain, Faulty,
+        fetchedLightBlocks1, lightBlockStatus1,
+        fetchedLightBlocks2, lightBlockStatus2>>
+   
 (**
  Execute AttackDetector for one secondary.
 
@@ -202,9 +241,9 @@ Next ==
     \* the global clock is advanced by zero or more time units
     /\ \E tm \in Int: tm >= now /\ now' = tm
     /\ \/ CompareLast
-       \/ CreateEvidenceForSecondaryLoop
-    \* \/ CreateEvidenceForPrimary
-
+       \/ CreateEvidenceForSecondary
+       \/ SwitchToPrimary 
+       \/ CreateEvidenceForPrimary
 
 
 \* simple invariants to try
@@ -218,7 +257,7 @@ NeverReachTargetHeight == nextHeightToTry < TARGET_HEIGHT
 
 PrecisionInv1 ==
   ((now < blockchain[TARGET_HEIGHT].time + TRUSTING_PERIOD)
-    /\ state = "FinishedNoEvidence"
+    /\ state = <<"FinishedNoEvidence", "SECONDARY">>
     \*/\ (IS_PRIMARY_CORRECT \/ IS_SECONDARY_CORRECT)
     )
         =>
@@ -228,7 +267,7 @@ PrecisionInv1 ==
 
 PrecisionInv2 ==
   ((now < blockchain[TARGET_HEIGHT].time + TRUSTING_PERIOD)
-    /\ state = "NoEvidence"
+    /\ state = <<"NoEvidence", "SECONDARY">>
     \*/\ (IS_PRIMARY_CORRECT \/ IS_SECONDARY_CORRECT)
     )
         =>
