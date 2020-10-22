@@ -89,11 +89,11 @@ parts (ie. `len(MakeParts(block))`)
 ```go
 type BlockID struct {
     Hash []byte
-    PartsHeader PartSetHeader
+    PartSetHeader PartSetHeader
 }
 
 type PartSetHeader struct {
-    Total int32
+    Total uint32
     Hash []byte
 }
 ```
@@ -125,7 +125,7 @@ validator. It also contains the relevant BlockID, height and round:
 ```go
 type Commit struct {
  Height     int64
- Round      int
+ Round      int32
  BlockID    BlockID
  Signatures []CommitSig
 }
@@ -168,14 +168,25 @@ The vote includes information about the validator signing it.
 
 ```go
 type Vote struct {
- Type             byte
+ Type             SignedMsgType
  Height           int64
- Round            int
+ Round            int32
  BlockID          BlockID
  Timestamp        Time
  ValidatorAddress []byte
- ValidatorIndex   int
+ ValidatorIndex   int32
  Signature        []byte
+}
+```
+
+```protobuf
+enum SignedMsgType {
+  SIGNED_MSG_TYPE_UNKNOWN = 0;
+  // Votes
+  PREVOTE_TYPE   = 1;
+  PRECOMMIT_TYPE = 2;
+  // Proposals
+  PROPOSAL_TYPE = 32;
 }
 ```
 
@@ -207,15 +218,10 @@ It is implemented as the following interface.
 ```go
 type Evidence interface {
  Height() int64                                     // height of the equivocation
- Time() time.Time                                   // time of the equivocation
- Address() []byte                                   // address of the equivocating validator
  Bytes() []byte                                     // bytes which comprise the evidence
- Hash() []byte                                      // hash of the evidence
- Verify(chainID string, pubKey crypto.PubKey) error // verify the evidence
- Equal(Evidence) bool                               // check equality of evidence
-
- ValidateBasic() error
- String() string
+ Hash() []byte                                      // hash of the evidence (this is also used for equality)
+ ValidateBasic() error                              // consistency check of the data
+ String() string                                    // string representation of the evidence
 }
 ```
 
@@ -231,16 +237,14 @@ in the same round of the same height. Votes are lexicographically sorted on `Blo
 
 ```go
 type DuplicateVoteEvidence struct {
- VoteA  *Vote
- VoteB  *Vote
-
- Timestamp time.Time
+    VoteA  *Vote
+    VoteB  *Vote
 }
 ```
 
 Valid Duplicate Vote Evidence must adhere to the following rules:
 
-- Validator Address, Height, Round and Type of vote must be the same for both votes
+- Validator Address, Height, Round and Type must be the same for both votes
 
 - BlockID must be different for both votes (BlockID can be for a nil block)
 
@@ -248,7 +252,31 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 - Vote signature must be valid (using the chainID)
 
-- Time must be equal to the block time
+- Evidence must not have expired: either age in terms of height or time must be
+    less than the age stated in the consensus params. Time is the block time that the
+    votes were a part of.
+
+### LightClientAttackEvidence
+
+```go
+type LightClientAttackEvidence struct {
+ ConflictingBlock *LightBlock
+ CommonHeight     int64
+}
+```
+
+Valid Light Client Attack Evidence encompasses three types of attack and must adhere to the following rules
+
+- If the header of the light block is invalid, thus indicating a lunatic attack, the node must check that
+    they can use `verifySkipping` from their header at the common height to the conflicting header
+
+- If the header is valid, then the validator sets are the same and this is either a form of equivocation
+    or amnesia. We therefore check that 2/3 of the validator set also signed the conflicting header
+
+- The trusted header of the node at the same height as the conflicting header must have a different hash to
+    the conflicting header.
+
+- Evidence must not have expired. The height (and thus the time) is taken from the common height.
 
 ## Validation
 
@@ -374,7 +402,8 @@ block.ValidatorsHash == MerkleRoot(state.Validators)
 
 MerkleRoot of the current validator set that is committing the block.
 This can be used to validate the `LastCommit` included in the next block.
-Note the validators are sorted by their voting power before computing the MerkleRoot.
+Note that before computing the MerkleRoot the validators are sorted
+first by voting power (descending), then by address (ascending).
 
 ### NextValidatorsHash
 
@@ -385,7 +414,8 @@ block.NextValidatorsHash == MerkleRoot(state.NextValidators)
 MerkleRoot of the next validator set that will be the validator set that commits the next block.
 This is included so that the current validator set gets a chance to sign the
 next validator sets Merkle root.
-Note the validators are sorted by their voting power before computing the MerkleRoot.
+Note that before computing the MerkleRoot the validators are sorted
+first by voting power (descending), then by address (ascending).
 
 ### ConsensusHash
 
@@ -393,7 +423,7 @@ Note the validators are sorted by their voting power before computing the Merkle
 block.ConsensusHash == state.ConsensusParams.Hash()
 ```
 
-Hash of the amino-encoding of a subset of the consensus parameters.
+Hash of the protobuf-encoding of a subset of the consensus parameters.
 
 ### AppHash
 
@@ -478,9 +508,9 @@ The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).
 ### Vote
 
 A vote is a signed message broadcast in the consensus for a particular block at a particular height and round.
-When stored in the blockchain or propagated over the network, votes are encoded in Amino.
-For signing, votes are represented via `CanonicalVote` and also encoded using amino (protobuf compatible) via
-`Vote.SignBytes` which includes the `ChainID`, and uses a different ordering of
+When stored in the blockchain or propagated over the network, votes are encoded in Protobuf.
+For signing, votes are represented via `CanonicalVote` and also encoded using Protobuf via
+`VoteSignBytes` which includes the `ChainID`, and uses a different ordering of
 the fields.
 
 We define a method `Verify` that returns `true` if the signature verifies against the pubkey for the `SignBytes`
