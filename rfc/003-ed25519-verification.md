@@ -24,7 +24,7 @@ Signature verification is one of the major bottlenecks of Tendermint-go, batch v
 
 This change constitutes a breaking changes, therefore must be done in a major release. No changes to validator keys or operations will be needed for this change to be enabled.
 
-This change has no impact on signature aggregation. To enable this signature aggregation Tendermint will have to use a different curve i.e [BLS](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
+This change has no impact on signature aggregation. To enable this signature aggregation Tendermint will have to use different keys (sr25519, BLS). Secondly, this change will enable safe batch verification for the Tendermint-Go client. Batch verification for the rust client is already supported in the library being used.
 
 As part of the acceptance of this proposal it would be best to contract or discuss with a third party the process of conducting a security review of the go library.
 
