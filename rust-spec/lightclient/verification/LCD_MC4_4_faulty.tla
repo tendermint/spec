@@ -1,8 +1,8 @@
-------------------------- MODULE LCD_MC5_5_faulty ---------------------------
+------------------------- MODULE LCD_MC4_4_faulty ---------------------------
 
-AllNodes == {"n1", "n2", "n3", "n4", "n5"}
+AllNodes == {"n1", "n2", "n3", "n4"}
 TRUSTED_HEIGHT == 1
-TARGET_HEIGHT == 5
+TARGET_HEIGHT == 4
 TRUSTING_PERIOD == 1400     \* two weeks, one day is 100 time units :-)
 IS_PRIMARY_CORRECT == FALSE
 IS_SECONDARY_CORRECT == TRUE
