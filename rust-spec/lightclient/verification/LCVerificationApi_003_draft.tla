@@ -10,16 +10,27 @@ EXTENDS Integers, FiniteSets
 CONSTANTS
   TRUSTING_PERIOD,
     (* the period within which the validators are trusted *)
+  CLOCK_DRIFT,
+    (* the assumed precision of the clock *)
+  REAL_CLOCK_DRIFT,
+    (* the actual clock drift, which under normal circumstances should not
+       be larger than CLOCK_DRIFT (otherwise, there will be a bug) *)
   FAULTY_RATIO
     (* a pair <<a, b>> that limits that ratio of faulty validator in the blockchain
        from above (exclusive). Tendermint security model prescribes 1 / 3. *)
 
 VARIABLES  
-  now (* current time *)
+  localClock (* current time as measured by the light client *)
 
 (* the header is still within the trusting period *)
-InTrustingPeriod(header) ==
-    now < header.time + TRUSTING_PERIOD
+InTrustingPeriodLocal(header) ==
+    \* note that the assumption about the drift reduces the period of trust
+    localClock < header.time + TRUSTING_PERIOD - CLOCK_DRIFT
+
+(* ensure that the local clock does not drift far away from the global clock *)
+IsLocalClockWithinDrift(local, global) ==
+    /\ global - REAL_CLOCK_DRIFT <= local
+    /\ local <= global + REAL_CLOCK_DRIFT
 
 (**
   * Check that the commits in an untrusted block form 1/3 of the next validators
@@ -36,16 +47,17 @@ SignedByOneThirdOfTrusted(trusted, untrusted) ==
  
  [LCV-FUNC-VALID.1::TLA-PRE.1]
  *)
-ValidAndVerifiedPre(trusted, untrusted) ==
+ValidAndVerifiedPre(trusted, untrusted, checkFuture) ==
   LET thdr == trusted.header
       uhdr == untrusted.header
   IN
-  /\ InTrustingPeriod(thdr)
+  /\ InTrustingPeriodLocal(thdr)
   /\ thdr.height < uhdr.height
-     \* the trusted block has been created earlier (no drift here)
+     \* the trusted block has been created earlier
   /\ thdr.time < uhdr.time
-     \* the untrusted block is not from the future
-  /\ uhdr.time < now
+     \* The untrusted block is not from the future (modulo clock drift).
+     \* Do the check, if it is required.
+  /\ checkFuture => uhdr.time < localClock + CLOCK_DRIFT
   /\ untrusted.Commits \subseteq uhdr.VS
   /\ LET TP == Cardinality(uhdr.VS)
          SP == Cardinality(untrusted.Commits)
@@ -65,10 +77,10 @@ ValidAndVerifiedPre(trusted, untrusted) ==
  
  [LCV-FUNC-VALID.1::TLA.1]
  *)   
-ValidAndVerified(trusted, untrusted) ==
-    IF ~ValidAndVerifiedPre(trusted, untrusted)
+ValidAndVerified(trusted, untrusted, checkFuture) ==
+    IF ~ValidAndVerifiedPre(trusted, untrusted, checkFuture)
     THEN "INVALID"
-    ELSE IF ~InTrustingPeriod(untrusted.header)
+    ELSE IF ~InTrustingPeriodLocal(untrusted.header)
     (* We leave the following test for the documentation purposes.
        The implementation should do this test, as signature verification may be slow.
        In the TLA+ specification, ValidAndVerified happens in no time.
@@ -96,10 +108,12 @@ LightStoreInv(fetchedLightBlocks, lightBlockStatus) ==
         \/ LET lhdr == fetchedLightBlocks[lh]
                rhdr == fetchedLightBlocks[rh]
            IN
-           \/ ~(InTrustingPeriod(fetchedLightBlocks[lh].header))
-                /\ lhdr.header.time < rhdr.header.time \* FIXME: new invariant!
+           \/ ~(InTrustingPeriodLocal(fetchedLightBlocks[lh].header))
+                /\ lhdr.header.time < rhdr.header.time
            \* or we can verify the right one using the left one
-           \/ "SUCCESS" = ValidAndVerified(lhdr, rhdr)
+           \/ "SUCCESS" = ValidAndVerified(lhdr, rhdr, FALSE)
+                \* if localClock moves backwards, this produces unrestricted blocks
+                \* figure out whether it is a problem
 
 (**
   Correctness states that all the obtained headers are exactly like in the blockchain.

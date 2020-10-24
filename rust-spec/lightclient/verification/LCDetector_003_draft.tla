@@ -11,6 +11,11 @@ CONSTANTS
     (* an index of the block header that the light client tries to verify *)
   TRUSTING_PERIOD,
     (* the period within which the validators are trusted *)
+  CLOCK_DRIFT,
+    (* the assumed precision of the clock *)
+  REAL_CLOCK_DRIFT,
+    (* the actual clock drift, which under normal circumstances should not
+       be larger than CLOCK_DRIFT (otherwise, there will be a bug) *)
   FAULTY_RATIO,
     (* a pair <<a, b>> that limits that ratio of faulty validator in the blockchain
        from above (exclusive). Tendermint security model prescribes 1 / 3. *)
@@ -19,7 +24,8 @@ CONSTANTS
 
 VARIABLES
   blockchain,           (* the reference blockchain *)
-  now,                  (* current time *)
+  localClock,           (* the local clock of the light client *)
+  refClock,             (* the reference clock in the reference blockchain *)
   Faulty,               (* the set of faulty validators *)
   state,                (* the state of the light client detector *)
   fetchedLightBlocks1,  (* a function from heights to LightBlocks *)
@@ -29,7 +35,7 @@ VARIABLES
   nextHeightToTry,      (* the index in CreateEvidenceForPeer *)
   evidences             (* a set of evidences *)
 
-vars == <<state, blockchain, now, Faulty,
+vars == <<state, blockchain, localClock, refClock, Faulty,
           fetchedLightBlocks1, fetchedLightBlocks2, fetchedLightBlocks1b,
           commonHeight, nextHeightToTry, evidences >>
 
@@ -69,6 +75,8 @@ InitLightBlocks(lb, Heights) ==
 Init ==
     \* initialize the blockchain to TARGET_HEIGHT + 1
     /\ BC!InitToHeight(FAULTY_RATIO)
+    /\ \E tm \in Int:
+        tm >= 0 /\ LC!IsLocalClockWithinDrift(tm, refClock) /\ localClock = tm
     /\ state = <<"Init", "SECONDARY">> /\ commonHeight = 0 /\ nextHeightToTry = 0
     /\ evidences = {} <: {ET}
     \* precompute a possible result of light client verification for the primary
@@ -199,7 +207,7 @@ SwitchToPrimary ==
     /\ state = <<"FoundEvidence", "SECONDARY">>
     /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks2, commonHeight)
     /\ state' = <<"CreateEvidence", "PRIMARY">>
-    /\ UNCHANGED <<blockchain, now, Faulty,
+    /\ UNCHANGED <<blockchain, refClock, Faulty, localClock,
                    fetchedLightBlocks1, fetchedLightBlocks2, fetchedLightBlocks1b,
                    commonHeight, evidences >>
 
@@ -207,7 +215,7 @@ SwitchToPrimary ==
 CreateEvidenceForSecondary ==
   /\ CreateEvidence("SECONDARY", IS_SECONDARY_CORRECT,
                     fetchedLightBlocks1, fetchedLightBlocks2')
-  /\ UNCHANGED <<blockchain, Faulty,
+  /\ UNCHANGED <<blockchain, refClock, Faulty, localClock,
         fetchedLightBlocks1, fetchedLightBlocks1b>>
 
 CreateEvidenceForPrimary ==
@@ -216,6 +224,20 @@ CreateEvidenceForPrimary ==
                     fetchedLightBlocks1b')
   /\ UNCHANGED <<blockchain, Faulty,
         fetchedLightBlocks1, fetchedLightBlocks2>>
+
+(*
+  The local and global clocks can be updated. They can also drift from each other.
+  Note that the local clock can actually go backwards in time.
+  However, it still stays in the drift envelope
+  of [refClock - REAL_CLOCK_DRIFT, refClock + REAL_CLOCK_DRIFT].
+ *)
+AdvanceClocks ==
+    /\ \E tm \in Int:
+        tm >= refClock /\ refClock' = tm
+    /\ \E tm \in Int:
+        /\ tm >= localClock
+        /\ LC!IsLocalClockWithinDrift(tm, refClock')
+        /\ localClock' = tm
    
 (**
  Execute AttackDetector for one secondary.
@@ -223,8 +245,7 @@ CreateEvidenceForPrimary ==
  [LCD-FUNC-DETECTOR.2::LOOP.1]
  *)
 Next ==
-    \* the global clock is advanced by zero or more time units
-    /\ \E tm \in Int: tm >= now /\ now' = tm
+    /\ AdvanceClocks
     /\ \/ CompareLast
        \/ CreateEvidenceForSecondary
        \/ SwitchToPrimary 
@@ -252,18 +273,20 @@ CommonHeightOnEvidenceInv ==
     LET conflicting == e.conflictingBlock IN
     LET conflictingHeader == conflicting.header IN
     /\ (e.peer = "PRIMARY"
-        /\ LC!InTrustingPeriod(fetchedLightBlocks1b[e.commonHeight].header))
+        /\ LC!InTrustingPeriodLocal(fetchedLightBlocks1b[e.commonHeight].header))
             =>
-      /\ "SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks1b[e.commonHeight], conflicting)
-      /\ fetchedLightBlocks1b[conflictingHeader.height].header /= conflictingHeader
+        ("SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks1b[e.commonHeight],
+                                         conflicting, FALSE)
+         /\ fetchedLightBlocks1b[conflictingHeader.height].header /= conflictingHeader)
     /\ (e.peer = "SECONDARY"
-        /\ LC!InTrustingPeriod(fetchedLightBlocks2[e.commonHeight].header))
+        /\ LC!InTrustingPeriodLocal(fetchedLightBlocks2[e.commonHeight].header))
             =>
-      /\ "SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks2[e.commonHeight], conflicting)
-      /\ fetchedLightBlocks2[conflictingHeader.height].header /= conflictingHeader
+         ("SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks2[e.commonHeight],
+                                         conflicting, FALSE)
+         /\ fetchedLightBlocks2[conflictingHeader.height].header /= conflictingHeader)
 
 PrecisionInv2 ==
-  (LC!InTrustingPeriod(fetchedLightBlocks1[TARGET_HEIGHT].header)
+  (LC!InTrustingPeriodLocal(fetchedLightBlocks1[TARGET_HEIGHT].header)
         /\ state = <<"NoEvidence", "SECONDARY">>)
         =>
     (fetchedLightBlocks1[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT]

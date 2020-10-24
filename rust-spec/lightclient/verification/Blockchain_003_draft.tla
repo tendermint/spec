@@ -44,8 +44,8 @@ BlockHeaders == [
 LightBlocks == [header: BlockHeaders, Commits: Commits]
 
 VARIABLES
-    now,
-        (* the current global time in integer units *)
+    refClock,
+        (* the current global time in integer units as perceived by the reference chain *)
     blockchain,
     (* A sequence of BlockHeaders, which gives us a bird view of the blockchain. *)
     Faulty
@@ -54,7 +54,7 @@ VARIABLES
        connect using a different id. *)
        
 (* all variables, to be used with UNCHANGED *)       
-vars == <<now, blockchain, Faulty>>         
+vars == <<refClock, blockchain, Faulty>>         
 
 (* The set of all correct nodes in a state *)
 Corr == AllNodes \ Faulty
@@ -75,7 +75,7 @@ LBT == [header |-> BT, Commits |-> {NT}]
 
 (* the header is still within the trusting period *)
 InTrustingPeriod(header) ==
-    now < header.time + TRUSTING_PERIOD
+    refClock < header.time + TRUSTING_PERIOD
 
 (*
  Given a function pVotingPower \in D -> Powers for some D \subseteq AllNodes
@@ -128,8 +128,8 @@ InitToHeight(pMaxFaultyRatioExclusive) ==
   \* pick the validator sets and last commits
   /\ \E vs, lastCommit \in [Heights -> SUBSET AllNodes]:
      \E timestamp \in [Heights -> Int]:
-        \* now is at least as early as the timestamp in the last block 
-        /\ \E tm \in Int: now = tm /\ tm >= timestamp[ULTIMATE_HEIGHT]
+        \* refClock is at least as early as the timestamp in the last block 
+        /\ \E tm \in Int: refClock = tm /\ tm >= timestamp[ULTIMATE_HEIGHT]
         \* the genesis starts on day 1     
         /\ timestamp[1] = 1
         /\ vs[1] = AllNodes
@@ -155,7 +155,7 @@ InitToHeight(pMaxFaultyRatioExclusive) ==
   Advance the clock by zero or more time units.
   *)
 AdvanceTime ==
-  /\ \E tm \in Int: tm >= now /\ now' = tm
+  /\ \E tm \in Int: tm >= refClock /\ refClock' = tm
   /\ UNCHANGED <<blockchain, Faulty>>
 
 =============================================================================
