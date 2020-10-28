@@ -7,8 +7,7 @@ about: Create a proposal to request a change to the protocol
 <!-- < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < ☺ 
 v                            ✰  Thanks for opening an issue! ✰    
 v    Before smashing the submit button please review the template.
-v    Word of caution: poorly thought-out proposals may be rejected 
-v                     without deliberation 
+v    Word of caution: Under-specified proposals may be rejected summarily 
 ☺ > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > >  -->
 
 # Protocol Change Proposal
