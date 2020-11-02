@@ -554,7 +554,7 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
                      (LightStore, Result) {
 
     b1, r1 = lightStore.Get(targetHeight)
-    if r1 = true &&
+    if r1 == true {
 	    if b1.State == StateTrusted {
             // block already there and trusted
             return (lightStore, ResultSuccess)
@@ -637,6 +637,5 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
     - [LC-DATA-PEERLIST-INV.1] is violated
 
 ----
-
 
 
