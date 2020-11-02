@@ -162,6 +162,8 @@ must perform one of the following:
     - it eventually puts the lightblock of height *h* in the lightstore and
 wait for another input.
 
+> Observe that the "existence of a lightclient attack" just means that some node has generated a conflicting block. It does not necessarily mean that a (faulty) peer sends such a block to "our" lightclient. Thus, even if there is an attack somewhere in the system, our lightclient might still continue to operate normally.
+
 ### Solving the sequential specification
 
 [LC-DIST-SAFE.1] is guaranteed by the detector; in particular it
@@ -643,5 +645,4 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
     - [LC-DATA-PEERLIST-INV.1] is violated
 
 ----
-
 
