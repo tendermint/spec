@@ -447,6 +447,13 @@ func Sequential-Supervisor (initdata LCInitData) (Error) {
 
 - Implementation remark
     - infinite loop unless a light client attack is detected
+	- In typical implementations (e.g., the one in Rust), 
+	  there are mutliple input actions:
+      `VerifytoLatest`, `LatestTrusted`, and `GetStatus`. The
+      information can be easily obtained from the lightstore, so that
+      we do not treat these requests explicitly here but just consider
+	  the request for a block of a given height which requires more
+	  involved computation and communication.
 - Expected precondition
     - *LCInitData* contains a genesis file or a lightblock.
 - Expected postcondition
