@@ -555,21 +555,21 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
 
     b1, r1 = lightStore.Get(targetHeight)
     if r1 == true {
-	    if b1.State == StateTrusted {
+        if b1.State == StateTrusted {
             // block already there and trusted
             return (lightStore, ResultSuccess)
 		}
 		else {
-		    // We have a lightblock in the store, but it has not been 
-			// cross-checked by now. We do that now.
-		    root_of_trust, auxLS := lightstore.TraceTo(b1);
+            // We have a lightblock in the store, but it has not been 
+            // cross-checked by now. We do that now.
+            root_of_trust, auxLS := lightstore.TraceTo(b1);
 			
             // Cross-check
             Evidences := AttackDetector(root_of_trust, auxLS);
             if Evidences.Empty {
                 // no attack detected, we trust the new lightblock
                 lightStore.Update(auxLS.Latest(), 
-			                      StateTrusted, 
+                                  StateTrusted, 
                                   verfiedLS.Latest().verification-root);
                 return (lightStore, OK);
             }
@@ -577,7 +577,7 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
                 // there is an attack, we exit
                 return(lightStore, ErrorAttack);
             }
-		}
+        }
     }
 
     // get the lightblock with maximum height smaller than targetHeight
@@ -602,18 +602,18 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
                 // pick new primary (promote a secondary to primary)
                 Replace_Primary(root_of_trust);
             }
-			else if result == ResultExpired {
-					return (lightStore, result)
+            else if result == ResultExpired {
+                return (lightStore, result)
             }
         }
-  
+
         // Cross-check
         Evidences := AttackDetector(root_of_trust, verifiedLS);
         if Evidences.Empty {
             // no attack detected, we trust the new lightblock
-			verifiedLS.Update(verfiedLS.Latest(), 
-			                  StateTrusted, 
-							  verfiedLS.Latest().verification-root);
+            verifiedLS.Update(verfiedLS.Latest(), 
+                              StateTrusted, 
+                              verfiedLS.Latest().verification-root);
             lightStore.store_chain(verifidLS);
             return (lightStore, OK);
         }
@@ -623,7 +623,6 @@ func VerifyAndDetect (lightStore LightStore, targetHeight Height)
         }
     }
 }
-
 ```
 
 - Implementation remark
