@@ -8,7 +8,7 @@ CLOCK_DRIFT == 10       \* how much we assume the local clock is drifting
 REAL_CLOCK_DRIFT == 3   \* how much the local clock is actually drifting
 IS_PRIMARY_CORRECT == FALSE
 IS_SECONDARY_CORRECT == TRUE
-FAULTY_RATIO == <<2, 3>>    \* < 1 / 3 faulty validators
+FAULTY_RATIO == <<2, 3>>    \* < 2 / 3 faulty validators
 
 VARIABLES
   blockchain,           (* the reference blockchain *)

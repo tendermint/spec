@@ -263,6 +263,8 @@ Next ==
 (************************* Types ******************************************)
 TypeOK ==
     /\ state \in States
+    /\ localClock \in Nat
+    /\ refClock \in Nat
     /\ nextHeight \in HEIGHTS
     /\ latestVerified \in BC!LightBlocks
     /\ \E HS \in SUBSET HEIGHTS:
@@ -284,7 +286,6 @@ NeverFinishNegative ==
 \* This invariant holds true, when the primary is correct. 
 \* This invariant candidate is false when the primary is faulty.    
 NeverFinishNegativeWhenTrusted ==
-    (*(minTrustedHeight <= TRUSTED_HEIGHT)*)
     BC!InTrustingPeriod(blockchain[TRUSTED_HEIGHT])
       => state /= "finishedFailure"     
 

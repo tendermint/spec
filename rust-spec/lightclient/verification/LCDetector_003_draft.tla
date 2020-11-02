@@ -30,7 +30,7 @@ VARIABLES
   state,                (* the state of the light client detector *)
   fetchedLightBlocks1,  (* a function from heights to LightBlocks *)
   fetchedLightBlocks2,  (* a function from heights to LightBlocks *)
-  fetchedLightBlocks1b,  (* a function from heights to LightBlocks *)
+  fetchedLightBlocks1b, (* a function from heights to LightBlocks *)
   commonHeight,         (* the height that is trusted in CreateEvidenceForPeer *)
   nextHeightToTry,      (* the index in CreateEvidenceForPeer *)
   evidences             (* a set of evidences *)
@@ -42,17 +42,30 @@ vars == <<state, blockchain, localClock, refClock, Faulty,
 \* (old) type annotations in Apalache
 a <: b == a
 
-
-ULTIMATE_HEIGHT == TARGET_HEIGHT + 1 
  
+\* instantiate a reference chain
+ULTIMATE_HEIGHT == TARGET_HEIGHT + 1 
 BC == INSTANCE Blockchain_003_draft
     WITH ULTIMATE_HEIGHT <- (TARGET_HEIGHT + 1)
 
+\* use the light client API
 LC == INSTANCE LCVerificationApi_003_draft
 
 \* evidence type
 ET == [peer |-> STRING, conflictingBlock |-> BC!LBT, commonHeight |-> Int]
 
+\* is the algorithm in the terminating state
+IsTerminated ==
+    state \in { <<"NoEvidence", "PRIMARY">>,
+                <<"NoEvidence", "SECONDARY">>,
+                <<"FaultyPeer", "PRIMARY">>,
+                <<"FaultyPeer", "SECONDARY">>,
+                <<"FoundEvidence", "PRIMARY">> }
+
+
+(********************************* Initialization ******************************)
+
+\* initialization for the light blocks data structure
 InitLightBlocks(lb, Heights) ==
     \* BC!LightBlocks is an infinite set, as time is not restricted.
     \* Hence, we initialize the light blocks by picking the sets inside.
@@ -72,14 +85,17 @@ InitLightBlocks(lb, Heights) ==
         IN
         lb = [ h \in Heights |-> lightHdr(h) ]
 
+\* initialize the detector algorithm
 Init ==
     \* initialize the blockchain to TARGET_HEIGHT + 1
     /\ BC!InitToHeight(FAULTY_RATIO)
     /\ \E tm \in Int:
         tm >= 0 /\ LC!IsLocalClockWithinDrift(tm, refClock) /\ localClock = tm
+    \* start with the secondary looking for evidence
     /\ state = <<"Init", "SECONDARY">> /\ commonHeight = 0 /\ nextHeightToTry = 0
     /\ evidences = {} <: {ET}
-    \* precompute a possible result of light client verification for the primary
+    \* Precompute a possible result of light client verification for the primary.
+    \* It is the input to the detection algorithm.
     /\ \E Heights1 \in SUBSET(TRUSTED_HEIGHT..TARGET_HEIGHT):
         /\ TRUSTED_HEIGHT \in Heights1
         /\ TARGET_HEIGHT \in Heights1
@@ -91,29 +107,31 @@ Init ==
            LC!VerifyToTargetPost(blockchain, IS_PRIMARY_CORRECT,
                                  fetchedLightBlocks1, status,
                                  TRUSTED_HEIGHT, TARGET_HEIGHT, "finishedSuccess")
-    \* initialize the data structures of the secondary
+    \* initialize the other data structures to the default values
     /\ LET trustedBlock == blockchain[TRUSTED_HEIGHT]
            trustedLightBlock == [header |-> trustedBlock, Commits |-> AllNodes]
        IN
        /\ fetchedLightBlocks2 =  [h \in {TRUSTED_HEIGHT} |-> trustedLightBlock]
        /\ fetchedLightBlocks1b = [h \in {TRUSTED_HEIGHT} |-> trustedLightBlock]
 
-\* block should contain a copy of the block from the reference chain, with a matching commit
-\* XXX: copied from Lightclient_003_draft, extract to another module?
+
+(********************************* Transitions ******************************)
+
+\* a block should contain a copy of the block from the reference chain,
+\* with a matching commit
 CopyLightBlockFromChain(block, height) ==
     LET ref == blockchain[height]
         lastCommit ==
           IF height < ULTIMATE_HEIGHT
           THEN blockchain[height + 1].lastCommit
-            \* for the ultimate block, which we never use, as ULTIMATE_HEIGHT = TARGET_HEIGHT + 1
+            \* for the ultimate block, which we never use,
+            \* as ULTIMATE_HEIGHT = TARGET_HEIGHT + 1
           ELSE blockchain[height].VS 
     IN
     block = [header |-> ref, Commits |-> lastCommit]      
 
 \* Either the primary is correct and the block comes from the reference chain,
 \* or the block is produced by a faulty primary.
-\*
-\* XXX: copied from Lightclient_003_draft, extract to another module?
 \*
 \* [LCV-FUNC-FETCH.1::TLA.1]
 FetchLightBlockInto(isPeerCorrect, block, height) ==
@@ -134,7 +152,7 @@ PickNextHeight(fetchedBlocks, height) ==
 
 
 (**
- Check, whether the target header matches at the secondary and primary.
+ * Check, whether the target header matches at the secondary and primary.
  *)
 CompareLast ==
     /\ state = <<"Init", "SECONDARY">>
@@ -144,13 +162,15 @@ CompareLast ==
         \* for the moment, we ignore the possibility of a timeout when fetching a block
         /\ FetchLightBlockInto(IS_SECONDARY_CORRECT, latest, TARGET_HEIGHT)
         /\  IF latest.header = fetchedLightBlocks1[TARGET_HEIGHT].header
-            THEN /\ state' = <<"NoEvidence", "SECONDARY">>
+            THEN \* if the headers match, CreateEvidence is not called
+                 /\ state' = <<"NoEvidence", "SECONDARY">>
                  \* save the retrieved block for further analysis
                  /\ fetchedLightBlocks2' =
                         [h \in (DOMAIN fetchedLightBlocks2) \union {TARGET_HEIGHT} |->
                             IF h = TARGET_HEIGHT THEN latest ELSE fetchedLightBlocks2[h]]
                  /\ UNCHANGED <<commonHeight, nextHeightToTry>>
-            ELSE /\ commonHeight' = TRUSTED_HEIGHT
+            ELSE \* prepare the parameters for CreateEvidence
+                 /\ commonHeight' = TRUSTED_HEIGHT
                  /\ nextHeightToTry' = PickNextHeight(fetchedLightBlocks1, TRUSTED_HEIGHT)
                  /\ state' = IF nextHeightToTry' >= 0
                              THEN <<"CreateEvidence", "SECONDARY">>
@@ -178,24 +198,27 @@ CreateEvidence(peer, isPeerCorrect, refBlocks, targetBlocks) ==
         \* blocks. This is a deep observation.
         /\ \E result \in {"finishedSuccess", "finishedFailure"}:
             LET targetStatus == [h \in HeightsRange |-> "StateVerified"] IN
+            \* call VerifyToTarget for (commonHeight, nextHeightToTry).
             /\ LC!VerifyToTargetPost(blockchain, isPeerCorrect,
                                      targetBlocks, targetStatus,
                                      commonHeight, nextHeightToTry, result)
+               \* case 1: the peer has failed (or the trusting period has expired)
             /\ \/ /\ result /= "finishedSuccess"
                   /\ state' = <<"FaultyPeer", peer>>
                   /\ UNCHANGED <<commonHeight, nextHeightToTry, evidences>>
+               \* case 2: success
                \/ /\ result = "finishedSuccess"
                   /\ LET block1 == refBlocks[nextHeightToTry] IN
                      LET block2 == targetBlocks[nextHeightToTry] IN
                      IF block1.header /= block2.header
-                     THEN
+                     THEN \* the target blocks do not match
                        /\ state' = <<"FoundEvidence", peer>>
                        /\ evidences' = evidences \union
                             {[peer |-> peer,
                               conflictingBlock |-> block1,
                               commonHeight |-> commonHeight]}
                        /\ UNCHANGED <<commonHeight, nextHeightToTry>>
-                     ELSE
+                     ELSE \* the target blocks match
                        /\ nextHeightToTry' = PickNextHeight(refBlocks, nextHeightToTry)
                        /\ commonHeight' = nextHeightToTry
                        /\ state' = IF nextHeightToTry' >= 0
@@ -252,7 +275,7 @@ Next ==
        \/ CreateEvidenceForPrimary
 
 
-\* simple invariants to try
+\* simple invariants to see the progress of the detector
 NeverNoEvidence == state[1] /= "NoEvidence"
 NeverFoundEvidence == state[1] /= "FoundEvidence"
 NeverFaultyPeer == state[1] /= "FaultyPeer"
@@ -268,28 +291,64 @@ EvidenceWhenFaultyInv ==
 NoEvidenceForCorrectInv ==
     IS_PRIMARY_CORRECT /\ IS_SECONDARY_CORRECT => evidences = {} <: {ET}
 
+(**
+ * If we find an evidence by peer A, peer B has ineded given us a corrupted
+ * header following the common height. Also, we have a verification trace by peer A.
+ *)
 CommonHeightOnEvidenceInv ==
   \A e \in evidences:
     LET conflicting == e.conflictingBlock IN
     LET conflictingHeader == conflicting.header IN
-    /\ (e.peer = "PRIMARY"
-        /\ LC!InTrustingPeriodLocal(fetchedLightBlocks1b[e.commonHeight].header))
-            =>
-        ("SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks1b[e.commonHeight],
-                                         conflicting, FALSE)
-         /\ fetchedLightBlocks1b[conflictingHeader.height].header /= conflictingHeader)
-    /\ (e.peer = "SECONDARY"
-        /\ LC!InTrustingPeriodLocal(fetchedLightBlocks2[e.commonHeight].header))
-            =>
-         ("SUCCESS" = LC!ValidAndVerified(fetchedLightBlocks2[e.commonHeight],
-                                         conflicting, FALSE)
-         /\ fetchedLightBlocks2[conflictingHeader.height].header /= conflictingHeader)
+    \* the evidence by suspectingPeer can be verified by suspectingPeer in one step
+    LET SoundEvidence(suspectingPeer, peerBlocks) ==
+      \/ e.peer /= suspectingPeer
+        \* the conflicting block from another peer verifies against the common height
+      \/ /\ "SUCCESS" =
+            LC!ValidAndVerifiedUntimed(peerBlocks[e.commonHeight], conflicting)
+         \* and the headers of the same height by the two peers do not match
+         /\ peerBlocks[conflictingHeader.height].header /= conflictingHeader
+    IN
+    /\ SoundEvidence("PRIMARY", fetchedLightBlocks1b)
+    /\ SoundEvidence("SECONDARY", fetchedLightBlocks2)
 
-PrecisionInv2 ==
+(**
+ * If the light client does not find an evidence,
+ * then there is no attack on the light client.
+ *)
+AccuracyInv ==
   (LC!InTrustingPeriodLocal(fetchedLightBlocks1[TARGET_HEIGHT].header)
         /\ state = <<"NoEvidence", "SECONDARY">>)
         =>
     (fetchedLightBlocks1[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT]
       /\ fetchedLightBlocks2[TARGET_HEIGHT].header = blockchain[TARGET_HEIGHT])
+
+(**
+ * The primary reports a corrupted block at the target height. If the secondary is
+ * correct and the algorithm has terminated, we should get the evidence.
+ * This property is violated due to clock drift. VerifyToTarget may fail with
+ * the correct secondary within the trusting period (due to clock drift, locally
+ * we think that we are outside of the trusting period).
+ *)
+PrecisionInvGrayZone ==
+    (/\ fetchedLightBlocks1[TARGET_HEIGHT].header /= blockchain[TARGET_HEIGHT]
+     /\ BC!InTrustingPeriod(blockchain[TRUSTED_HEIGHT])
+     /\ IS_SECONDARY_CORRECT
+     /\ IsTerminated)
+       =>
+    evidences /= {} <: {ET}
+
+(**
+ * The primary reports a corrupted block at the target height. If the secondary is
+ * correct and the algorithm has terminated, we should get the evidence.
+ * This invariant does not fail, as we are using the local clock to check the trusting
+ * period.
+ *)
+PrecisionInvLocal ==
+    (/\ fetchedLightBlocks1[TARGET_HEIGHT].header /= blockchain[TARGET_HEIGHT]
+     /\ LC!InTrustingPeriodLocal(blockchain[TRUSTED_HEIGHT])
+     /\ IS_SECONDARY_CORRECT
+     /\ IsTerminated)
+       =>
+    evidences /= {} <: {ET}
 
 ====================================================================================

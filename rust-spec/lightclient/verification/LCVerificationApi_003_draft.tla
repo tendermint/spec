@@ -43,21 +43,18 @@ SignedByOneThirdOfTrusted(trusted, untrusted) ==
   3 * SP > TP     
 
 (**
- Check the precondition of ValidAndVerified.
+ The first part of the precondition of ValidAndVerified, which does not take
+ the current time into account.
  
- [LCV-FUNC-VALID.1::TLA-PRE.1]
+ [LCV-FUNC-VALID.1::TLA-PRE-UNTIMED.1]
  *)
-ValidAndVerifiedPre(trusted, untrusted, checkFuture) ==
+ValidAndVerifiedPreUntimed(trusted, untrusted) ==
   LET thdr == trusted.header
       uhdr == untrusted.header
   IN
-  /\ InTrustingPeriodLocal(thdr)
   /\ thdr.height < uhdr.height
      \* the trusted block has been created earlier
   /\ thdr.time < uhdr.time
-     \* The untrusted block is not from the future (modulo clock drift).
-     \* Do the check, if it is required.
-  /\ checkFuture => uhdr.time < localClock + CLOCK_DRIFT
   /\ untrusted.Commits \subseteq uhdr.VS
   /\ LET TP == Cardinality(uhdr.VS)
          SP == Cardinality(untrusted.Commits)
@@ -71,6 +68,36 @@ ValidAndVerifiedPre(trusted, untrusted, checkFuture) ==
      2. untrusted.Validators = hash(untrusted.Header.Validators)
      3. untrusted.NextValidators = hash(untrusted.Header.NextValidators)
    *)
+
+(**
+ Check the precondition of ValidAndVerified, including the time checks.
+ 
+ [LCV-FUNC-VALID.1::TLA-PRE.1]
+ *)
+ValidAndVerifiedPre(trusted, untrusted, checkFuture) ==
+  LET thdr == trusted.header
+      uhdr == untrusted.header
+  IN
+  /\ InTrustingPeriodLocal(thdr)
+     \* The untrusted block is not from the future (modulo clock drift).
+     \* Do the check, if it is required.
+  /\ checkFuture => uhdr.time < localClock + CLOCK_DRIFT
+  /\ ValidAndVerifiedPreUntimed(trusted, untrusted)
+
+
+(**
+ Check, whether an untrusted block is valid and verifiable w.r.t. a trusted header.
+ This test does take current time into account, but only looks at the block structure.
+ 
+ [LCV-FUNC-VALID.1::TLA-UNTIMED.1]
+ *)   
+ValidAndVerifiedUntimed(trusted, untrusted) ==
+    IF ~ValidAndVerifiedPreUntimed(trusted, untrusted)
+    THEN "INVALID"
+    ELSE IF untrusted.header.height = trusted.header.height + 1
+             \/ SignedByOneThirdOfTrusted(trusted, untrusted)
+         THEN "SUCCESS"
+         ELSE "NOT_ENOUGH_TRUST"
 
 (**
  Check, whether an untrusted block is valid and verifiable w.r.t. a trusted header.
@@ -108,12 +135,8 @@ LightStoreInv(fetchedLightBlocks, lightBlockStatus) ==
         \/ LET lhdr == fetchedLightBlocks[lh]
                rhdr == fetchedLightBlocks[rh]
            IN
-           \/ ~(InTrustingPeriodLocal(fetchedLightBlocks[lh].header))
-                /\ lhdr.header.time < rhdr.header.time
-           \* or we can verify the right one using the left one
-           \/ "SUCCESS" = ValidAndVerified(lhdr, rhdr, FALSE)
-                \* if localClock moves backwards, this produces unrestricted blocks
-                \* figure out whether it is a problem
+           \* we can verify the right one using the left one
+           "SUCCESS" = ValidAndVerifiedUntimed(lhdr, rhdr)
 
 (**
   Correctness states that all the obtained headers are exactly like in the blockchain.
@@ -129,7 +152,8 @@ CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus) ==
             fetchedLightBlocks[h].header = blockchain[h]
 
 (**
- * When the light client terminates, there are no failed blocks. (Otherwise, someone lied to us.) 
+ * When the light client terminates, there are no failed blocks.
+ * (Otherwise, someone lied to us.) 
  *)            
 NoFailedBlocksOnSuccessInv(fetchedLightBlocks, lightBlockStatus) ==
      \A h \in DOMAIN fetchedLightBlocks:
@@ -141,17 +165,24 @@ NoFailedBlocksOnSuccessInv(fetchedLightBlocks, lightBlockStatus) ==
 VerifyToTargetPost(blockchain, isPeerCorrect,
                    fetchedLightBlocks, lightBlockStatus,
                    trustedHeight, targetHeight, finalState) ==
+  LET trustedHeader == fetchedLightBlocks[trustedHeight].header IN
     \* The light client is not lying us on the trusted block.
     \* It is straightforward to detect.
     /\ lightBlockStatus[trustedHeight] = "StateVerified"
     /\ trustedHeight \in DOMAIN fetchedLightBlocks
-    /\ fetchedLightBlocks[trustedHeight].header = blockchain[trustedHeight]
+    /\ trustedHeader = blockchain[trustedHeight]
     \* the invariants we have found in the light client verification
+    \* TODO: make sure that the correct peer does not report failure, unless
+    \* there is a problem with trusting period
+    /\ isPeerCorrect
+        => CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus)
+    \* a correct peer should fail the light client,
+    \* if the trusted block is in the trusting period
+    /\ isPeerCorrect /\ InTrustingPeriodLocal(trustedHeader)
+        => finalState = "finishedSuccess"
     /\ finalState = "finishedSuccess" =>
         /\ lightBlockStatus[targetHeight] = "StateVerified"
         /\ targetHeight \in DOMAIN fetchedLightBlocks
-        /\ isPeerCorrect
-          => CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus)
         /\ NoFailedBlocksOnSuccessInv(fetchedLightBlocks, lightBlockStatus)
     /\ LightStoreInv(fetchedLightBlocks, lightBlockStatus)
 
