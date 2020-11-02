@@ -179,9 +179,9 @@ The local code for verification is presented by a sequential function
 functionality. Each lightblock is first verified with a primary, and then
 cross-checked with secondaries, and if all goes well, the lightblock
 is
-added to the
-lightstore. That is, no lightblock is ever removed from the
-lightstore, and all lightblocks in the lightstore are trusted.
+added (with the attribute "trusted") to the
+lightstore. Intermiate lightblocks that were used to verify the target
+block but were not cross-checked are stored as "verified"
 
 > We note that if a different concurrency model is considered
 > for an implementation, the semantics of the lightstore might change:
@@ -192,14 +192,15 @@ lightstore, and all lightblocks in the lightstore are trusted.
 > - do verification for the next height *h' != h*
 > - do cross-checking for height *h*. If we find an attack, we remove
 >   *h* from the lightstore.
+> - the user might already start to use *h*
 >
 > Thus, this concurrency model changes the semantics of the
-> lightstore (not all lightblocks are trusted; they may be removed if
+> lightstore (not all lightblocks that are read by the user are
+> trusted; they may be removed if
 > we find a problem). Whether this is desirable, and whether the gain in
 > performance is worth it, we keep for future versions/discussion of
 > lightclient protocols.
->
->
+
 
 ## Definitions
 
