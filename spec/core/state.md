@@ -68,11 +68,19 @@ message ResponseDeliverTx {
   repeated Event events     = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string codespace = 8;
+  int64          block_gas_used = 9;
 }
 ```
 
 `ResponseDeliverTx` is the result of executing a transaction against the application.
-It returns a result code (`uint32`), an arbitrary byte array (`[]byte`) (ie. a return value), Log (`string`), Info (`string`), GasWanted (`int64`), GasUsed (`int64`), Events (`[]Events`) and a Codespace (`string`).
+It returns a result code (`uint32`), an arbitrary byte array (`[]byte`) (ie. a return value),
+Log (`string`), Info (`string`), GasWanted (`int64`), GasUsed (`int64`), Events (`[]Events`)
+and a Codespace (`string`).
+
+Note, the GasUsed field is useful information when diagnosing why a transaction
+failed and can be useful even information even when transaction succeeds. Whereas
+the BlockGasUsed reflects the total amount of gas used in the entire block during
+execution.
 
 ### Validator
 
