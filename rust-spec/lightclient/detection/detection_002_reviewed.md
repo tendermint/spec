@@ -681,7 +681,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
     - solves the problem statement (if attack found, then evidence is reported)
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
-    period) [[LCV-INV-TP.1]][#LCV-INV-TP1-link]
+    period) [[LCV-INV-TP.1]][LCV-INV-TP1-link]
     - `ErrorNoPeers`: if no peers are left to replace secondaries, and
     no evidence was found before that happened
 
@@ -730,7 +730,7 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
     - finds evidence where trace and peer diverge
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
-       period) [[LCV-INV-TP.1]][#LCV-INV-TP1-link]
+       period) [[LCV-INV-TP.1]][LCV-INV-TP1-link]
     - If `VerifyToTarget` returns error but root is not expired then return
  `FaultyPeer`
 
@@ -756,7 +756,7 @@ no point there were conflicting blocks.
 
 #### Argument for [[LCD-DIST-LIVE.1]](#LCD-DIST-LIVE1)
 
-At the latest when [[LCV-INV-TP.1]][#LCV-INV-TP1-link] is violated,
+At the latest when [[LCV-INV-TP.1]][LCV-INV-TP1-link] is violated,
 `AttackDetector` terminates.
 
 #### Argument for [[LCD-DIST-TERM-NORMAL.1]](#LCD-DIST-TERM-NORMAL1)
