@@ -9,7 +9,7 @@ same height on the blockchain. In order to do so, some of these faulty
 full nodes must have been validators before and violate
 [[TMBC-FM-2THIRDS]](TMBC-FM-2THIRDS-link), as otherwise, if
 [[TMBC-FM-2THIRDS]](TMBC-FM-2THIRDS-link) would hold,
-[verification](verification) would satisfy
+[verification][verification] would satisfy
 [[LCV-SEQ-SAFE.1]](LCV-SEQ-SAFE-link).
 
 An attack detector (or detector for short) is a mechanism that is used
@@ -786,7 +786,7 @@ Once a bogus block is recognized as such the secondary is removed.
 
 [[supervisor]] The specification of the light client supervisor.
 
-[verification]:  https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md
+[verification]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md
 
 [supervisor]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/supervisor/supervisor_001_draft.md
 
