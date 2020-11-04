@@ -354,6 +354,7 @@ via light client.
     be non-deterministic.
     - `GasWanted (int64)`: Amount of gas requested for transaction.
     - `GasUsed (int64)`: Amount of gas consumed by transaction.
+    - `BlockGasUsed (int64)`: The total amount of gas consumed in the block after processing the transaction.
     - `Events ([]abci.Event)`: Type & Key-Value events for indexing
     transactions (eg. by account).
     - `Codespace (string)`: Namespace for the `Code`.
@@ -382,6 +383,7 @@ via light client.
     be non-deterministic.
     - `GasWanted (int64)`: Amount of gas requested for transaction.
     - `GasUsed (int64)`: Amount of gas consumed by transaction.
+    - `BlockGasUsed (int64)`: The total amount of gas consumed in the block after processing the transaction.
     - `Events ([]abci.Event)`: Type & Key-Value events for indexing
     transactions (eg. by account).
     - `Codespace (string)`: Namespace for the `Code`.
