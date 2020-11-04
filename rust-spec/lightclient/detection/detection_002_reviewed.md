@@ -629,11 +629,11 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
     Evidences := new []InternalEvidence;
 
     for each secondary in Secondaries {
-	    lb, result := FetchLightBlock(secondary,primary_trace.Latest().Header.Height);
-	    if result != ResultSuccess {
-		    Replace_Secondary(root);
-		}
-		else if lb.Header != primary_trace.Latest().Header {
+        lb, result := FetchLightBlock(secondary,primary_trace.Latest().Header.Height);
+        if result != ResultSuccess {
+            Replace_Secondary(root);
+        }
+        else if lb.Header != primary_trace.Latest().Header {
 		
             // we replay the primary trace with the secondary, in
             // order to generate evidence that we can submit to the
@@ -652,9 +652,9 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
                 Evidences.Add(EvidenceForSecondary);
                 // we replay the secondary trace with the primary, ...
                 EvidenceForPrimary, _, result :=
-                    CreateEvidenceForPeer(primary,
-                                          newroot,
-                                          secondary_trace);
+                        CreateEvidenceForPeer(primary,
+                                              newroot,
+                                              secondary_trace);
                 if result == FoundEvidence {
                     Evidences.Add(EvidenceForPrimary);
                 }
@@ -667,10 +667,10 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
             }
             // In the case where the secondary reports NoEvidence
             // after initially it reported a conflicting header.
-			// secondary is faulty
-			Replace_Secondary(root);
+            // secondary is faulty
+            Replace_Secondary(root);
         }
-	}
+    }
     return Evidences;
 }
 ```
