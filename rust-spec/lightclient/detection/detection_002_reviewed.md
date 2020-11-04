@@ -730,7 +730,7 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
     - finds evidence where trace and peer diverge
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
-       period) [[LCV-INV-TP.1]][LCV-INV-TP1-link]
+       period) [[LCV-INV-TP.1]][#LCV-INV-TP1-link]
     - If `VerifyToTarget` returns error but root is not expired then return
  `FaultyPeer`
 
