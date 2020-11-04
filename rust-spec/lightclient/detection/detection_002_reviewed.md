@@ -74,7 +74,7 @@ the secondaries using this specification.
   lightclient attack detection
   
      - [Informal Problem Statement](#informal-problem-statement)
-     - [Assumptions, Incentives, and Environment](#Assumptions,-Incentives,-and-Environment)
+     - [Assumptions](#Assumptions)
      - [Definitions](#definitions)
      - [Distributed Problem statement](#Distributed-Problem-statement)
   
@@ -346,7 +346,7 @@ Let *b* be a light block and *t* a time. We define *bogus(b,t)* iff
 - *sequ-rooted(b) = false* and
 - for all *a*, *sequ-rooted(a)* implies *skip-trace(a,b,t) = false*
   
-# Part II Problem Statement  
+# Part II - Problem Statement
   
 ## Informal Problem statement
 
@@ -411,7 +411,7 @@ secondary
   proof for an attack. Block *b* may be bogus. In this case the
   secondary is faulty and it should be replaced.
 
-## Assumptions, Incentives, and Environment
+## Assumptions
 
 It is not in the interest of faulty full nodes to talk to the
 detector as long as the  detector is connected to at least one
