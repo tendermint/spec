@@ -1,25 +1,3 @@
-# ***This an unfinished draft. Comments are welcome!***
-
-**TODO:** We will need to do small adaptations to the verification
-spec to reflect the semantics in the LightStore (verified, trusted,
-untrusted, etc. not needed anymore). In more detail:
-
-- The state of the Lightstore needs to go. Functions like `LatestVerified` can
-keep the name but will ignore state as it will not exist anymore.
-
-- verification spec should be adapted to the second parameter of
-`VerifyToTarget`
-being a lightblock; new version number of function tag;
-
-- We should clarify what is the expectation of VerifyToTarget
-so if it returns TimeoutError it can be assumed faulty. I guess that
-VerifyToTarget with correct full node should never terminate with
-TimeoutError.
-
-- We need to introduce a new version number for the new
-specification. So we should decide how
-  to handle that.
-
 # Light Client Attack Detector
 
 In this specification, we strengthen the light client to be resistant
@@ -775,23 +753,23 @@ Once a bogus block is recognized as such the secondary is removed.
 
 [[supervisor]] The specification of the light client supervisor.
 
-[verification]:  https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md
+[verification]:  https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md
 
-[supervisor]:  https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/supervisor/supervisor.md
+[supervisor]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/supervisor/supervisor_001_draft.md
 
 [block]: https://github.com/tendermint/spec/blob/d46cd7f573a2c6a2399fcab2cde981330aa63f37/spec/core/data_structures.md
 
-[TMBC-FM-2THIRDS-link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#tmbc-fm-2thirds1
+[TMBC-FM-2THIRDS-link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#tmbc-fm-2thirds1
 
-[TMBC-SOUND-DISTR-POSS-COMMIT-link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#tmbc-sound-distr-poss-commit1
+[TMBC-SOUND-DISTR-POSS-COMMIT-link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#tmbc-sound-distr-poss-commit1
 
-[LCV-SEQ-SAFE-link]:https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#lcv-seq-safe1
+[LCV-SEQ-SAFE-link]:https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-seq-safe1
 
 [TMBC-VAL-CONTAINS-CORR-link]:
-https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#tmbc-val-contains-corr1
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#tmbc-val-contains-corr1
 
 [fetch]:
-https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#lcv-func-fetch1
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-func-fetch1
 
 [LCV-INV-TP1-link]:
-https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification.md#lcv-inv-tp1
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-inv-tp1
