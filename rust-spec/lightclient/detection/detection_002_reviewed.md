@@ -60,7 +60,15 @@ the secondaries using this specification.
 
 - [Part I](#part-i---Tendermint-Consensus-and-Light-Client-Attacks):
   Formal definitions of lightclient attacks, based on basic
-  properties of Tendermint consensus
+  properties of Tendermint consensus.
+     - [Node-based characterization of
+       attacks](#Node-based-characterization-of-attacks) The
+       definition of attacks used in the problem statement of
+	   this specification.
+
+     - [Block-based characterization of attacks](#Block-based-characterization-of-attacks). Alternative definitions
+  provided for future reference.
+
 
 - [Part II](#part-ii---problem-statement): Problem statement of
   lightclient attack detection
