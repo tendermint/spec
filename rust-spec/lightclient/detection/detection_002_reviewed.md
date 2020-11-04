@@ -681,7 +681,7 @@ func AttackDetector(root LightBlock, primary_trace []LightBlock)
     - solves the problem statement (if attack found, then evidence is reported)
 - Error condition
     - `ErrorTrustExpired`: fails if root expires (outside trusting
-    period) [[LCV-INV-TP.1]][LCV-INV-TP1-link]
+    period) [[LCV-INV-TP.1]][#LCV-INV-TP1-link]
     - `ErrorNoPeers`: if no peers are left to replace secondaries, and
     no evidence was found before that happened
 
