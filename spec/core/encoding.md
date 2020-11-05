@@ -75,8 +75,6 @@ encoded in base64 (`Elems`).
 | bits  | int64                      |
 | elems | slice of int64 (`[]int64`) |
 
-This type is easily encoded directly by Amino.
-
 Note BitArray receives a special JSON encoding in the form of `x` and `_`
 representing `1` and `0`. Ie. the BitArray `10110` would be JSON encoded as
 `"x_xx_"`
