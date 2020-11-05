@@ -192,7 +192,7 @@ we have **an attack at height** *b.Header.Height* and write
 > several blocks that satisfy the above requirement for the same
 > blocks *b* and *c*.
 
-[[TMBC-ATTACK.1]][#TMBC-ATTACK1] is a formalization of the violation
+[[TMBC-ATTACK.1]](#TMBC-ATTACK1) is a formalization of the violation
 of the agreement property based on the result of consensus, that is,
 the generated blocks.
 
@@ -225,7 +225,7 @@ We say there is a (main chain) fork at time *t* if
 
 We say there is a light client attack at time *t*, if
 
-- there is **no** (main chain) fork [[TMBC-MC-FORK.1]][#TMBC-MC-FORK1], and
+- there is **no** (main chain) fork [[TMBC-MC-FORK.1]](#TMBC-MC-FORK1), and
 - there exist nodes that have computed light blocks *b* and *c* and
 - there exist *a* such that *attack(a,b,c,t)*.
 
@@ -241,11 +241,11 @@ We say the attack is at height *a.Header.Height*.
 #### **[TMBC-LC-ATTACK-EVIDENCE.1]**
 
 We consider the following case of a light client attack
-[[TMBC-LC-ATTACK.1]][#TMBC-LC-ATTACK1]:
+[[TMBC-LC-ATTACK.1]](#TMBC-LC-ATTACK1):
 
 - *attack(a,b,c,t)*
 - there is a peer p1 that has a sequence *chain* of blocks from *a* to *b*
-- *skip-trace(a,c,t)*: by [[TMBC-SKIP-TRACE.1]][#TMBC-SKIP-TRACE1] there is a
+- *skip-trace(a,c,t)*: by [[TMBC-SKIP-TRACE.1]](#TMBC-SKIP-TRACE1) there is a
   verification trace *v* of the form *a = v(1)*, ... *v(h) = c*
 
 Evidence for p1 (that proves an attack) consists for index i
@@ -312,15 +312,15 @@ If there exists two light blocks b and c, with *sign-unique(b,c) =
 false* then we have a *fork*.
 
 > The difference of the above definition to
-> [[TMBC-MC-FORK.1]][#TMBC-MC-FORK1] is subtle. The latter requires a
+> [[TMBC-MC-FORK.1]](#TMBC-MC-FORK1) is subtle. The latter requires a
 > full node being affected by a bad block while
-> [[TMBC-BLOCKS-MCFORK.1]][#TMBC-BLOCKS-MCFORK1] just requires that a
+> [[TMBC-BLOCKS-MCFORK.1]](#TMBC-BLOCKS-MCFORK1) just requires that a
 > bad block exists, possibly in memory of an attacker.
 > The following captures a light client fork. There is no fork up to
 > the height of block b. However, c is of that height, is different,
 > and passes skipping verification. It is a stricter property than
-> [[TMBC-LC-ATTACK.1]][#TMBC-LC-ATTACK1], as
-> [[TMBC-LC-ATTACK.1]][#TMBC-LC-ATTACK1] requires that no correct full
+> [[TMBC-LC-ATTACK.1]](#TMBC-LC-ATTACK1), as
+> [[TMBC-LC-ATTACK.1]](#TMBC-LC-ATTACK1) requires that no correct full
 > node is affected.
 
 #### **[TMBC-BLOCKS-LCFORK.1]**
@@ -460,7 +460,7 @@ before the timeout expires.
 ### Evidence
 
 Following the definition of
-[[TMBC-LC-ATTACK-EVIDENCE.1]][#TMBC-LC-ATTACK-EVIDENCE1], by evidence
+[[TMBC-LC-ATTACK-EVIDENCE.1]](#TMBC-LC-ATTACK-EVIDENCE1), by evidence
 we refer to a variable of the following type
 
 #### **[LC-DATA-EVIDENCE.1]**
@@ -515,8 +515,8 @@ been verified before, and that were provided by the primary.
 #### **[LCD-DIST-INV-ATTACK.1]**
 
 If the detector returns evidence for height *h*
-[[TMBC-LC-EVIDENCE-DATA.1]][#TMBC-LC-EVIDENCE-DATA1], then there is an
-attack at height *h*. [[TMBC-LC-ATTACK.1]][#TMBC-LC-ATTACK1]
+[[TMBC-LC-EVIDENCE-DATA.1]](#TMBC-LC-EVIDENCE-DATA1), then there is an
+attack at height *h*. [[TMBC-LC-ATTACK.1]](#TMBC-LC-ATTACK1)
 
 #### **[LCD-DIST-INV-STORE.1]**
 
