@@ -4,28 +4,31 @@ Here we describe the data structures in the Tendermint blockchain and the rules 
 
 The Tendermint blockchains consists of a short list of data types:
 
-- [`Block`](#block)
-- [`Header`](#header)
-- [`Version`](#version)
-- [`BlockID`](#blockid)
-- [`PartSetHeader`](#partsetheader)
-- [`Time`](#time)
-- [`Data` (for transactions)](#data)
-- [`Commit`](#commit)
-- [`CommitSig`](#commitsig)
-- [`BlockIDFlag`](#blockidflag)
-- [`Vote`](#vote)
-- [`CanonicalVote`](#canonicalvote)
-- [`SignedMsgType`](#signedmsgtype)
-- [`EvidenceData`](#evidence_data)
-- [`Evidence`](#evidence)
-- [`DuplicateVoteEvidence`](#duplicatevoteevidence)
-- [`LightClientAttackEvidence`](#lightclientattackevidence)
-- [`LightBlock](#lightblock)
-- [`SignedHeader`](#signedheader)
-- [`Validator`](#validator)
-- [`ValidatorSet`](#validatorset)
-- [`Address`](#address)
+- [Data Structures](#data-structures)
+  - [Block](#block)
+  - [Execution](#execution)
+  - [Header](#header)
+  - [Version](#version)
+  - [BlockID](#blockid)
+  - [PartSetHeader](#partsetheader)
+  - [Time](#time)
+  - [Data](#data)
+  - [Commit](#commit)
+  - [CommitSig](#commitsig)
+  - [BlockIDFlag](#blockidflag)
+  - [Vote](#vote)
+  - [CanonicalVote](#canonicalvote)
+  - [SignedMsgType](#signedmsgtype)
+  - [Signature](#signature)
+  - [EvidenceData](#evidencedata)
+  - [Evidence](#evidence)
+    - [DuplicateVoteEvidence](#duplicatevoteevidence)
+    - [LightClientAttackEvidence](#lightclientattackevidence)
+  - [LightBlock](#lightblock)
+  - [SignedHeader](#signedheader)
+  - [ValidatorSet](#validatorset)
+  - [Validator](#validator)
+  - [Address](#address)
 
 ## Block
 
@@ -165,7 +168,7 @@ Commit is a simple wrapper for a list of signatures, with one for each validator
 
 | Name       | Type                             | Description                                                          | Validation                                                                                               |
 |------------|----------------------------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| Height     | int64                            | Height at which this commit was created.                              | Must be > 0                                                                                              |
+| Height     | int64                            | Height at which this commit was created.                             | Must be > 0                                                                                              |
 | Round      | int32                            | Round that the commit corresponds to.                                | Must be > 0                                                                                              |
 | BlockID    | [BlockID](#blockid)              | The blockID of the corresponding block.                              | Must adhere to the validation rules of [BlockID](#blockid).                                              |
 | Signatures | Array of [CommitSig](#commitsig) | Array of commit signatures that correspond to current validator set. | Length of signatures must be > 0 and adhere to the validation of each individual [Commitsig](#commitsig) |
@@ -180,7 +183,7 @@ to reconstruct the vote set given the validator set.
 |------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
 | BlockIDFlag      | [BlockIDFlag](#blockidflag) | Represents the validators participation in consensus: Either voted for the block that received the majority, voted for another block, voted nil or did not vote | Must be one of the fields in the [BlockIDFlag](#blockidflag) enum |
 | ValidatorAddress | [Address](#address)         | Address of the validator                                                                                      | Must be of length 20                                              |
-| Timestamp        | [Time](#time)               | This field will vary from `CommitSig` to `CommitSig`. It represents the timestamp of the validator.               | [Time](#time)                                                     |
+| Timestamp        | [Time](#time)               | This field will vary from `CommitSig` to `CommitSig`. It represents the timestamp of the validator.           | [Time](#time)                                                     |
 | Signature        | [Signature](#signature)     | Signature corresponding to the validators participation in consensus.                                         | The length of the signature must be > 0 and < than  64            |
 
 NOTE: `ValidatorAddress` and `Timestamp` fields may be removed in the future
@@ -206,7 +209,7 @@ The vote includes information about the validator signing it. When stored in the
 
 | Name             | Type                            | Description                                                                                 | Validation                                                                                           |
 |------------------|---------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| Type             | [SignedMsgType](#signedmsgtype) | Either prevote or precommit. [SignedMsgType](#signedmsgtype)                                                             | A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype) |
+| Type             | [SignedMsgType](#signedmsgtype) | Either prevote or precommit. [SignedMsgType](#signedmsgtype)                                | A Vote is valid if its corresponding fields are included in the enum [signedMsgType](#signedmsgtype) |
 | Height           | int64                           | Height for which this vote was created for                                                  | Must be > 0                                                                                          |
 | Round            | int32                           | Round that the commit corresponds to.                                                       | Must be > 0                                                                                          |
 | BlockID          | [BlockID](#blockid)             | The blockID of the corresponding block.                                                     | [BlockID](#blockid)                                                                                  |
@@ -294,10 +297,13 @@ the timestamp of the block that the evidence occurred at to indicate the age of 
 `DuplicateVoteEvidence` represents a validator that has voted for two different blocks
 in the same round of the same height. Votes are lexicographically sorted on `BlockID`.
 
-| Name  | Type          | Description                                                     | Validation                                          |
-|-------|---------------|-----------------------------------------------------------------|-----------------------------------------------------|
-| VoteA | [Vote](#vote) | One of the votes submitted by a validator when they equivocated | VoteA must adhere to [Vote](#vote) validation rules |
-| VoteB | [Vote](#vote) | The second vote submitted by a validator when they equivocated  | VoteB must adhere to [Vote](#vote) validation rules |
+| Name             | Type          | Description                                                        | Validation                                          |
+|------------------|---------------|--------------------------------------------------------------------|-----------------------------------------------------|
+| VoteA            | [Vote](#vote) | One of the votes submitted by a validator when they equivocated    | VoteA must adhere to [Vote](#vote) validation rules |
+| VoteB            | [Vote](#vote) | The second vote submitted by a validator when they equivocated     | VoteB must adhere to [Vote](#vote) validation rules |
+| TotalVotingPower | int64         | The total power of the validator set at the height of equivocation | Must be equal to nodes own copy of the data         |
+| ValidatorPower   | int64         | Power of the equivocating validator at the height                  | Must be equal to the nodes own copy of the data     |
+| Timestamp        | [Time](#Time) | Time of the block where the equivocation occurred                  | Must be equal to the nodes own copy of the data     |
 
 Valid Duplicate Vote Evidence must adhere to the following rules:
 
@@ -311,6 +317,8 @@ Valid Duplicate Vote Evidence must adhere to the following rules:
 
 - For DuplicateVoteEvidence to be included in a block it must be within the time period outlined in [evidenceParams](../abci/abci.md#evidenceparams). Evidence expiration is measured as a combination of age in terms of height and time.
 
+- Information required to form ABCI evidence (`TotalVotingPower`, `ValidatorPower` and `Timestamp`) must all match the nodes own state at that height.
+
 ### LightClientAttackEvidence
 
 LightClientAttackEvidence is a generalized evidence that captures all forms of known attacks on
@@ -318,10 +326,13 @@ a light client such that a full node can verify, propose and commit the evidence
 punishment of the malicious validators. There are three forms of attacks: Lunatic, Equivocation
 and Amnesia. These attacks are exhaustive. You can find a more detailed overview of this [here](../light-client/accountability#the_misbehavior_of_faulty_validators)
 
-| Name             | Type                      | Description | Validation |
-|------------------|---------------------------|-------------|------------|
-| ConflictingBlock | [LightBlock](#LightBlock) | Read Below  | Must adhere to the validation rules of [lightBlock](#lightblock) |
-| CommonHeight     | int64                     | Read Below  | must be > 0 |
+| Name                 | Type                               | Description                                                          | Validation                                                       |
+|----------------------|------------------------------------|----------------------------------------------------------------------|------------------------------------------------------------------|
+| ConflictingBlock     | [LightBlock](#LightBlock)          | Read Below                                                           | Must adhere to the validation rules of [lightBlock](#lightblock) |
+| CommonHeight         | int64                              | Read Below                                                           | must be > 0                                                      |
+| Byzantine Validators | Array of [Validators](#Validators) | validators that acted maliciously                                    | Read Below                                                       |
+| TotalVotingPower     | int64                              | The total power of the validator set at the height of the infraction | Must be equal to the nodes own copy of the data                  |
+| Timestamp            | [Time](#Time)                      | Time of the block where the infraction occurred                      | Must be equal to the nodes own copy of the data                  |
 
 Valid Light Client Attack Evidence must adhere to the following rules:
 
@@ -329,12 +340,16 @@ Valid Light Client Attack Evidence must adhere to the following rules:
     they can use `verifySkipping` from their header at the common height to the conflicting header
 
 - If the header is valid, then the validator sets are the same and this is either a form of equivocation
-    or amnesia. We therefore check that 2/3 of the validator set also signed the conflicting header
+    or amnesia. We therefore check that 2/3 of the validator set also signed the conflicting header.
 
 - The trusted header of the node at the same height as the conflicting header must have a different hash to
     the conflicting header.
 
+- The `ByzantineValidators` provided must be the overlap between validators in the common validator set and those that voted in the commit of the conflicting block.
+
 - For LightClientAttackEvidence to be included in a block it must be within the time period outlined in [evidenceParams](../abci/abci.md#evidenceparams). Evidence expiration is measured as a combination of age in terms of height and time.
+
+- Information required to form ABCI evidence (`TotalVotingPower` and `Timestamp`) must all match the nodes own state at that height.
 
 ## LightBlock
 
@@ -351,8 +366,8 @@ The `SignedHeader` and `ValidatorSet` are linked by the hash of the validator se
 
 The SignedhHeader is the [header](#header) accompanied by the commit to prove it.
 
-| Name   | Type              | Description       | Validation                                                                      |
-|--------|-------------------|-------------------|---------------------------------------------------------------------------------|
+| Name   | Type              | Description       | Validation                                                                        |
+|--------|-------------------|-------------------|-----------------------------------------------------------------------------------|
 | Header | [Header](#Header) | [Header](#header) | Header cannot be nil and must adhere to the [Header](#Header) validation criteria |
 | Commit | [Commit](#commit) | [Commit](#commit) | Commit cannot be nil and must adhere to the [Commit](#commit) criteria            |
 
@@ -361,7 +376,7 @@ The SignedhHeader is the [header](#header) accompanied by the commit to prove it
 | Name       | Type                             | Description                                        | Validation                                                                                                        |
 |------------|----------------------------------|----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
 | Validators | Array of [validator](#validator) | List of the active validators at a specific height | The list of validators can not be empty or nil and must adhere to the validation rules of [validator](#validator) |
-| Proposer   | [validator](#validator) | The block proposer for the corresponding block           | The proposer cannot be nil and must adhere to the validation rules of  [validator](#validator)                    |
+| Proposer   | [validator](#validator)          | The block proposer for the corresponding block     | The proposer cannot be nil and must adhere to the validation rules of  [validator](#validator)                    |
 
 ## Validator
 
@@ -370,7 +385,7 @@ The SignedhHeader is the [header](#header) accompanied by the commit to prove it
 | Address          | [Address](#address)       | Validators Address                                                                                | Length must be of size 20       |
 | Pubkey           | slice of bytes (`[]byte`) | Validators Public Key                                                                             | must be a length greater than 0 |
 | VotingPower      | int64                     | Validators voting power                                                                           | cannot be < 0                   |
-| ProposerPriority | int64                     | Validators proposer priority. This is used to gauge when a validator is up next to propose blocks |  No validation, value can be negative and positive                               |
+| ProposerPriority | int64                     | Validators proposer priority. This is used to gauge when a validator is up next to propose blocks | No validation, value can be negative and positive |
 
 ## Address
 
