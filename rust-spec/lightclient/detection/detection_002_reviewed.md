@@ -505,7 +505,8 @@ func submitEvidence(Evidences []InternalEvidence)
 ### LightStore
 
 Lightblocks and LightStores are defined in the verification
-specification [LCV-DATA-LIGHTBLOCK.1] and [LCV-DATA-LIGHTSTORE.1]. See
+specification [[LCV-DATA-LIGHTBLOCK.1]][LCV-LB-link]
+and [[LCV-DATA-LIGHTSTORE.2]][LCV-LS-link]. See
 the [verification specification][verification] for details.
 
 ## Distributed Problem statement
@@ -575,31 +576,30 @@ If
 
 then the secondary is replaced before the detector terminates.
 
-> The above property is quite operational ("reports"), but it captures
-> quite closely the requirement. As the
-> detector only makes sense in a distributed setting, and does
-> not have a sequential specification, less "pure"
-> specification are acceptable.
+> The above property is quite operational (e.g., the usage of
+> "reports"), but it captures closely the requirement. As the
+> detector only makes sense in a distributed setting, and does not
+> have a sequential specification, a less "pure" specification are
+> acceptable.
 
 # Part III - Protocol
 
 ## Functions and Data defined in other Specifications
 
-### From the supervisor
+### From the [supervisor][supervisor]
 
+[[LC-FUNC-REPLACE-SECONDARY.1]][repl]
 ```go
 Replace_Secondary(addr Address, root-of-trust LightBlock)
 ```
 
-### From the verifier
+### From the [verifier][verification]
 
+[[LCV-FUNC-MAIN.2]][vtt]
 ```go
 func VerifyToTarget(primary PeerID, root LightBlock,
                     targetHeight Height) (LightStore, Result)
 ```
-
-> Note: the above differs from the current version in the second
-> parameter. verification will be revised.
 
 Observe that `VerifyToTarget` does communication with the secondaries
 via the function [FetchLightBlock][fetch].
@@ -619,7 +619,7 @@ with a lightstore that contains a light block that has just been
 verified by the verifier.
 
 Then `AttackDetector` downloads headers from the secondaries. In case
-a conflicting header is downloaded from a secondary,
+a conflicting header is downloaded from a secondary, it calls
 `CreateEvidenceForPeer` which computes evidence in the case that
 indeed an attack is confirmed. It could be that the secondary reports
 a bogus block, which means that there need not be an attack, and the
@@ -720,7 +720,7 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
                 return (ev, common, auxLS, FoundEvidence)
             }
             else {
-                // the peer agrees with the trace, we move common forward
+                // the peer agrees with the trace, we move common forward.
                 // we could delete auxLS as it will be overwritten in
                 // the next iteration
                 common := trace[i]
@@ -817,5 +817,14 @@ https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verificatio
 [LCV-LB-link]:
 https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-data-lightblock1
 
+[LCV-LS-link]:
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-data-lightstore2
+
 [LVC-HD-link]:
 https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#tmbc-header-fields2
+
+[repl]:
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/supervisor/supervisor_001_draft.md#lc-func-replace-secondary1
+
+[vtt]:
+https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-func-main2
