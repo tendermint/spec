@@ -1,4 +1,24 @@
 -------------------------- MODULE LCDetector_003_draft -----------------------------
+(**
+ * This is a specification of the light client detector module.
+ * It follows the English specification:
+ *
+ * https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/detection/detection_003_reviewed.md
+ *
+ * The assumptions made in this specification:
+ *
+ *  - light client connects to one primary and one secondary peer
+ *
+ *  - the light client has its own local clock that can drift from the reference clock
+ *    within the envelope [refClock - CLOCK_DRIFT, refClock + CLOCK_DRIFT].
+ *    The local clock may increase as well as decrease in the the envelope
+ *    (similar to clock synchronization).
+ *
+ *  - the ratio of the faulty validators is set as the parameter.
+ *
+ * Igor Konnov, Josef Widder, 2020
+ *)
+
 EXTENDS Integers
 
 \* the parameters of Light Client
@@ -182,7 +202,6 @@ CompareLast ==
 
 
 \* the actual loop in CreateEvidence
-\* TODO: Josef adds a tag
 CreateEvidence(peer, isPeerCorrect, refBlocks, targetBlocks) ==
     /\ state = <<"CreateEvidence", peer>>
     \* precompute a possible result of light client verification for the secondary
@@ -345,7 +364,7 @@ PrecisionInvGrayZone ==
  *)
 PrecisionInvLocal ==
     (/\ fetchedLightBlocks1[TARGET_HEIGHT].header /= blockchain[TARGET_HEIGHT]
-     /\ LC!InTrustingPeriodLocal(blockchain[TRUSTED_HEIGHT])
+     /\ LC!InTrustingPeriodLocalSurely(blockchain[TRUSTED_HEIGHT])
      /\ IS_SECONDARY_CORRECT
      /\ IsTerminated)
        =>

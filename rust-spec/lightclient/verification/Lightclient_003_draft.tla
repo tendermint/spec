@@ -1,6 +1,7 @@
 -------------------------- MODULE Lightclient_003_draft ----------------------------
 (**
- * A state-machine specification of the lite client, following the English spec:
+ * A state-machine specification of the lite client verification,
+ * following the English spec:
  *
  * https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification.md
  *) 
@@ -241,6 +242,8 @@ AdvanceClocks ==
         /\ tm >= 0
         /\ API!IsLocalClockWithinDrift(tm, refClock')
         /\ localClock' = tm
+        \* if you like the clock to always grow monotonically, uncomment the next line:
+        \*/\ localClock' > localClock
             
 (********************* Lite client + Blockchain *******************)
 Init ==
@@ -340,9 +343,13 @@ StoredHeadersAreVerifiedInv ==
             \/ "SUCCESS" = API!ValidAndVerified(fetchedLightBlocks[lh],
                                                 fetchedLightBlocks[rh], FALSE)
 
-\* An improved version of StoredHeadersAreSound, assuming that a header may be not trusted.
+\* An improved version of StoredHeadersAreVerifiedInv,
+\* assuming that a header may be not trusted.
 \* This invariant candidate is also violated,
 \* as there may be some unverified blocks left in the middle.
+\* This property is violated under two conditions:
+\* (1) the primary is faulty and there are at least 4 blocks,
+\* (2) the primary is correct and there are at least 5 blocks.
 StoredHeadersAreVerifiedOrNotTrustedInv ==
     state = "finishedSuccess"
         =>
@@ -405,10 +412,25 @@ CorrectPrimaryAndTimeliness ==
 (**
   If the primary is correct and there is a trusted block that has not expired,
   then whenever the algorithm terminates, it reports "success".
+  This property only holds true, if the local clock is always growing monotonically.
+  If the local clock can go backwards in the envelope
+  [refClock - CLOCK_DRIFT, refClock + CLOCK_DRIFT], then the property fails.
 
   [LCV-DIST-LIVE.1::SUCCESS-CORR-PRIMARY-CHAIN-OF-TRUST.1]
  *)
-SuccessOnCorrectPrimaryAndChainOfTrust ==
+SuccessOnCorrectPrimaryAndChainOfTrustLocal ==
+  (\E h \in DOMAIN fetchedLightBlocks:
+        /\ lightBlockStatus[h] = "StateVerified"
+        /\ API!InTrustingPeriodLocal(blockchain[h])
+    /\ state /= "working" /\ IS_PRIMARY_CORRECT) =>
+      state = "finishedSuccess"     
+
+(**
+  Similar to SuccessOnCorrectPrimaryAndChainOfTrust, but using the blockchain clock.
+  It fails because the local clock of the client drifted away, so it rejects a block
+  that has not expired yet (according to the local clock).
+ *)
+SuccessOnCorrectPrimaryAndChainOfTrustGlobal ==
   (\E h \in DOMAIN fetchedLightBlocks:
         lightBlockStatus[h] = "StateVerified" /\ BC!InTrustingPeriod(blockchain[h])
     /\ state /= "working" /\ IS_PRIMARY_CORRECT) =>

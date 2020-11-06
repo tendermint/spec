@@ -1,8 +1,6 @@
 -------------------- MODULE LCVerificationApi_003_draft --------------------------
 (**
- * The basic interface of the light client verification, following the English spec:
- *
- * https://github.com/informalsystems/tendermint-rs/blob/master/docs/spec/lightclient/verification.md
+ * The common interface of the light client verification and detection.
  *) 
 EXTENDS Integers, FiniteSets
 
@@ -26,6 +24,11 @@ VARIABLES
 InTrustingPeriodLocal(header) ==
     \* note that the assumption about the drift reduces the period of trust
     localClock < header.time + TRUSTING_PERIOD - CLOCK_DRIFT
+
+(* the header is still within the trusting period, even if the clock can go backwards *)
+InTrustingPeriodLocalSurely(header) ==
+    \* note that the assumption about the drift reduces the period of trust
+    localClock < header.time + TRUSTING_PERIOD - 2 * CLOCK_DRIFT
 
 (* ensure that the local clock does not drift far away from the global clock *)
 IsLocalClockWithinDrift(local, global) ==
@@ -172,13 +175,12 @@ VerifyToTargetPost(blockchain, isPeerCorrect,
     /\ trustedHeight \in DOMAIN fetchedLightBlocks
     /\ trustedHeader = blockchain[trustedHeight]
     \* the invariants we have found in the light client verification
-    \* TODO: make sure that the correct peer does not report failure, unless
     \* there is a problem with trusting period
     /\ isPeerCorrect
         => CorrectnessInv(blockchain, fetchedLightBlocks, lightBlockStatus)
     \* a correct peer should fail the light client,
     \* if the trusted block is in the trusting period
-    /\ isPeerCorrect /\ InTrustingPeriodLocal(trustedHeader)
+    /\ isPeerCorrect /\ InTrustingPeriodLocalSurely(trustedHeader)
         => finalState = "finishedSuccess"
     /\ finalState = "finishedSuccess" =>
         /\ lightBlockStatus[targetHeight] = "StateVerified"
