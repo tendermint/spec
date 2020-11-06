@@ -264,19 +264,6 @@ of v(i) and v(i+1) such that
 > - check that v(i+1)  differs from its block at that height, and
 > - verify v(i+1) in one step from v(i) as v is a verification trace.
 
-**Proposition.** In the case of attack, evidence exists.  
-*Proof.* First observe that
-
-- (A). (NOT E2(i)) implies E1(i+1)
-
-Now by contradiction assume there is no evidence. Thus
-
-- for all i, we have NOT E1(i) or NOT E2(i)
-- for i = 1 we have E1(1) and thus NOT E2(1)
-  thus by induction on i, by (A) we have for all i that **E1(i)**
-- from attack we have E2(h-1), and as there is no evidence for
-  i = h - 1 we get **NOT E1(h-1)**. Contradiction.
-QED.
 
 #### **[TMBC-LC-EVIDENCE-DATA.1]**
 
@@ -745,18 +732,37 @@ func CreateEvidenceForPeer(peer PeerID, root LightBlock, trace LightStore)
 
 ## Correctness arguments
 
+#### On the existence of evidence 
+
+**Proposition.** In the case of attack, 
+evidence [[TMBC-LC-ATTACK-EVIDENCE.1]](#TMBC-LC-ATTACK-EVIDENCE1)
+ exists.  
+*Proof.* First observe that
+
+- (A). (NOT E2(i)) implies E1(i+1)
+
+Now by contradiction assume there is no evidence. Thus
+
+- for all i, we have NOT E1(i) or NOT E2(i)
+- for i = 1 we have E1(1) and thus NOT E2(1)
+  thus by induction on i, by (A) we have for all i that **E1(i)**
+- from attack we have E2(h-1), and as there is no evidence for
+  i = h - 1 we get **NOT E1(h-1)**. Contradiction.
+QED.
+
+
 #### Argument for [[LCD-DIST-INV-ATTACK.1]](#LCD-DIST-INV-ATTACK1)
 
 Under the assumption that root and trace are a verification trace,
-when in `CreateEvidenceForPeer` the detector the detector creates
+when in `CreateEvidenceForPeer` the detector creates
 evidence, then the lightclient has seen two different headers (one via
-`trace` and one via `VerifyToTarget` for the same height that can both
+`trace` and one via `VerifyToTarget`) for the same height that can both
 be verified in one step.
 
 #### Argument for [[LCD-DIST-INV-STORE.1]](#LCD-DIST-INV-STORE1)
 
 We assume that there is at least one correct peer, and there is no
-fork. As a result the correct peer has the correct sequence of
+fork. As a result, the correct peer has the correct sequence of
 blocks. Since the primary_trace is checked block-by-block also against
 each secondary, and at no point evidence was generated that means at
 no point there were conflicting blocks.
