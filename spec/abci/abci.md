@@ -237,6 +237,7 @@ via light client.
     - `Version (string)`: The Tendermint software semantic version
     - `BlockVersion (uint64)`: The Tendermint Block Protocol version
     - `P2PVersion (uint64)`: The Tendermint P2P Protocol version
+    - `AbciVersion (string)`: The Tendermint ABCI semantic version
 - **Response**:
     - `Data (string)`: Some arbitrary information
     - `Version (string)`: The application software semantic version
