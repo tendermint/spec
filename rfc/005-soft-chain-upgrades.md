@@ -196,7 +196,7 @@ The general strategy for a chain migration would be to get the validator set at
 the height of the migration to not finalize the last block but to instead
 finalize the entire migration from a prior version to the new version.
 
-![Chain Migration](images/chain_migration_1.png)
+![Chain Migration](images/chain-migration.png)
 
 Practically speaking, this would mean that `LastBlockID` ( The blue arrow at
 height h) wouldn't be the hash of the last block but the hash of the newly
@@ -215,7 +215,7 @@ would not be able to safely verify the derived blocks because the signatures
 (the red lines) only link between the original versions (V1). This outlines
 some basic imperatives with chain migration.
 
-## Imperatives
+### Imperatives
 
 - All state modifying data from the original block must be preserved
 - Light client and fast sync verification models must be unaffected
