@@ -18,22 +18,17 @@ time, where application state can be exported across and an entirely new chain
 (as far as Tendermint is concerned) is created (see [cosmoshub-3
 upgrade](https://blog.cosmos.network/cosmos-hub-3-upgrade-announcement-39c9da941aee)).
 This means that each block protocol version maps to the entire life of a single
-chain. The result of this is that either Tendermint is hindered with the
-flexibility of changes it can make or that networks have to deal
-with the pain of frequently upgrading and all its shortfalls.
+chain. The result is that networks either forego new features for long periods
+of time or have to deal with the pains of upgrading such as the coordination
+effort, state migration, intra-chain security challenges and most importantly,
+the loss of transaction history.
 
-Furthermore, although work from [RFC002: Non-Zero Genesis](https://github.com/tendermint/spec/blob/master/rfc/002-nonzero-genesis.md)
-has enabled unique heights throughout the history of a "logical" chain, data
-retrievability across heights remains difficult as blockchains that choose to
-upgrade not only have to coordinate upgrades but they essentially lose all their
-history.
-
-The scope of this RFC is to address the need for Tendermint to have flexibility
-in improving itself whilst offering greater ease of use to the networks running
-on Tendermint. This is done by introducing a division in the way a
-network can upgrade: either soft (live) or hard (stop, do some changes then
-coordinate a restart). There may still remain the need for hard upgrades but
-this will be focused [elsewhere](https://github.com/tendermint/tendermint/issues/5595)).
+The scope of this RFC is to address the need for Tendermint to have better
+flexibility in improving itself whilst offering greater ease of use to the
+networks running on Tendermint. This is done by introducing a division in the
+way a network can upgrade: either soft (live) or hard (stop, do some changes
+then coordinate a restart). There may still remain the need for hard upgrades
+but this will be focused [elsewhere](https://github.com/tendermint/tendermint/issues/5595)).
 Instead, this RFC will describe what supporting soft upgrades would entail
 and explore two different methods: **Multi Data Structure Support** or
 **Chain Migrations**.
@@ -49,27 +44,29 @@ The implementation to support this would ideally need to be done prior to the
 
 Tendermint currently has three protocol versions: Block, P2P and App.
 
-Block protocol version would initially be the sole focus for soft upgrades.
+The block protocol version would initially be the sole focus for soft upgrades.
 This consists of all block related data structures i.e. `Header`,
 `Vote`, `Validator`, `Commit` (a full list of the exact data structures can be
 found in [data structures](https://github.com/tendermint/spec/blob/master/spec/core/data_structures.md#data-structures).
 Data structures are dictated by the spec thus requiring a Tendermint software
-version to indicate the block version/s it supports.
+version to indicate the block version/s it supports. When a new spec release
+makes changes to any of the aforementioned data structures, this will result in
+incrementing the block protocol version.
 
 The app version can already be changed via consensus and is left to the
 discretion of the application to handle. The P2P version would also be left as
-it is, with major revisions requiring a hard upgrade.
-However, this may be revisited in the future.
+it is, with major revisions requiring a hard upgrade. However, this may be
+revisited in the future.
 
 ### Transitions
 
 Networks would be expected to announce upgrades in advance allowing a window for
 node operators to upgrade to a software version of Tendermint that would
-comply with the announced block protocol upgrade. This can be done asynchronously
-with node operators temporarily halting their node, changing to the new binary
-and starting up again. Tendermint could also offer a tool to easily swap between
-binaries thus reducing the amount of down-time that nodes experience although
-this is outside the scope of this RFC.
+comply with the announced block protocol upgrade. This can be done
+asynchronously with node operators temporarily halting their node, changing to
+the new binary and starting up again. Tendermint could also offer a tool to
+easily swap between binaries thus reducing the amount of down-time that nodes
+experience although this is outside the scope of this RFC.
 
 The actual switch would occur in the same manner as an App Version change, using
 the `EndBlockResponse{}` ABCI call to indicate to Tendermint that a different
@@ -190,11 +187,12 @@ Chain migration might sound counter intuitive in the context of an immutable
 blockchain; any change to a block would simply break the hashes.
 This would then make the signatures for each block invalid and the whole thing
 would just fall apart. Chain migration, however, would mean that the network
-only supports a single version at the time which would greatly simplify things.
+only supports a single version at a time which would greatly simplify things.
 
 The general strategy for a chain migration would be to get the validator set at
 the height of the migration to not finalize the last block but to instead
-finalize the entire migration from a prior version to the new version.
+finalize the entire migration of all blocks from a prior version to the new
+version.
 
 ![Chain Migration](images/chain-migration.png)
 
@@ -225,15 +223,15 @@ some basic imperatives with chain migration.
 One basic approach is that each derived version should be capable of producing
 its original i.e. If the chain is at version 4 and a node is fast syncing and is
 at block 100 which corresponds originally to version 2 then when it receives a
-derived block it should be able to extract out the original for verification
-purposes. However, the derived block should also reflect the structure of the
-latest version.
+derived block (at v4) it should be able to extract out the original (v2) for
+verification. However, the derived block should also reflect the structure of
+the latest version.
 
 The shortcomings of this is that we would expect the derived block stored to be
 larger than normal as it needs to hold the relevant data for both. This would go
 against a lot of the proposed plans on the horizon which would aim to reduce the
-overall size of the block. Verification would take a little longer but we
-wouldn't need to worry about any byzantine behavior (either the derived
+overall size of the block's components. Verification would take a little longer
+but we wouldn't need to worry about any byzantine behavior (either the derived
 block can produce the original block or it can't).
 
 ### Advanced Approach
@@ -257,7 +255,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 	height int64, commit *Commit) error
 ```
 
-We can then trust the header and as aforementioned trust the rest of the block.
+We can then trust the header and therefore trust the rest of the block.
 Then Tendermint delivers the txs to the application which will in turn update
 the validator set (with an extra height delay). We use NextValidatorsHash to
 verify that we have the correct trusted validator set for the next height.
@@ -301,21 +299,21 @@ Verification would be as follows:
 
 1. Starting from a trusted validator set (this could be from genesis)
 2. Grab the migrated block at the next height or more specifically the
-signatures, next validator hash and derived block hash
+signatures, next validator hash, app hash and derived block hash
 3. Calculate the original header hash that the signatures should be signing with
-the next validator hash and the derived block hash.
+the next validator hash, app hash and the derived block hash.
 4. Check that the LastBlockID is equal to the hash of the trusted header
 (no need to check this is height is 1)
 5. Verify that 2/3 signed the original header hash by running `VerifyCommit`.
 If no error then we can trust at least that the original block ID is correct and
-thus based on collision probability of hashed also assume that we can trust the
-`NextValidatorHash` and the `AppHash`.
+thus, based on the collision probability of hashes, also assume that we can
+trust the `NextValidatorHash` and the `AppHash`.
 6. Apply block to current state to get the new state.
 7. Check that the state's `ValidatorHash` (at height + 1 now) matches the
 `NextValidatorsHash`. If so it means we can trust the new validator set. Check
 that the `AppHash` matches. This means that application state is also correct.
 If one of these doesn't match we drop the block and peer and continue looking
-for another. (Remmeber light clients only have `NextValidatorHash` and have no
+for another. (Remember light clients only have `NextValidatorHash` and have no
 record of app state)
 8. Go back to 1 and recur until we reach a point where the `DerivedBlockHash`
 is nil. This indicates the crossover from the migrated blocks to the original
