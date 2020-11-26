@@ -51,7 +51,7 @@ When an output is generated it satisfies the following properties:
 - If
     - `bc[CommonHeight].bfttime` is within the unbonding period, 
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
-    - Validators in `bc[CommonHeight].NextValidators` represent more than 1/3 of the voting power in `ev.ConflictingBlock.Commit`
+    - Validators in `ev.ConflictingBlock.Commit` represent more than 1/3 of the voting power in `bc[CommonHeight].NextValidators`
 - Then: A set of validators in `bc[CommonHeight].NextValidators` that
     - represent more than 1/3 of the voting power in `bc[CommonHeight].NextValidators`
     - signed Tendermint consensus messages for height `ev.ConflictingBlock.Header.Height` by violating the Tendermint consensus protocol.
