@@ -63,25 +63,9 @@ When an output is generated it satisfies the following properties:
 
 > Overview
 
+**TODO:** discuss what happens in this spec, and that we discuss soundness in Part V
 
-## Definitions
-
-### Data Types
-
-### Inputs
-
-
-### Configuration Parameters
-
-### Variables
-
-### Assumptions
-
-### Invariants
-
-### Used Remote Functions / Exchanged Messages
-
-## <<Core Protocol>>
+## Isolation
 
 ### Outline
 
@@ -93,7 +77,7 @@ func detectMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []V
     reference := bc[ev.conflictingBlock.Header.Height].Header
     ev_header := ev.conflictingBlock.Header
 
-    ref_commit := bc[ev.conflictingBlock.Header.Height + 1].Header.LastCommit
+    ref_commit := bc[ev.conflictingBlock.Header.Height + 1].Header.LastCommit // + 1 !!
     ev_commit := ev.conflictingBlock.Commit
 
     if violatesTMValidity(reference, ev_header) {
@@ -131,7 +115,7 @@ func ValidAndVerifiedUnbonding(trusted LightBlock, untrusted LightBlock) Result
     - `trusted.Header.Time > now - UnbondingPeriod`
 
 ```go
-func violatesTMValidity(ref Header, ev Header) boolean {
+func violatesTMValidity(ref Header, ev Header) boolean
 ```
 - Implementation remarks
     - checks whether the evidence header `ev` violates the validity property of Tendermint Consensus, by checking agains a reference header
@@ -146,6 +130,14 @@ func violatesTMValidity(ref Header, ev Header) boolean {
     `ref.LastResultsHash == ev.LastResultsHash`
 
 ```go
+func RoundOf(commit Commit) []ValidatorAddress 
+```
+- Expected precondition
+    - `commit` is well-formed. In particular all votes are from the same round `r`.
+- Expected postcondition
+    - returns round `r` that is encoded in all the votes of the commit
+
+```go
 func Signers(commit Commit) []ValidatorAddress 
 ```
 - Expected postcondition
@@ -157,34 +149,12 @@ func Addresses(vals Validator[]) ValidatorAddress[]
 - Expected postcondition
     - returns all validator addresses in `vals`
 
-> Function signatures followed by pseudocode (optional) and a list of features (required):
-> - Implementation remarks (optional)
->   - e.g. (local/remote) function called in the body of this function
-> - Expected precondition
-> - Expected postcondition
-> - Error condition
 
 
-### Solving the distributed specification
-
-> Proof sketches of why we believe the solution satisfies the problem statement.
-Possibly giving inductive invariants that can be used to prove the specifications
-of the problem statement 
-
-> In case the specification describes an existing protocol with known issues,
-e.g., liveness bugs, etc. "Correctness Arguments" should be replace by
-a section called "Analysis"
+# Part V - Completeness of the Solution
 
 
-
-## Liveness Scenarios
-
-
-
-# Part V - Additional Discussions
-
-
-
+**TODO:** here comes the magic
 
 
 
