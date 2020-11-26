@@ -53,7 +53,7 @@ When an output is generated it satisfies the following properties:
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
     - Validators in `bc[CommonHeight].NextValidators` represent more than 1/3 of the voting power in `ev.ConflictingBlock.Commit`
 - Then: A set of validators in `bc[CommonHeight].NextValidators` that
-    - represent more than 1/3 of the voting power in `ev.ConflictingBlock.Commit`
+    - represent more than 1/3 of the voting power in `bc[CommonHeight].NextValidators`
     - signed Tendermint consensus messages for height `ev.ConflictingBlock.Header.Height` by violating the Tendermint consensus protocol.
     - the stake according to their voting power at height `ev.CommonHeight` is still bonded
 - Else: the empty set.
