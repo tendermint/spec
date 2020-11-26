@@ -42,9 +42,12 @@ type LightClientAttackEvidence struct {
 ```
 
 The isolator is a function that gets as input evidence `ev`
-and a prefix of the blockchain `bc` at least up to height `ev.ConflictingBlock.Header.Height`. The output is a set of *peerIDs* of validators.
+and a prefix of the blockchain `bc` at least up to height `ev.ConflictingBlock.Header.Height + 1`. The output is a set of *peerIDs* of validators.
 
-The output is as follows. 
+**TODO:** should we capture that the blockchain hasn't reached `ev.ConflictingBlock.Header.Height + 1` yet?
+
+#### **[FN-INV-Output.1]**
+When an output is generated it satisfies the following properties: 
 - If
     - `bc[CommonHeight].bfttime` is within the unbonding period, 
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
@@ -84,8 +87,75 @@ The output is as follows.
 
 > Describe solution (in English), decomposition into functions, where communication to other components happens.
 
+```go
+func detectMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []ValidatorAddress {
+    
+    reference := bc[ev.conflictingBlock.Header.Height].Header
+    ev_header := ev.conflictingBlock.Header
+
+    ref_commit := bc[ev.conflictingBlock.Header.Height + 1].Header.LastCommit
+    ev_commit := ev.conflictingBlock.Commit
+
+    if violatesTMValidity(reference, ev_header) {
+        // lunatic light client attack
+        signatories := Signers(ev.ConflictingBlock.Commit)
+        bonded_vals := Addresses(bc[ev.CommonHeight].NextValidators)
+        return intersection(signatories,bonded_vals)
+
+    } 
+    else if RoundOf(ref_commit) == RoundOf(ev_commit) {
+        // equivocation light client attack
+        return intersection(Signers(ref_commit), Signers(ev_commit))
+    } 
+    else {
+        // amnesia light client attack 
+        HandleAmnesiaAttackEvidence(ev, bc)
+    } 
+}
+```
+- Expected precondition
+    - `ValidAndVerifiedUnbonding(bc[ev.CommonHeight], ev.ConflictingBlock) == SUCCESS`
+    - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
+- Expected postcondition
+    - [[FN-INV-Output.1]](#FN-INV-Output1) holds
+- Error condition 
+    - returns `INVALID_EVIDENCE`
+
 
 ### Details of the Functions
+
+```go
+func ValidAndVerifiedUnbonding(trusted LightBlock, untrusted LightBlock) Result
+```
+- Conditions are identical to [[LCV-FUNC-VALID.2]][LCV-FUNC-VALID.link] except the precondition "*trusted.Header.Time > now - trustingPeriod*" is substituted with
+    - `trusted.Header.Time > now - UnbondingPeriod`
+
+```go
+func violatesTMValidity(ref Header, ev Header) boolean {
+```
+- Implementation remarks
+    - checks whether the evidence header `ev` violates the validity property of Tendermint Consensus, by checking agains a reference header
+- Expected precondition
+    - `ref.Height == ev.Height`    
+- Expected postcondition
+    - returns evaluation of the following conjunction
+    `ref.ValidatorsHash == ev.ValidatorsHash` and  
+    `ref.NextValidatorsHash == ev.NextValidatorsHash` and  
+    `ref.ConsensusHash == ev.ConsensusHash` and  
+    `ref.AppHash == ev.AppHash` and  
+    `ref.LastResultsHash == ev.LastResultsHash`
+
+```go
+func Signers(commit Commit) []ValidatorAddress 
+```
+- Expected postcondition
+    - returns all validator addresses in `commit`
+
+```go
+func Addresses(vals Validator[]) ValidatorAddress[]
+```
+- Expected postcondition
+    - returns all validator addresses in `vals`
 
 > Function signatures followed by pseudocode (optional) and a list of features (required):
 > - Implementation remarks (optional)
@@ -148,3 +218,5 @@ https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/detection/d
 https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/detection/detection_003_reviewed.md#node-based-characterization-of-attacks
 
 [TMBC-FM-2THIRDS-link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#tmbc-fm-2thirds1
+
+[LCV-FUNC-VALID.link]: https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/verification/verification_002_draft.md#lcv-func-valid2
