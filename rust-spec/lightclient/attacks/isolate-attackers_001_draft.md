@@ -122,12 +122,12 @@ func violatesTMValidity(ref Header, ev Header) boolean
 - Expected precondition
     - `ref.Height == ev.Height`    
 - Expected postcondition
-    - returns evaluation of the following conjunction
-    `ref.ValidatorsHash == ev.ValidatorsHash` and  
-    `ref.NextValidatorsHash == ev.NextValidatorsHash` and  
-    `ref.ConsensusHash == ev.ConsensusHash` and  
-    `ref.AppHash == ev.AppHash` and  
-    `ref.LastResultsHash == ev.LastResultsHash`
+    - returns evaluation of the following disjunction
+    `ref.ValidatorsHash != ev.ValidatorsHash` or  
+    `ref.NextValidatorsHash != ev.NextValidatorsHash` or  
+    `ref.ConsensusHash != ev.ConsensusHash` or  
+    `ref.AppHash != ev.AppHash` or  
+    `ref.LastResultsHash != ev.LastResultsHash`
 
 ```go
 func RoundOf(commit Commit) []ValidatorAddress 
