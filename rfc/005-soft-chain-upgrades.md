@@ -3,6 +3,7 @@
 
 ## Changelog
 
+- 2020-11-27: Add appendix to distinguish between soft and hard upgrades
 - 2020-11-23: Added chain migration proposal for comparison
 - 2020-11-16: Initial draft.
 
@@ -27,8 +28,9 @@ The scope of this RFC is to address the need for Tendermint to have better
 flexibility in improving itself whilst offering greater ease of use to the
 networks running on Tendermint. This is done by introducing a division in the
 way a network can upgrade: either soft (live) or hard (stop, do some changes
-then coordinate a restart). There may still remain the need for hard upgrades
-but this will be focused [elsewhere](https://github.com/tendermint/tendermint/issues/5595)).
+then coordinate a restart). More information on the distinction as well as
+general upgrade terminology can be found in Appendix A. There may still remain
+the need for hard upgrades but this will be focused [elsewhere](https://github.com/tendermint/tendermint/issues/5595)).
 Instead, this RFC will describe what supporting soft upgrades would entail
 and explore two different methods: **Multi Data Structure Support** or
 **Chain Migrations**.
@@ -358,6 +360,8 @@ prior block version. This would allow external clients on prior block versions
 to still be able to process the blocks.
 - Async upgrading. Nodes choose when they want to upgrade the binary and
 Tendermint handles the actual transition.
+- In the future it may be possible to support application migrations. This is
+where the application can upgrade the Tx data structures. 
 
 **Negative**
 
@@ -377,3 +381,58 @@ Proposed
 
 - [Upgrade tooling tracking issue](https://github.com/tendermint/tendermint/issues/5595)
 - [Protocol versions](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-016-protocol-versions.md)
+
+## Appendix A: Upgrade terminology
+
+It's important to define upgrades and classify the distinctions so as to ensure
+that everyone has the same understanding of what it means and that we can use
+the same terminology to speak about the different concepts. This appendix aims
+at achieving this.
+
+An upgrade, in the loosest sense, is a change to the Tendermint codebase. For
+simplicity to users, we group changes together and form releases. Every release
+corresponds to a unique software version. Tendermint follows SemVer which
+has strict rules about versioning and makes a distinction between different
+types of releases.
+
+From the node operators perspective, upgrades just mean, stopping the node,
+changing the binary and starting the node again.
+
+A patch release (the last number in x.x.x), is a backwards compatible bug-fix.
+Nodes should be able to perform this upgrade at any time without any affect to
+the network.
+
+A minor release (the middle number in x.x.x), is also backwards compatible but
+it indicates changes in existing features or new features. One can think of
+performance optimizations as a good example. Nodes should also be able to
+perform this upgrade at any time and nodes with different minor versions should
+have no problem interacting with one another.
+
+We call the above two releases as constituting minor upgrades.
+
+A major release (the first number in x.x.x), is a set of incompatible changes.
+This means that the public api has changed and/or the messages that nodes send
+to one another and persist to disk have changed in a way that is incompatible
+with prior releases. A block protocol change is always a major release.
+
+When this happens nodes can't simply stop and restart when they want but must
+coordinate a restart together. There can't be nodes with different versions on
+the same network. Not only this, but upgraded nodes can't read nor verify data
+structures from a prior major version. Thus, an upgrade for a major release
+has so far meant having to create a new chain.
+
+Soft and hard upgrades both refer to major releases but have very different
+properties.
+
+A soft upgrade like minor upgrades can happen asynchronously across the
+network. They are initiated by the application and coordinated by Tendermint's
+consensus mechanism. In one way or another they allow the chain to remain fully
+accessible and verifiable to the nodes with the latest version. In the context
+of this RFC, an example of a soft upgrade could be the removing of timestamps
+in the commit sig.
+
+A hard upgrade must be initiated and coordinated socially. The latest versioned
+node is incapable of parsing and/or verifying the previous versioned data
+structures. Once could imagine a wall between the chain of blocks. An example of
+a hard upgrade in the context of this RFC could be switching from delayed
+execution to immediate execution.
