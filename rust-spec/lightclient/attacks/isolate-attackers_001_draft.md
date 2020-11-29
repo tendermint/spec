@@ -163,13 +163,13 @@ func Addresses(vals Validator[]) ValidatorAddress[]
 # Part V - Completeness
 
 As discussed in the beginning of this document, an attack boils down to creating and signing Tendermint consensus messages in deviation from the Tendermint consensus algorithm rules.
-The main function `detectMisbehavingProcesses` distinguishes three kinds of wrongly signing messages, namely,
+The main function `isolateMisbehavingProcesses` distinguishes three kinds of wrongly signing messages, namely,
 - lunatic: signing invalid blocks
 - equivocation: double-signing valid blocks in the same consensus round 
 - amnesia: signing conflicting blocks in different consensus rounds, without having seen a quorum of messages that would have allowed to do so.
 
 The question is whether this captures all attacks. 
-First observe that the first checking in `detectMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus.
+First observe that the first checking in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus.
 
 **TODO** we have analyzed Tendermint consensus with TLA+ and have accompanied Galois in an independent study of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs).
 
