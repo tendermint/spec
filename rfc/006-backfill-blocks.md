@@ -30,8 +30,8 @@ network.
 
 ## Proposal
 
-When a node, seeking to state sync, finds an adequate snapshot and offers it to
-the application:
+A node, seeking to state sync, will find an adequate snapshot and offer it to
+the application with the following format:
 
 ```golang
 type snapshot struct {
@@ -45,9 +45,9 @@ type snapshot struct {
 }
 ```
 
-The application will be expected to parse information in the meta data about
-the backfill height and then return it in the response (alongside the app's
-decision):
+The application will then be expected to parse information in the meta data
+regarding the backfill height and then return it in the response (alongside the
+app's decision):
 
 ```proto
 message ResponseOfferSnapshot {
@@ -57,9 +57,9 @@ message ResponseOfferSnapshot {
 ```
 
 If all chunks are accepted and state sync is successful then the backfill height
-would be returned to the node so that it could execute backfill (via the
-blockchain reactor) to retrieve the necessary blocks. A backfill height of 0
-would mean that this step is ignored.
+would be returned from state sync to the node so that it can execute the
+backfill process (via the blockchain reactor) to retrieve the necessary blocks.
+A backfill height of 0 would mean that this step is ignored.
 
 ```golang
 go func() {
@@ -92,24 +92,28 @@ go func() {
 			conR.SwitchToConsensus(state, true)
 		}
 }
-
 ```
+
+`BackfillBlocks` would be implemented similarly to fast sync itself, by
+requesting blocks and validating them by matching the hash of the new header
+to the LastBlockID hash in the trusted header. This would use the same block
+pool and thus would be exclusive with the fast sync process (only one can run
+at a time).
 
 For completeness, the node should also retrieve the `ValidatorSet`s,
 `ConsensusParam`'s and `ABCIResponse`'s for each of the heights. In alignment
-with the separation between state and block, it should rather be the state sync
-reactor than the blockchain reactor that serves and requests these data
-structures.
+with the separation between state and block, it may makes sense that the state
+sync reactor rather than the blockchain reactor serve, request and verify this
+data.
 
 This could be done in one of two ways: use the light client via the
-RPC connection or create a new channel to send these structures through. I
-would lean towards the latter because this may be better suited for asynchronous
-backfilling of blocks if the node wished to pivot towards becoming an archive
-node at a later time.
+RPC connection or creating a new channel to send this data through.
 
-Alternatively, if we wished to extend the blockchain reactor by adding an
-additional channel, the node would benefit by having closer access to the header
-which would be required for verification.
+However, this separation would require multiple reads to retrieve the header at
+each height and would make it difficult to coordinate with the process running
+on the blockchain reactor. Hence I would lean towards extending the blockchain
+reactor with new channels to request this data structure, to verify it and to
+persist it to the state store.
 
 The back filling of blocks on start up would occur synchronously, completing
 this action before switching to either fast sync or consensus.
@@ -138,7 +142,7 @@ being involved in consensus.
 
 - Applications need to be careful about adjusting the retain height too
 frequently as this will put extra load on the network.
-- Statesync is will be slower.
+- Statesync will be slower as more processing is required.
 
 ### Neutral
 
