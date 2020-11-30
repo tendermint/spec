@@ -95,7 +95,7 @@ func isolateMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []
     } 
     else {
         // amnesia light client attack 
-        HandleAmnesiaAttackEvidence(ev, bc)
+        return IsolateAmnesiaAttacker(ev, bc)
     } 
 }
 ```
@@ -137,6 +137,15 @@ func violatesTMValidity(ref Header, ev Header) boolean
     `ref.ConsensusHash != ev.ConsensusHash` or  
     `ref.AppHash != ev.AppHash` or  
     `ref.LastResultsHash != ev.LastResultsHash`
+
+
+```go
+func IsolateAmnesiaAttacker(ev LightClientAttackEvidence, bc Blockchain) []ValidatorAddress 
+```
+- Implementation remarks
+    **TODO:** What should we do here? Refer to the accountability doc?
+- Expected postcondition
+    **TODO:** What should we do here? Refer to the accountability doc?
 
 ```go
 func RoundOf(commit Commit) []ValidatorAddress 
