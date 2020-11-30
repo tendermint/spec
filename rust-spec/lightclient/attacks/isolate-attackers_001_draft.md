@@ -178,7 +178,7 @@ The main function `isolateMisbehavingProcesses` distinguishes three kinds of wro
 - amnesia: signing conflicting blocks in different consensus rounds, without having seen a quorum of messages that would have allowed to do so.
 
 The question is whether this captures all attacks. 
-First observe that the first checking in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus.
+First observe that the first checking in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus with a fixed group membership (set of validators). Also it is sufficient to consider two different valid consensus values, that is, binary consensus.
 
 **TODO** we have analyzed Tendermint consensus with TLA+ and have accompanied Galois in an independent study of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs).
 
