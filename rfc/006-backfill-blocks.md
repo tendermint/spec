@@ -30,100 +30,72 @@ network.
 
 ## Proposal
 
+There are two places where a backfill mechanism would be required:
+1. Upon startup using state sync where nodes must meet the prerequisite history
+before participating in consensus
+2. Where application specifies that the `retain_height` needs to be lower than
+the current blockchain base.
+
+### Backfill on Statesync
+
 A node, seeking to state sync, will find an adequate snapshot and offer it to
 the application with the following format:
 
-```golang
-type snapshot struct {
- 	Height   uint64
- 	Format   uint32
- 	Chunks   uint32
- 	Hash     []byte
- 	Metadata []byte
-
- 	trustedAppHash []byte // populated by light client
+```proto
+message RequestOfferSnapshot {
+  Snapshot snapshot = 1;  // snapshot offered by peers
+  bytes    app_hash = 2;  // light client-verified app hash for snapshot height
 }
 ```
 
-The application will then be expected to parse information in the meta data
-regarding the backfill height and then return it in the response (alongside the
-app's decision):
+where `Snapshot` contains the field `backfill_height` :
 
 ```proto
-message ResponseOfferSnapshot {
-  Result result = 1;
-  int64 backfill_height = 2;
+message Snapshot {
+  uint64 height          = 1;  // The height at which the snapshot was taken
+  uint32 format          = 2;  // The application-specific snapshot format
+  uint32 chunks          = 3;  // Number of chunks in the snapshot
+  bytes  hash            = 4;  // Arbitrary snapshot hash, equal only if identical
+  bytes  metadata        = 5;  // Arbitrary application metadata
+  int64  backfill_height = 6;  // Height to backfill blocks from before starting application (inclusive)
 }
 ```
 
-If all chunks are accepted and state sync is successful then the backfill height
-would be returned from state sync to the node so that it can execute the
-backfill process (via the blockchain reactor) to retrieve the necessary blocks.
-A backfill height of 0 would mean that this step is ignored.
+If all chunks are accepted and state sync is successful then the node will
+retrieve and verify blocks up to (and including) the specified backfill height
+**before** participating in consensus.
 
-```golang
-go func() {
-		state, commit, backfill_height, err := ssR.Sync(stateProvider, config.DiscoveryTime)
-		if err != nil {
-			ssR.Logger.Error("State sync failed", "err", err)
-			return
-		}
-		err = stateStore.Bootstrap(state)
-		if err != nil {
-			ssR.Logger.Error("Failed to bootstrap node with new state", "err", err)
-			return
-		}
-		err = blockStore.SaveSeenCommit(state.LastBlockHeight, commit)
-		if err != nil {
-			ssR.Logger.Error("Failed to store last seen commit", "err", err)
-			return
-		}
 
-    // proposed method for backfilling blocks
-    bcR.BackfillBlocks(backfill_height)
+For completeness, the node would retrieve not just block info but also state
+info such as the `ValidatorSet`s, `ConsensusParam`'s and `ABCIResponse`'s for
+each of the heights.
 
-		if fastSync {
-			err = bcR.SwitchToFastSync(state)
-			if err != nil {
-				ssR.Logger.Error("Failed to switch to fast sync", "err", err)
-				return
-			}
-		} else {
-			conR.SwitchToConsensus(state, true)
-		}
+### Backfill on application request
+
+The application has control of block retention via `retain_height`, called here:
+
+message ResponseCommit {
+  // reserve 1
+  bytes data          = 2;
+  int64 retain_height = 3;
 }
-```
 
-`BackfillBlocks` would be implemented similarly to fast sync itself, by
-requesting blocks and validating them by matching the hash of the new header
-to the LastBlockID hash in the trusted header. This would use the same block
-pool and thus would be exclusive with the fast sync process (only one can run
-at a time).
+Beforehand, a retain height that was less than the nodes current base was
+ignored. With the same backfill mechanism, the application should now be able to
+lower the retention height below the current base height (whether to accommodate
+changing consensus parameters, app specific needs, or a local config).
+This accommodates the use case of a truncated node that wishes to become an
+archive node. Note this could be done simultaneously alongside consensus.
 
-For completeness, the node should also retrieve the `ValidatorSet`s,
-`ConsensusParam`'s and `ABCIResponse`'s for each of the heights. In alignment
-with the separation between state and block, it may makes sense that the state
-sync reactor rather than the blockchain reactor serve, request and verify this
-data.
+### Backfill verification
 
-This could be done in one of two ways: use the light client via the
-RPC connection or creating a new channel to send this data through.
-
-However, this separation would require multiple reads to retrieve the header at
-each height and would make it difficult to coordinate with the process running
-on the blockchain reactor. Hence I would lean towards extending the blockchain
-reactor with new channels to request this data structure, to verify it and to
-persist it to the state store.
-
-The back filling of blocks on start up would occur synchronously, completing
-this action before switching to either fast sync or consensus.
-
-Following with the notion of having the application in control of block
-retention, if for whatever circumstance the application wanted to lower the
-retention height below the current base height (whether to accommodate changing
-consensus parameters, app specific needs, or a local config), this would boot
-up the same backfill mechanism to asynchronously fetch, verify and persist
-prior blocks.
+Nodes will need to verify these prior blocks. This can be achieved by first
+retrieving the header at the base height from the block store. The node then
+checks that the `LastBlockID` corresponds with the hash calculated from the
+header in the new block directly below. The node can therefore trust the header.
+This then can be followed with using the hashes in the trusted header to
+validate the other block and state info and continue to sequentially verify the
+blocks below.  
 
 ## Status
 
@@ -135,8 +107,7 @@ Proposed
 
 - Greater flexibility over the data that a node has. This makes it easier to
 become a node with full history.
-- Ensures that a state synced node has the adequate block history before
-being involved in consensus.
+- Ensures a minimum block history invariant.
 
 ### Negative
 
@@ -148,6 +119,9 @@ frequently as this will put extra load on the network.
 
 - By having validator sets served through p2p, this will make it easier to
 extend p2p support to light clients.
+- `Backfill_height` can be relative to the latest height of the providing node,
+not just an absolute height. This means that an older snapshot might not require
+as much backfilling as a newer one.
 
 ## References
 
