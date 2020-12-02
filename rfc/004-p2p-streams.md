@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020-12-01: Initial draft
+- 2020-12-02: Add shim option
 
 ## Author(s)
 
@@ -12,13 +13,15 @@
 
 The Tendermint Core team is currently refactoring the P2P stack, with a planned architecture outlined in [ADR 062](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-062-p2p-architecture.md). In parallel, Informal Systems is planning to implement P2P support in Tendermint-rs, and have expressed interest in using QUIC as a transport protocol instead of the current proprietary MConnection protocol.
 
-In order to take full advantage of QUIC streams, the proposed new P2P architecture has first-class support for network streams. Each reactor channel maps onto a separate network stream. However, the current MConnection protocol, which uses multiplexing, cannot map onto an idiomatic stream API due to a couple of impedance mismatches. This leaves three options:
+In order to take full advantage of QUIC streams, the proposed new P2P architecture has first-class support for network streams. Each reactor channel maps onto a separate network stream. However, the current MConnection protocol, which uses multiplexing, cannot map onto an idiomatic stream API due to a couple of impedance mismatches. This leaves four options:
 
 1. Make two changes to the MConnection protocol to fit with an idiomatic network stream API.
 
-2. Use a non-idiomatic network API that is message-oriented rather than byte-oriented.
+2. Write a shim between the network stream API and MConnection protocol that reframes the data.
 
-3. Don't support network streams (and by extension, don't take full advantage of QUIC).
+3. Use a non-idiomatic network API that is message-oriented rather than byte-oriented.
+
+4. Don't support network streams (and by extension, don't take full advantage of QUIC).
 
 ### What's Multiplexing, and What's Wrong With It?
 
@@ -90,7 +93,7 @@ The MConnection protocol should be implemented as a transport-layer protocol whi
 
 However, since MConnection multiplexing currently sits above the transport layer, it has more knowledge about the high-level Tendermint P2P protocol than a transport-layer protocol should. Two aspects in particular are problematic:
 
-* MConnection is message-oriented, and responsible for message framing via the `PacketMsg.EOF` field. This can't really be made compatible with a byte stream-oriented API (i.e. `Read([]byte)` and `Write([]byte)`), since there is no way to mark message boundaries without injecting additional binary data into the byte stream (such as length-prefixing) and allocating multiple memory buffers for the same message (since `Read` must read into a buffer that's pre-allocated by the _caller_).
+* MConnection is message-oriented, and responsible for message framing via the `PacketMsg.EOF` field. This isn't compatible with a byte stream-oriented API (i.e. `Read([]byte)` and `Write([]byte)`), since we need to mark message boundaries somehow. This can be done by reframing the data with length-prefixing, which results in additional memory usage, CPU overhead, and complexity.
 
 * Channels are currently listed in the initial connection handshake, but the stream API dynamically opens and closes channels on an ad-hoc basis. There is also no way for the two sides to agree on which QUIC stream corresponds to which reactor channel without a channel handshake.
 
@@ -157,7 +160,9 @@ An alternative is to use explicit stream IDs in the API, i.e. `Connection.Stream
 
 ## Alternative Solutions
 
-If we do not wish to make any changes to the current P2P protocol at all, we have two other options:
+If we do not wish to make any changes to the current P2P protocol at all, we have three other options:
+
+* Write a shim between the network stream API and MConnection protocol, which assumes length-prefixed messages from the caller, decodes it, and passes messages to MConnection for framing with `PacketMsg`. This violates abstraction boundaries, has additional memory and CPU overhead, and makes the overall system more complex. QUIC channel handshakes must be implemented separately at the transport level.
 
 * Use a message-oriented, non-idiomatic network transport API - e.g.:
 
@@ -196,6 +201,8 @@ Proposed
 ### Negative
 
 * This is a breaking change to the P2P protocol.
+
+* These changes are unnecessary and possibly detrimental unless we adopt QUIC or another multi-stream protocol.
 
 * Additional channel handshakes may increase initial connection latency when connecting to peers (although pipelining would avoid multiple roundtrip penalties).
 
