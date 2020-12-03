@@ -38,22 +38,20 @@ limit on the number of votes in a commit.
 
 ### Version
 
-```go
-type Version struct {
-  consensus Consensus
-  software string
-}
-```
+| Name      | type                    | Description                                           |
+|-----------|-------------------------|-------------------------------------------------------|
+| Consensus | [Consensus](#consensus) | [Consensus](#consensus)                               |
+| Software  | string                  | [Semantic version](https://semver.org/) of Tendermint |
+
+### Consensus
 
 The `Consensus` contains the protocol version for the blockchain and the
 application as two `uint64` values:
 
-```go
-type Consensus struct {
- Block uint64
- App   uint64
-}
-```
+| Name  | type   | Description                                                        |
+|-------|--------|--------------------------------------------------------------------|
+| Block | uint64 | Block protocol version. Block breaking changes are reflected here. |
+| App   | uint64 | App protocol version. This is supplied by the application.         |
 
 ### ResponseDeliverTx
 
@@ -79,13 +77,11 @@ It returns a result code (`uint32`), an arbitrary byte array (`[]byte`) (ie. a r
 A validator is an active participant in the consensus with a public key and a voting power.
 Validator's also contain an address field, which is a hash digest of the PubKey.
 
-```go
-type Validator struct {
-    Address     []byte
-    PubKey      PubKey
-    VotingPower int64
-}
-```
+| Name        | type                      | Description                                                  |
+|-------------|---------------------------|--------------------------------------------------------------|
+| Address     | slice of bytes (`[]byte`) | The address is derived from the public key.                  |
+| Pubkey      | slice of bytes (`[]byte`) | `Pubkey` is the public key associated to a validator           |
+| VotingPower | int64                     | VotingPower represent the associated weight a validator has. |
 
 When hashing the Validator struct, the address is not included,
 because it is redundant with the pubkey.
