@@ -27,20 +27,41 @@ the loss of transaction history.
 The scope of this RFC is to address the need for Tendermint to have better
 flexibility in improving itself whilst offering greater ease of use to the
 networks running on Tendermint. This is done by introducing a division in the
-way a network can upgrade: either soft (live) or hard (stop, do some changes
-then coordinate a restart). More information on the distinction as well as
-general upgrade terminology can be found in Appendix A. There may still remain
-the need for hard upgrades but this will be focused [elsewhere](https://github.com/tendermint/tendermint/issues/5595)).
-Instead, this RFC will describe what supporting soft upgrades would entail
-and explore two different methods: **Multi Data Structure Support** or
+way a network can upgrade: either soft or hard. More information on the
+distinction as well as general upgrade terminology can be found in Appendix A.
+There may still remain the need for hard upgrades but this will be focused
+[elsewhere](https://github.com/tendermint/tendermint/issues/5595)). Instead,
+this RFC will describe what supporting soft upgrades would entail and explore
+two different methods: **Multi Data Structure Support** or
 **Chain Migrations**.
 
 ## Proposal
 
 Tendermint supports a class of upgrades deemed as soft upgrades.
 
+A soft upgrade, in the simplest terms, is a change to Tendermint's binary that
+would not impede with the use of prior data / existing chains.
+
 The implementation to support this would ideally need to be done prior to the
 1.0 release.
+
+### Stakeholders
+
+Let's first set out to define the different needs that the various stakeholders
+of the Tendermint software have in the context of upgrading:
+
+- Application Developers: want to be able to get as much of the benefits of
+  new features (like state sync and light client) with minimal work or loss to
+  their current infrastructure. Ideally, Tendermint is also somewhat
+  accommodating to application upgrades.
+
+- Node Operators: Primarily they want safety and reliability. This means minimal
+  down-time and intuitive / easy UX when it comes to upgrading.
+
+- Wallets, Block Explorers and other clients: data retrievability which means
+  ensuring that helpful/informative data is always available and that minimal
+  infrastructure is needed to support serving data across the entire lifespan of
+  the chain.
 
 ### Protocol Versioning
 
@@ -89,11 +110,11 @@ We will now cover the two main methods of executing a soft upgrade.
 
 ## Method 1: Multi Data Structure Support
 
-This would require Tendermint to support all prior block protocol version. This
-would be done by somehow finding what the version of the structure is and
-processing it accordingly. This mimics a similar design model to the Cosmos SDK
-where all legacy code is stored in the repository and conditionals are used to
-indicate how messages are processed.
+This would require Tendermint to support all prior block protocol version since
+the last hard fork. This would be done by somehow finding what the version of
+the structure is and processing it accordingly. This mimics a similar design
+model to the Cosmos SDK where all legacy code is stored in the repository and
+conditionals are used to indicate how messages are processed.
 
 One could imagine a directory structure for each module as
 such:
@@ -154,15 +175,22 @@ Supporting soft upgrades means that the RPC will need to be able to deliver
 information across different versions. The RPC will therefore need to know which
 heights corresponds to which version and then be able to communicate this to
 the clients. This would most likely require clients to be versatile to handling
-the different block versions. For example block explorers would also take on the
-burden of supporting all block versions across a chain.
+the different block versions unless it was possible for the data to be
+transformed to an earlier version. For example, block explorers would also take
+on the burden of supporting all block versions across a chain. Clients would
+indicate the latest version they support in the RPC call itself e.g.
+`/v3/block?height=100`. The node would know what version the block at height 100
+was. If it was greater than v3 it would return a version error indicating the
+version the block explorer would need to support. If it was less or equal to v3
+then it would return the block (which contains version information).
 
 ### Light Clients
 
 Similar to RPC, light clients will also need to be wary of block protocol
 changes and be able to handle them accordingly. Depending on these changes,
 there might be the need for special verification logic across signed headers
-with different versions.
+with different versions. If a light client bisected to a height where it didn't
+have the version it would return an error.
 
 ### Implications
 
@@ -175,12 +203,13 @@ Tendermint handles the actual transition.
 
 **Negative:**
 
-- Increased burden on RPC clients to be able to parse multiple versions
+- Increased burden on RPC clients to be able to parse multiple versions.
 - Bloating of code base and binary. We would also need to figure out methods
 of maintaining good code hygiene with respect to having all these versions.
 - If we separate versions i.e. ABCI and Block and P2P this could potentially
 compound the problem if we need to consider the different permutations and
-how they can be supported.
+how they can be supported. Correctness analysis and proper testing would be
+required to mitigate errors.
 
 
 ## Method 2: Chain Migration
@@ -361,7 +390,8 @@ to still be able to process the blocks.
 - Async upgrading. Nodes choose when they want to upgrade the binary and
 Tendermint handles the actual transition.
 - In the future it may be possible to support application migrations. This is
-where the application can upgrade the Tx data structures. 
+where the application can upgrade the Tx data structures. Generally, this option
+might offer a broader set of changes that can be soft upgraded.
 
 **Negative**
 
@@ -372,6 +402,7 @@ the transition period
 - Bootstrapping nodes and light clients require an extra step for verification.
 - We've cornered off some untouchable fields in the block structure. If we
 really wanted to change these we would need a hard upgrade.
+- There is greater risk to correctness in the migration logic.
 
 ## Status
 
