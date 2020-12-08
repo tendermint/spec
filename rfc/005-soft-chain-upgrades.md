@@ -159,6 +159,9 @@ could have many versions and is represented here as an interface. `State` and
 internalized to allow for changes (so long as this wouldn't change the overall
 behavior).
 
+Another similar approach is to have the prior versions in a different repo and
+import it as a library. This may minimize the amount of code in the repo.
+
 ### Current Use of Versioning
 
 Records of versions are currently stored in `State` and in the `Header` of each
@@ -412,6 +415,7 @@ Proposed
 
 - [Upgrade tooling tracking issue](https://github.com/tendermint/tendermint/issues/5595)
 - [Protocol versions](https://github.com/tendermint/tendermint/blob/master/docs/architecture/adr-016-protocol-versions.md)
+- [Go Modules: v2 and Beyond](https://blog.golang.org/v2-go-modules)
 
 ## Appendix A: Upgrade terminology
 
