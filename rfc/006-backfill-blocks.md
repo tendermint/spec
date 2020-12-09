@@ -68,18 +68,20 @@ message Snapshot {
 ```
 
 If all chunks are accepted and state sync is successful then the node will
-retrieve and verify blocks up to (and including) the specified backfill height
+retrieve and verify blocks down to (and including) the specified backfill height
 **before** participating in consensus.
 
 ### Backfill on application request
 
 The application has control of block retention via `retain_height`, called here:
 
+```proto
 message ResponseCommit {
   // reserve 1
   bytes data          = 2;
   int64 retain_height = 3;
 }
+```
 
 Beforehand, a retain height that was less than the nodes current base was
 ignored. With the same backfill mechanism, the application should now be able to
@@ -129,6 +131,11 @@ message StateDataResponse {
 This would be sent across the existing blockchain channel. The advantage with
 this setup is that all backfill data is within the same domain, making it
 easier to coordinate both verification of block and state data.
+
+Similarly to fast sync, backfill will keep track of the peers base height, thus
+termination is either 1) reaching the retain height, 2) reaching the lowest
+height of all peers, or 3) a suitable timeout if peers aren't responding or not
+responding quick enough.
 
 ## Alternative Solutions
 
