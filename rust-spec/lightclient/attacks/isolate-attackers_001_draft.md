@@ -114,7 +114,7 @@ func isolateMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []
 
 ### Details of the Functions
 
-#### **[FN-FUNC-VVU.1]**
+#### **[LCAI-FUNC-VVU.1]**
 ```go
 func ValidAndVerifiedUnbonding(trusted LightBlock, untrusted LightBlock) Result
 ```
