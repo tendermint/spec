@@ -187,7 +187,7 @@ For this fixed group membership, we have analyzed the attacks using the TLA+ spe
 
 [[supervisor]] The specification of the light client supervisor.
 
-[[verification]] The specification of the light client verification protocol
+[[verification]] The specification of the light client verification protocol.
 
 [[detection]] The specification of the light client attack detection mechanism.
 
