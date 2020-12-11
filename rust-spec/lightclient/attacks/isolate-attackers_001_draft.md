@@ -106,6 +106,7 @@ func isolateMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []
     - `length(bc) >= ev.conflictingBlock.Header.Height`
     - `ValidAndVerifiedUnbonding(bc[ev.CommonHeight], ev.ConflictingBlock) == SUCCESS`
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
+    - TODO: input light blocks pass basic validation
 - Expected postcondition
     - [[FN-INV-Output.1]](#FN-INV-Output1) holds
 - Error condition 
