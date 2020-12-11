@@ -52,7 +52,7 @@ We assume that the full node is synchronized with the blockchain and has reached
 #### **[FN-INV-Output.1]**
 When an output is generated it satisfies the following properties: 
 - If
-    - `bc[CommonHeight].bfttime` is within the unbonding period, 
+    - `bc[CommonHeight].bfttime` is within the unbonding period w.r.t. the time at the full node, 
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
     - Validators in `ev.ConflictingBlock.Commit` represent more than 1/3 of the voting power in `bc[ev.CommonHeight].NextValidators`
 - Then: A set of validators in `bc[CommonHeight].NextValidators` that
