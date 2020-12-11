@@ -71,7 +71,7 @@ Here we discuss how to solve the problem of isolating misbehaving processes. We 
 
 > Describe solution (in English), decomposition into functions, where communication to other components happens.
 
-#### **[FN-FUNC-MAIN.1]**
+#### **[LCAI-FUNC-MAIN.1]**
 ```go
 func isolateMisbehavingProcesses(ev LightClientAttackEvidence, bc Blockchain) []ValidatorAddress {
     
