@@ -46,7 +46,7 @@ type LightClientAttackEvidence struct {
 The isolator is a function that gets as input evidence `ev`
 and a prefix of the blockchain `bc` at least up to height `ev.ConflictingBlock.Header.Height + 1`. The output is a set of *peerIDs* of validators.
 
-We assume that the full node is synchronized with be blockchain and has reached the height `ev.ConflictingBlock.Header.Height + 1`.
+We assume that the full node is synchronized with the blockchain and has reached the height `ev.ConflictingBlock.Header.Height + 1`.
 
 
 #### **[FN-INV-Output.1]**
