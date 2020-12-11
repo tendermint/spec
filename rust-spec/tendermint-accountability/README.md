@@ -39,8 +39,9 @@
    inductive invariant for establishing the protocol safety as well as the
    forking cases,
 
- - `MC_n<n>_f<f>`, e.g., [MC_n4_f1](MC_n4_f1.tla), contains fixed constants
-   for model checking with Apalache,
+ - `MC_n<n>_f<f>`, e.g., [MC_n4_f1](MC_n4_f1.tla), contains fixed constants for
+   model checking with the [Apalache model
+   checker](https://github.com/informalsystems/apalache),
 
  - [TendermintAccTrace_004_draft](TendermintAccTrace_004_draft.tla) shows how
    to restrict the execution space to a fixed sequence of actions (e.g., to
@@ -66,11 +67,11 @@ THEOREM TypedInvIsInductive ==
 ```
 
 When over two-thirds of processes are faulty, `TypedInv` is not inductive.
-However, there is no hope to repair the protocol in this case. We run Apalache
-to prove this theorem only for fixed instances of 4 to 10 processes.  Apalache
-does not parse theorem statements at the moment, so we ran Apalache using a
-shell script. To find a parameterized argument, one has to use a theorem
-prover, e.g., TLAPS.
+However, there is no hope to repair the protocol in this case. We run
+[Apalache](https://github.com/informalsystems/apalache) to prove this theorem
+only for fixed instances of 4 to 5 validators.  Apalache does not parse theorem
+statements at the moment, so we ran Apalache using a shell script. To find a
+parameterized argument, one has to use a theorem prover, e.g., TLAPS.
 
 Second, we would like to show that the invariant implies `Agreement`, that is,
 no fork, provided that less than one third of processes is faulty. By combining
