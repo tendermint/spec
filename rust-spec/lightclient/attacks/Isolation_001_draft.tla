@@ -1,4 +1,26 @@
------------------------ MODULE Isolation_001_draft -----------------------------------
+----------------------- MODULE Isolation_001_draft ----------------------------
+(**
+ * The specification of the attackers isolation at full node,
+ * when it has received an evidence from the light client.
+ * We check that the isolation spec produces a set of validators
+ * that have more than 1/3 of the voting power.
+ *
+ * It follows the English specification:
+ *
+ * https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/attacks/isolate-attackers_001_draft.md
+ *
+ * The assumptions made in this specification:
+ *
+ *  - the voting power of every validator is 1
+ *     (add more validators, if you need more validators)
+ *
+ *  - Tendermint security model is violated
+ *    (there are Byzantine validators who signed a conflicting block)
+ *
+ * Igor Konnov, Zarko Milosevic, Josef Widder, Informal Systems, 2020
+ *)
+
+
 EXTENDS Integers, FiniteSets, Apalache
 
 \* algorithm parameters
@@ -39,7 +61,7 @@ LC == INSTANCE LCVerificationApi_003_draft
 \* old-style type annotations in apalache
 a <: b == a
 
-\* [FN-NONVALID-OUTPUT.1::TLA.1]
+\* [LCAI-NONVALID-OUTPUT.1::TLA.1]
 ViolatesValidity(header1, header2) ==
     \/ header1.VS /= header2.VS
     \/ header1.NextVS /= header2.NextVS
@@ -87,7 +109,7 @@ Init ==
     
 \* This is a specification of isolateMisbehavingProcesses.
 \*
-\* [FN-FUNC-MAIN.1::TLA.1]
+\* [LCAI-FUNC-MAIN.1::TLA.1]
 Next ==
     /\ state = "init"
     \* Extract the rounds from the reference block and the conflicting block.
@@ -118,10 +140,20 @@ Next ==
     /\ Faulty' := Faulty
     /\ conflictingBlock' := conflictingBlock
 
+(********************************** INVARIANTS *******************************)
 
-(********************************** INVARIANTS *************************************)
-DetectedEnough ==
+\* This invariant ensure that the attackers have
+\* more than 1/3 of the voting power
+\*
+\* [LCAI-INV-Output.1::TLA-DETECTION-COMPLETENESS.1]
+DetectionCompleteness ==
   state /= "init" =>
     3 * Cardinality(attackers) > Cardinality(blockchain[CONFLICT_HEIGHT].VS)
 
-======================================================================================
+\* This invariant ensures that only the faulty validators are detected
+\*
+\* [LCAI-INV-Output.1::TLA-DETECTION-ACCURACY.1]
+DetectionAccuracy ==
+  attackers \subseteq Faulty
+
+==============================================================================
