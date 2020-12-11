@@ -30,7 +30,7 @@ For definitions of data structures used here, in particular LightBlocks [[LCV-DA
 
 # Part II - Definition of the Problem
 
-The specification of the [detection mechanism][detection] specifies 
+The specification of the [detection mechanism][detection] describes 
 - what is a light client attack,
 - conditions under which the detector will detect a light client attack,
 - and the format of the output data, called evidence, in the case an attack is detected. The format is defined in
