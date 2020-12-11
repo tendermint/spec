@@ -121,7 +121,7 @@ func ValidAndVerifiedUnbonding(trusted LightBlock, untrusted LightBlock) Result
 - Conditions are identical to [[LCV-FUNC-VALID.2]][LCV-FUNC-VALID.link] except the precondition "*trusted.Header.Time > now - trustingPeriod*" is substituted with
     - `trusted.Header.Time > now - UnbondingPeriod`
 
-#### **[FN-FUNC-NONVALID.1]**
+#### **[LCAI-FUNC-NONVALID.1]**
 ```go
 func violatesTMValidity(ref Header, ev Header) boolean
 ```
