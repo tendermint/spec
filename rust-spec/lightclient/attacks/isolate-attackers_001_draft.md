@@ -131,7 +131,7 @@ func violatesTMValidity(ref Header, ev Header) boolean
     - `ref.Height == ev.Height`    
 - Expected postcondition
     - returns evaluation of the following disjunction  
-    **[[FN-NONVALID-OUTPUT]]** ==  
+    **[[LCAI-NONVALID-OUTPUT.1]]** ==  
     `ref.ValidatorsHash != ev.ValidatorsHash` or  
     `ref.NextValidatorsHash != ev.NextValidatorsHash` or  
     `ref.ConsensusHash != ev.ConsensusHash` or  
