@@ -187,7 +187,7 @@ defines the protocol that is executed on a full node upon receiving attack [evid
 - equivocation
 - amnesia
 
-As is discussed in the [last part](attacks/isolate-attackers_002_reviewed.md#Part-III---Completeness) of the English specification, computer-aided analysis of  [Tendermint Consensus in TLA+](TODO) shows that these three types capture all possible attacks.
+As is discussed in the [last part](attacks/isolate-attackers_002_reviewed.md#Part-III---Completeness) of the English specification, computer-aided analysis of  [Tendermint Consensus in TLA+][tendermint-accountability] shows that these three types capture all possible attacks.
 
 
 The [TLA+ specification](attacks/Isolation_001_draft.tla)
@@ -196,3 +196,5 @@ protocol, including the safety property, which can be model checked with Apalach
 
 Similar to the other specifications, [MC_5_3.tla](attacks/MC_5_3.tla) contains concrete parameters to run the model checker. The specification can be checked within seconds.
 
+[tendermint-accountability]:
+https://github.com/tendermint/spec/blob/master/rust-spec/tendermint-accountability/README.md

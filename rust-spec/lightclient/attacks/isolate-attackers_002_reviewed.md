@@ -178,7 +178,7 @@ The main function `isolateMisbehavingProcesses` distinguishes three kinds of wro
 The question is whether this captures all attacks. 
 First observe that the first checking in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus with a fixed group membership (set of validators). Also it is sufficient to consider two different valid consensus values, that is, binary consensus.
 
-For this fixed group membership, we have analyzed the attacks using the TLA+ specification of [Tendermint Consensus in TLA+](TODOAddLink). We checked that indeed the only possible scenarios that can lead to violation of agreement are equivocation and amnesia. An independent study by Galois of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs) led to the same conclusion.
+For this fixed group membership, we have analyzed the attacks using the TLA+ specification of [Tendermint Consensus in TLA+][tendermint-accountability]. We checked that indeed the only possible scenarios that can lead to violation of agreement are equivocation and amnesia. An independent study by Galois of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs) led to the same conclusion.
 
 
 
@@ -190,6 +190,11 @@ For this fixed group membership, we have analyzed the attacks using the TLA+ spe
 [[verification]] The specification of the light client verification protocol.
 
 [[detection]] The specification of the light client attack detection mechanism.
+
+[[tendermint-accountability]]: TLA+ specification to check types of attacks
+
+[tendermint-accountability]:
+https://github.com/tendermint/spec/blob/master/rust-spec/tendermint-accountability/README.md
 
 [supervisor]: 
 https://github.com/tendermint/spec/blob/master/rust-spec/lightclient/supervisor/supervisor_001_draft.md
