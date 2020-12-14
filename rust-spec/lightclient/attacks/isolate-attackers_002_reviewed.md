@@ -20,7 +20,7 @@ This specification considers how a full node in a Tendermint blockchain can isol
 
 # Outline
 
-After providing the [problem statement](#Part-I---Basics-and-Definition-of-the-Problem), we specify the [isolator function](#Part-III---Protocol) and close with the discussion about its [correctness](#Part-III---Completeness) which is based on computer-aided analysis of Tendermint Consensus.
+After providing the [problem statement](#Part-I---Basics-and-Definition-of-the-Problem), we specify the [isolator function](#Part-II---Protocol) and close with the discussion about its [correctness](#Part-III---Completeness) which is based on computer-aided analysis of Tendermint Consensus.
 
 # Part I - Basics and Definition of the Problem
 
@@ -52,7 +52,7 @@ When an output is generated it satisfies the following properties:
     - `bc[CommonHeight].bfttime` is within the unbonding period w.r.t. the time at the full node, 
     - `ev.ConflictingBlock.Header != bc[ev.ConflictingBlock.Header.Height]`
     - Validators in `ev.ConflictingBlock.Commit` represent more than 1/3 of the voting power in `bc[ev.CommonHeight].NextValidators`
-- Then: A set of validators in `bc[CommonHeight].NextValidators` that
+- Then: The output is a set of validators in `bc[CommonHeight].NextValidators` that
     - represent more than 1/3 of the voting power in `bc[ev.commonHeight].NextValidators`
     - signed Tendermint consensus messages for height `ev.ConflictingBlock.Header.Height` by violating the Tendermint consensus protocol.
 - Else: the empty set.
@@ -60,13 +60,13 @@ When an output is generated it satisfies the following properties:
 
 # Part II - Protocol
 
-Here we discuss how to solve the problem of isolating misbehaving processes. We describe the function `isolateMisbehavingProcesses` as well as all the helping functions below. In [Part V](#part-v---Completeness), we discuss why the solution is complete based on result from analysis with automated tools.
+Here we discuss how to solve the problem of isolating misbehaving processes. We describe the function `isolateMisbehavingProcesses` as well as all the helping functions below. In [Part III](#part-III---Completeness), we discuss why the solution is complete based on result from analysis with automated tools.
 
 ## Isolation
 
 ### Outline
 
-> Describe solution (in English), decomposition into functions, where communication to other components happens.
+We first check whether the conflicting block can indeed be verified from the common height. We then first check whether it was a lunatic attack (violating validity). If this is not the case, we check for equivocation. If this also is not the case, we start the on-chain [accountability protocol](https://docs.google.com/document/d/11ZhMsCj3y7zIZz4udO9l25xqb0kl7gmWqNpGVRzOeyY/edit).
 
 #### **[LCAI-FUNC-MAIN.1]**
 ```go
@@ -124,12 +124,12 @@ func ValidAndVerifiedUnbonding(trusted LightBlock, untrusted LightBlock) Result
 func violatesTMValidity(ref Header, ev Header) boolean
 ```
 - Implementation remarks
-    - checks whether the evidence header `ev` violates the validity property of Tendermint Consensus, by checking agains a reference header
+    - checks whether the evidence header `ev` violates the validity property of Tendermint Consensus, by checking against a reference header
 - Expected precondition
     - `ref.Height == ev.Height`    
 - Expected postcondition
     - returns evaluation of the following disjunction  
-    **[[LCAI-NONVALID-OUTPUT.1]]** ==  
+    **[LCAI-NONVALID-OUTPUT.1]** ==  
     `ref.ValidatorsHash != ev.ValidatorsHash` or  
     `ref.NextValidatorsHash != ev.NextValidatorsHash` or  
     `ref.ConsensusHash != ev.ConsensusHash` or  
@@ -143,7 +143,7 @@ func IsolateAmnesiaAttacker(ev LightClientAttackEvidence, bc Blockchain) []Valid
 - Implementation remarks
     - This triggers the [query/response protocol](https://docs.google.com/document/d/11ZhMsCj3y7zIZz4udO9l25xqb0kl7gmWqNpGVRzOeyY/edit).
 - Expected postcondition
-    - returs attackers according to [LCAI-INV-Output.1].
+    - returns attackers according to [LCAI-INV-Output.1].
 
 ```go
 func RoundOf(commit Commit) []ValidatorAddress 
@@ -152,6 +152,8 @@ func RoundOf(commit Commit) []ValidatorAddress
     - `commit` is well-formed. In particular all votes are from the same round `r`.
 - Expected postcondition
     - returns round `r` that is encoded in all the votes of the commit
+- Error condition
+    - reports error if precondition is violated
 
 ```go
 func Signers(commit Commit) []ValidatorAddress 
@@ -170,15 +172,15 @@ func Addresses(vals Validator[]) ValidatorAddress[]
 # Part III - Completeness
 
 As discussed in the beginning of this document, an attack boils down to creating and signing Tendermint consensus messages in deviation from the Tendermint consensus algorithm rules.
-The main function `isolateMisbehavingProcesses` distinguishes three kinds of wrongly signing messages, namely,
+The main function `isolateMisbehavingProcesses` distinguishes three kinds of wrongly signed messages, namely,
 - lunatic: signing invalid blocks
 - equivocation: double-signing valid blocks in the same consensus round 
 - amnesia: signing conflicting blocks in different consensus rounds, without having seen a quorum of messages that would have allowed to do so.
 
 The question is whether this captures all attacks. 
-First observe that the first checking in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [FN-NONVALID-OUTPUT] evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus with a fixed group membership (set of validators). Also it is sufficient to consider two different valid consensus values, that is, binary consensus.
+First observe that the first check in `isolateMisbehavingProcesses` is `violatesTMValidity`. It takes care of lunatic attacks. If this check passes, that is, if `violatesTMValidity` returns `FALSE` this means that [[LCAI-NONVALID-OUTPUT.1]](#LCAI-FUNC-NONVALID1]) evaluates to false, which implies that `ref.ValidatorsHash = ev.ValidatorsHash`. Hence, after `violatesTMValidity`, all the involved validators are the ones from the blockchain. It is thus sufficient to analyze one instance of Tendermint consensus with a fixed group membership (set of validators). Also, as we have two different blocks for the same height, it is sufficient to consider two different valid consensus values, that is, binary consensus.
 
-For this fixed group membership, we have analyzed the attacks using the TLA+ specification of [Tendermint Consensus in TLA+][tendermint-accountability]. We checked that indeed the only possible scenarios that can lead to violation of agreement are equivocation and amnesia. An independent study by Galois of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs) led to the same conclusion.
+For this fixed group membership, we have analyzed the attacks using the TLA+ specification of [Tendermint Consensus in TLA+][tendermint-accountability]. We checked that indeed the only possible scenarios that can lead to violation of agreement are **equivocation** and **amnesia**. An independent study by Galois of the protocol based on [Ivy proofs](https://github.com/tendermint/spec/tree/master/ivy-proofs) led to the same conclusion.
 
 
 
@@ -191,7 +193,7 @@ For this fixed group membership, we have analyzed the attacks using the TLA+ spe
 
 [[detection]] The specification of the light client attack detection mechanism.
 
-[[tendermint-accountability]]: TLA+ specification to check types of attacks
+[[tendermint-accountability]]: TLA+ specification to check the types of attacks
 
 [tendermint-accountability]:
 https://github.com/tendermint/spec/blob/master/rust-spec/tendermint-accountability/README.md
