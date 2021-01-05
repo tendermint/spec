@@ -267,14 +267,14 @@ via light client.
 
 - **Request**:
 
-| Name             | Type                                         | Description                                         | Field Number |
-|------------------|----------------------------------------------|-----------------------------------------------------|--------------|
-| time             | google.protobuf.Timestamp                    | Genesis time                                        | 1            |
-| chain_id         | string                                       | ID of the blockchain.                               | 2            |
-| consensus_params | ConsensusParams <!-- todo: link -->          | Initial consensus-critical parameters.              | 3            |
-| validators       | repeated [ValidatorUpdate](#validatorupdate) | Initial genesis validators, sorted by voting power. | 4            |
-| app_state_bytes  | bytes                                        | Serialized initial application state. JSON bytes.   | 5            |
-| initial_height   | int64                                        | Height of the initial block (typically `1`).        | 6            |
+| Name             | Type                                                                                                                                 | Description                                         | Field Number |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|--------------|
+| time             | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Genesis time                                        | 1            |
+| chain_id         | string                                                                                                                               | ID of the blockchain.                               | 2            |
+| consensus_params | ConsensusParams <!-- todo: link -->                                                                                                  | Initial consensus-critical parameters.              | 3            |
+| validators       | repeated [ValidatorUpdate](#validatorupdate)                                                                                         | Initial genesis validators, sorted by voting power. | 4            |
+| app_state_bytes  | bytes                                                                                                                                | Serialized initial application state. JSON bytes.   | 5            |
+| initial_height   | int64                                                                                                                                | Height of the initial block (typically `1`).        | 6            |
  
 - **Response**:
 
@@ -328,12 +328,12 @@ via light client.
 
 - **Request**:
 
-| Name                 | Type                              | Description                                                                                                       | Field Number |
-|----------------------|-----------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------|
-| hash                 | bytes                             | The block's hash. This can be derived from the block header.                                                      | 1            |
-| header               | [Header](../core/data_structures.md#header)            | The block header.                                                                                                 | 2            |
-| last_commit_info     | [LastCommitInfo](#lastcommitinfo) | Info about the last commit, including the round, and the list of validators and which ones signed the last block. | 3            |
-| byzantine_validators | repeated [Evidence](#evidence)    | List of evidence of validators that acted maliciously.                                                            | 4            |
+| Name                 | Type                                        | Description                                                                                                       | Field Number |
+|----------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------|
+| hash                 | bytes                                       | The block's hash. This can be derived from the block header.                                                      | 1            |
+| header               | [Header](../core/data_structures.md#header) | The block header.                                                                                                 | 2            |
+| last_commit_info     | [LastCommitInfo](#lastcommitinfo)           | Info about the last commit, including the round, and the list of validators and which ones signed the last block. | 3            |
+| byzantine_validators | repeated [Evidence](#evidence)              | List of evidence of validators that acted maliciously.                                                            | 4            |
 - **Response**:
 
 | Name   | Type                      | Description                         | Field Number |
@@ -412,13 +412,14 @@ via light client.
 ### EndBlock
 
 - **Request**:
+
 | Name   | Type  | Description                        | Field Number |
 |--------|-------|------------------------------------|--------------|
 | height | int64 | Height of the block just executed. | 1            |
 
   
 - **Response**:
-- 
+
 | Name                    | Type                                         | Description                                                     | Field Number |
 |-------------------------|----------------------------------------------|-----------------------------------------------------------------|--------------|
 | validator_updates       | repeated [ValidatorUpdate](#validatorupdate) | Changes to validator set (set voting power to 0 to remove).     | 1            |
@@ -491,6 +492,7 @@ Empty request asking the application for a list of snapshots.
 ### LoadSnapshotChunk
 
 - **Request**:
+
 | Name     | Type     | Description                                                             | Field Number   |
 |----------|----------|-------------------------------------------------------------------------|----------------|
 | height   | uint64   | The height of the snapshot the chunks belongs to.                       | 1              |
@@ -563,11 +565,11 @@ Empty request asking the application for a list of snapshots.
 
 - **Response**:
 
-| Name           | Type            | Description                                                                                                                                                                                                                             | Field Number |
-|----------------|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| result         | Result  (see below)        | The result of applying this chunk.                                                                                                                                                                                                      | 1            |
-| refetch_chunks | repeated uint32 | Refetch and reapply the given chunks, regardless of `result`. Only the listed chunks will be refetched, and reapplied in sequential order.                                                                                              | 2            |
-| reject_senders | repeated string | Reject the given P2P senders, regardless of `Result`. Any chunks already applied will not be refetched unless explicitly requested, but queued chunks from these senders will be discarded, and new chunks or other snapshots rejected. | 3            |
+| Name           | Type                | Description                                                                                                                                                                                                                             | Field Number |
+|----------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| result         | Result  (see below) | The result of applying this chunk.                                                                                                                                                                                                      | 1            |
+| refetch_chunks | repeated uint32     | Refetch and reapply the given chunks, regardless of `result`. Only the listed chunks will be refetched, and reapplied in sequential order.                                                                                              | 2            |
+| reject_senders | repeated string     | Reject the given P2P senders, regardless of `Result`. Any chunks already applied will not be refetched unless explicitly requested, but queued chunks from these senders will be discarded, and new chunks or other snapshots rejected. | 3            |
 
 ```proto
   enum Result {
@@ -600,8 +602,12 @@ The data types not listed below are the same as the [core data structures](../co
 ### Validator
 
 - **Fields**:
-    - `Address ([]byte)`: Address of the validator (the first 20 bytes of SHA256(public key))
-    - `Power (int64)`: Voting power of the validator
+
+| Name    | Type  | Description                                                         | Field Number |
+|---------|-------|---------------------------------------------------------------------|--------------|
+| address | bytes | Address of the validator (the first 20 bytes of SHA256(public key)) | 1            |
+| power   | int64 | Voting power of the validator                                       | 3            |
+
 - **Usage**:
     - Validator identified by address
     - Used in RequestBeginBlock as part of VoteInfo
@@ -611,8 +617,12 @@ The data types not listed below are the same as the [core data structures](../co
 ### ValidatorUpdate
 
 - **Fields**:
-    - `PubKey (PubKey)`: Public key of the validator
-    - `Power (int64)`: Voting power of the validator
+
+| Name    | Type                                             | Description                   | Field Number |
+|---------|--------------------------------------------------|-------------------------------|--------------|
+| pub_key | [Public Key](../core/data_structures.md#pub_key) | Public key of the validator   | 1            |
+| power   | int64                                            | Voting power of the validator | 2            |
+
 - **Usage**:
     - Validator identified by PubKey
     - Used to tell Tendermint to update the validator set
@@ -620,9 +630,12 @@ The data types not listed below are the same as the [core data structures](../co
 ### VoteInfo
 
 - **Fields**:
-    - `Validator (Validator)`: A validator
-    - `SignedLastBlock (bool)`: Indicates whether or not the validator signed
-    the last block
+
+| Name              | Type                    | Description                                                  | Field Number |
+|-------------------|-------------------------|--------------------------------------------------------------|--------------|
+| validator         | [Validator](#validator) | A validator                                                  | 1            |
+| signed_last_block | bool                    | Indicates whether or not the validator signed the last block | 2            |
+
 - **Usage**:
     - Indicates whether a validator signed the last block, allowing for rewards
     based on validator availability
@@ -630,92 +643,89 @@ The data types not listed below are the same as the [core data structures](../co
 ### Evidence
 
 - **Fields**:
-    - `Type (EvidenceType)`: Type of the evidence. An enum of possible evidence's.
-    - `Validator (Validator`: The offending validator
-    - `Height (int64)`: Height when the offense occured
-    - `Time (google.protobuf.Timestamp)`: Time of the block that was committed at the height that the offense occured
-    - `TotalVotingPower (int64)`: Total voting power of the validator set at
-    height `Height`
+
+| Name               | Type                                                                                                                                 | Description                                                                  | Field Number |
+|--------------------|--------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
+| type               | [EvidenceType](#evidencetype)                                                                                                        | Type of the evidence. An enum of possible evidence's.                        | 1            |
+| validator          | [Validator](#validator)                                                                                                              | The offending validator                                                      | 2            |
+| height             | int64                                                                                                                                | Height when the offense occurred                                             | 3            |
+| time               | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Time of the block that was committed at the height that the offense occurred | 4            |
+| total_voting_power | int64                                                                                                                                | Total voting power of the validator set at height `Height`                   | 5            |
+
+#### EvidenceType
+
+- **Fields**
+
+ENUM:
+
+| Name                | Field Number |
+|---------------------|--------------|
+| UNKNOWN             | 0            |
+| DUPLICATE_VOTE      | 1            |
+| LIGHT_CLIENT_ATTACK | 2            |
 
 ### LastCommitInfo
 
 - **Fields**:
-    - `Round (int32)`: Commit round. Reflects the total amount of rounds it took to come to consensus for the current block.
-    - `Votes ([]VoteInfo)`: List of validators addresses in the last validator set
-    with their voting power and whether or not they signed a vote.
+
+| Name  | Type                           | Description                                                                                                           | Field Number |
+|-------|--------------------------------|-----------------------------------------------------------------------------------------------------------------------|--------------|
+| round | int32                          | Commit round. Reflects the total amount of rounds it took to come to consensus for the current block.                 | 1            |
+| votes | repeated [VoteInfo](#voteinfo) | List of validators addresses in the last validator set with their voting power and whether or not they signed a vote. | 2            |
+
 
 ### ConsensusParams
 
 - **Fields**:
-    - `Block (BlockParams)`: Parameters limiting the size of a block and time between consecutive blocks.
-    - `Evidence (EvidenceParams)`: Parameters limiting the validity of
-    evidence of byzantine behaviour.
-    - `Validator (ValidatorParams)`: Parameters limiting the types of pubkeys validators can use.
-    - `Version (VersionParams)`: The ABCI application version.
+
+| Name      | Type                                                          | Description                                                                  | Field Number |
+|-----------|---------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
+| block     | [BlockParams](#blockparams)                                   | Parameters limiting the size of a block and time between consecutive blocks. | 1            |
+| evidence  | [EvidenceParams](../core/data_structures.md#evidenceparams)   | Parameters limiting the validity of evidence of byzantine behaviour.         | 2            |
+| validator | [ValidatorParams](../core/data_structures.md#validatorparams) | Parameters limiting the types of public keys validators can use.             | 3            |
+| version   | [BlockParams](../core/data_structures.md#versionparams)       | The ABCI application version.                                                | 4            |
 
 ### BlockParams
 
 - **Fields**:
-    - `MaxBytes (int64)`: Max size of a block, in bytes.
-    - `MaxGas (int64)`: Max sum of `GasWanted` in a proposed block.
-        - NOTE: blocks that violate this may be committed if there are Byzantine proposers.
-      It's the application's responsibility to handle this when processing a
-      block!
 
-### EvidenceParams
+| Name      | Type  | Description                                                                                                                                                                                                 | Field Number |
+|-----------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| max_bytes | int64 | Max size of a block, in bytes.                                                                                                                                                                              | 1            |
+| max_gas   | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
 
-- **Fields**:
-    - `MaxAgeNumBlocks (int64)`: Max age of evidence, in blocks.
-    - `MaxAgeDuration (time.Duration)`: Max age of evidence, in time.
-    It should correspond with an app's "unbonding period" or other similar
-    mechanism for handling [Nothing-At-Stake
-    attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+> Note: time_iota_ms is removed from this data structure.
 
-        - Evidence older than `MaxAgeNumBlocks` && `MaxAgeDuration` is considered
-      stale and ignored.
-        - In Cosmos-SDK based blockchains, `MaxAgeDuration` is usually equal to the
-      unbonding period. `MaxAgeNumBlocks` is calculated by dividing the unboding
-      period by the average block time (e.g. 2 weeks / 6s per block = 2d8h).
-    - `MaxNum (uint32)`: The maximum number of evidence that can be committed to a single block
 
-### ValidatorParams
+### ProofOps
 
 - **Fields**:
-    - `PubKeyTypes ([]string)`: List of accepted public key types.
-        - Uses same naming as `PubKey.Type`.
 
-### VersionParams
-
-- **Fields**:
-    - `AppVersion (uint64)`: The ABCI application version.
-
-### Proof
-
-- **Fields**:
-    - `Ops ([]ProofOp)`: List of chained Merkle proofs, of possibly different types
-        - The Merkle root of one op is the value being proven in the next op.
-        - The Merkle root of the final op should equal the ultimate root hash being
-      verified against.
+| Name | Type                         | Description                                                                                                                                                                                                                  | Field Number |
+|------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| ops  | repeated [ProofOp](#proofop) | List of chained Merkle proofs, of possibly different types. The Merkle root of one op is the value being proven in the next op. The Merkle root of the final op should equal the ultimate root hash being verified against.. | 1            |
 
 ### ProofOp
 
 - **Fields**:
-    - `Type (string)`: Type of Merkle proof and how it's encoded.
-    - `Key ([]byte)`: Key in the Merkle tree that this proof is for.
-    - `Data ([]byte)`: Encoded Merkle proof for the key.
+
+| Name | Type   | Description                                    | Field Number |
+|------|--------|------------------------------------------------|--------------|
+| type | string | Type of Merkle proof and how it's encoded.     | 1            |
+| key  | bytes  | Key in the Merkle tree that this proof is for. | 2            |
+| data | bytes  | Encoded Merkle proof for the key.              | 3            |
 
 ### Snapshot
 
 - **Fields**:
-    - `Height (uint64)`: The height at which the snapshot was taken (after commit).
-    - `Format (uint32)`: An application-specific snapshot format, allowing applications to version
-    their snapshot data format and make backwards-incompatible changes. Tendermint does not
-    interpret this.
-    - `Chunks (uint32)`: The number of chunks in the snapshot. Must be at least 1 (even if empty).
-    - `Hash (bytes)`: An arbitrary snapshot hash. Must be equal only for identical snapshots across
-    nodes. Tendermint does not interpret the hash, it only compares them.
-    - `Metadata (bytes)`: Arbitrary application metadata, for example chunk hashes or other
-    verification data.
+
+| Name | Type   | Description                                    | Field Number |
+|------|--------|------------------------------------------------|--------------|
+| height | uint64 | The height at which the snapshot was taken (after commit).  | 1            |
+| format  | uint32  | An application-specific snapshot format, allowing applications to version their snapshot data format and make backwards-incompatible changes. Tendermint does not interpret this. | 2            |
+| chunks | uint32  | The number of chunks in the snapshot. Must be at least 1 (even if empty).           | 3            |
+| hash | bytes  | TAn arbitrary snapshot hash. Must be equal only for identical snapshots across nodes. Tendermint does not interpret the hash, it only compares them.         | 3            |
+| metadata | bytes  | Arbitrary application metadata, for example chunk hashes or other verification data.          | 3            |
 
 - **Usage**:
     - Used for state sync snapshots, see [separate section](apps.md#state-sync) for details.
