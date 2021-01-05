@@ -71,6 +71,14 @@ IsValid(v) == v \in ValidValues
 THRESHOLD1 == T + 1     \* at least one process is not faulty
 THRESHOLD2 == 2 * T + 1 \* a quorum when having N > 3 * T
 
+\* possible actions (not part of the protocol)
+Actions == { "Init", "InsertProposal", "UponProposalInPropose",
+             "UponProposalInProposeAndPrevote", "UponQuorumOfPrevotesAny",
+             "UponProposalInPrevoteOrCommitAndPrevote",
+             "UponQuorumOfPrecommitsAny", "UponProposalInPrecommitNoDecision",
+             "OnTimeoutPropose", "OnQuorumOfNilPrevotes",
+             "OnRoundCatchup" }
+
 (********************* TYPE ANNOTATIONS FOR APALACHE **************************)
 \* the operator for type annotations
 a <: b == a
