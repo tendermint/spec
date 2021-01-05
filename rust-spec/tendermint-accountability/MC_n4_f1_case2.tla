@@ -5,6 +5,16 @@
 
  https://github.com/tendermint/tendermint/issues/5834
 
+ You can check it with Apalache as follows:
+
+ $ docker pull apalache/mc
+ $ alias apalache="docker run --rm -v $(pwd):/var/apalache apalache/mc:unstable"
+ $ apalache check --cinit=ConstInit --init=TraceInit --next=TraceNext --inv=NoDecision --length=30 MC_n4_f1_case2.tla
+
+ Apalache should produce an example of an execution in about 4 minutes.
+ Check counterexample.tla.
+
+
  Igor Konnov, Informal Systems, 2021
  *)
 EXTENDS Sequences
