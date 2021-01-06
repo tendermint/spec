@@ -444,7 +444,7 @@ via light client.
     | Name   | Type  | Description                        | Field Number |
     |--------|-------|------------------------------------|--------------|
 
-Empty request meant to signal to the app it can write state transitions to state.
+    Empty request meant to signal to the app it can write state transitions to state.
 
 - **Response**:
 
@@ -477,7 +477,7 @@ Empty request meant to signal to the app it can write state transitions to state
     | Name   | Type  | Description                        | Field Number |
     |--------|-------|------------------------------------|--------------|
 
-Empty request asking the application for a list of snapshots.
+    Empty request asking the application for a list of snapshots.
 
 - **Response**:
 
