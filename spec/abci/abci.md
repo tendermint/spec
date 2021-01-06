@@ -59,7 +59,7 @@ Each event has a `type` which is meant to categorize the event for a particular
 `Response*` or tx. A `Response*` or tx may contain multiple events with duplicate
 `type` values, where each distinct entry is meant to categorize attributes for a
 particular event. Every key and value in an event's attributes must be UTF-8
-encoded strings along with the event type itself. 
+encoded strings along with the event type itself.
 
 ```protobuf
 message Event {
@@ -275,7 +275,7 @@ via light client.
     | validators       | repeated [ValidatorUpdate](#validatorupdate)                                                                                         | Initial genesis validators, sorted by voting power. | 4            |
     | app_state_bytes  | bytes                                                                                                                                | Serialized initial application state. JSON bytes.   | 5            |
     | initial_height   | int64                                                                                                                                | Height of the initial block (typically `1`).        | 6            |
- 
+
 - **Response**:
 
     | Name             | Type                                         | Description                                     | Field Number |
@@ -304,7 +304,7 @@ via light client.
     | path   | string | Path of request, like an HTTP GET path. Can be used with or in liue of Data. Apps MUST interpret '/store' as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like '/accounts/...' or '/votes/...' | 2            |
     | height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
     | prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
-    
+
 - **Response**:
 
     | Name      | Type                  | Description                                                                                                                                                                                                        | Field Number |
@@ -419,7 +419,6 @@ via light client.
     |--------|-------|------------------------------------|--------------|
     | height | int64 | Height of the block just executed. | 1            |
 
-  
 - **Response**:
 
     | Name                    | Type                                         | Description                                                     | Field Number |
@@ -446,7 +445,6 @@ via light client.
     |--------|-------|------------------------------------|--------------|
 
 Empty request meant to signal to the app it can write state transitions to state.
-
 
 - **Response**:
 
@@ -500,7 +498,7 @@ Empty request asking the application for a list of snapshots.
     | height | uint64 | The height of the snapshot the chunks belongs to.                     | 1            |
     | format | uint32 | The application-specific format of the snapshot the chunk belongs to. | 2            |
     | chunk  | uint32 | The chunk index, starting from `0` for the initial chunk.             | 3            |
- 
+
 - **Response**:
 
     | Name  | Type  | Description                                                                                                                                           | Field Number |
@@ -525,7 +523,7 @@ Empty request asking the application for a list of snapshots.
     |--------|-------------------|-----------------------------------|--------------|
     | result | [Result](#result) | The result of the snapshot offer. | 1            |
 
-#### Result: 
+#### Result
 
 ```proto
   enum Result {
@@ -653,7 +651,7 @@ The data types not listed below are the same as the [core data structures](../co
 
 - **Fields**
 
-ENUM:
+    EvidenceType is an enum with the listed fields:
 
     | Name                | Field Number |
     |---------------------|--------------|
@@ -669,7 +667,6 @@ ENUM:
     |-------|--------------------------------|-----------------------------------------------------------------------------------------------------------------------|--------------|
     | round | int32                          | Commit round. Reflects the total amount of rounds it took to come to consensus for the current block.                 | 1            |
     | votes | repeated [VoteInfo](#voteinfo) | List of validators addresses in the last validator set with their voting power and whether or not they signed a vote. | 2            |
-
 
 ### ConsensusParams
 
@@ -692,7 +689,6 @@ ENUM:
     | max_gas   | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
 
 > Note: time_iota_ms is removed from this data structure.
-
 
 ### ProofOps
 

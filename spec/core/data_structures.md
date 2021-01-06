@@ -405,41 +405,37 @@ func SumTruncated(bz []byte) []byte {
 
 ### ConsensusParams
 
-
-| Name  | Type                        | Description                                                                  | Validation | Field Number |
-|-------|-----------------------------|------------------------------------------------------------------------------|------------|--------------|
-| block | [BlockParams](#blockparams) | Parameters limiting the size of a block and time between consecutive blocks. | --         | 1            |
-| evidence | [EvidenceParams](#evidenceparams) | Parameters limiting the validity of
-    evidence of byzantine behaviour. | --         | 2            |
-| validator | [ValidatorParams](#validatorparams) | Parameters limiting the types of public keys validators can use. | --         | 3            |
-| version | [BlockParams](#blockparams) | The ABCI application version. | --         | 4            |
+| Name      | Type                                | Description                                                                  | Field Number |
+|-----------|-------------------------------------|------------------------------------------------------------------------------|--------------|
+| block     | [BlockParams](#blockparams)         | Parameters limiting the size of a block and time between consecutive blocks. | 1            |
+| evidence  | [EvidenceParams](#evidenceparams)   | Parameters limiting the validity of evidence of byzantine behaviour.         | 2            |
+| validator | [ValidatorParams](#validatorparams) | Parameters limiting the types of public keys validators can use.             | 3            |
+| version   | [BlockParams](#blockparams)         | The ABCI application version.                                                | 4            |
 
 ### BlockParams
 
-| Name         | Type  | Description                                                                                                                                                                                                 | Validation | Field Number |
-|--------------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------------|
-| max_bytes    | int64 | Max size of a block, in bytes.                                                                                                                                                                              | --         | 1            |
-| max_gas      | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | --         | 2            |
-| time_iota_ms | int64 | (**Deprecated**) Unused Param                                                                                                                                                                               | --         | 3            |
-
+| Name         | Type  | Description                                                                                                                                                                                                 | Field Number |
+|--------------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| max_bytes    | int64 | Max size of a block, in bytes.                                                                                                                                                                              | 1            |
+| max_gas      | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
+| time_iota_ms | int64 | (**Deprecated**) Unused Param                                                                                                                                                                               | 3            |
 
 ### EvidenceParams
 
-| Name               | Type                                                                                                                               | Description                                                                                                                                                                                                                                                                    | Validation | Field Number |
-|--------------------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|--------------|
-| max_age_num_blocks | int64                                                                                                                              | Max age of evidence, in blocks.                                                                                                                                                                                                                                                | --         | 1            |
-| max_age_duration   | [google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration) | Max age of evidence, in time. It should correspond with an app's "unbonding period" or other similar mechanism for handling [Nothing-At-Stake attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed). | --         | 2            |
-| max_bytes          | int64                                                                                                                              | maximum size in bytes of total evidence allowed to be entered into a block                                                                                                                                                                                                     | --         | 3            |
+| Name               | Type                                                                                                                               | Description                                                                                                                                                                                                                                                                    | Field Number |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| max_age_num_blocks | int64                                                                                                                              | Max age of evidence, in blocks.                                                                                                                                                                                                                                                | 1            |
+| max_age_duration   | [google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration) | Max age of evidence, in time. It should correspond with an app's "unbonding period" or other similar mechanism for handling [Nothing-At-Stake attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed). | 2            |
+| max_bytes          | int64                                                                                                                              | maximum size in bytes of total evidence allowed to be entered into a block                                                                                                                                                                                                     | 3            |
 
 ### ValidatorParams
 
-| Name               | Type  | Description                     | Validation | Field Number |
-|--------------------|-------|---------------------------------|------------|--------------|
-| pub_key_types | repeated string | List of accepted public key types.
-        - Uses same naming as `PubKey.Type`. | --         | 1            |
+| Name          | Type            | Description                                                           | Field Number |
+|---------------|-----------------|-----------------------------------------------------------------------|--------------|
+| pub_key_types | repeated string | List of accepted public key types. Uses same naming as `PubKey.Type`. | 1            |
 
 ### VersionParams
 
-| Name        | Type   | Description                   | Validation | Field Number |
-|-------------|--------|-------------------------------|------------|--------------|
-| app_version | uint64 | The ABCI application version. | --         | 1            |
+| Name        | Type   | Description                   | Field Number |
+|-------------|--------|-------------------------------|--------------|
+| app_version | uint64 | The ABCI application version. | 1            |
