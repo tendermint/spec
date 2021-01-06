@@ -59,7 +59,7 @@ Each event has a `type` which is meant to categorize the event for a particular
 `Response*` or tx. A `Response*` or tx may contain multiple events with duplicate
 `type` values, where each distinct entry is meant to categorize attributes for a
 particular event. Every key and value in an event's attributes must be UTF-8
-encoded strings along with the event type itself.
+encoded strings along with the event type itself. 
 
 ```protobuf
 message Event {
@@ -235,22 +235,22 @@ via light client.
 
 - **Request**:
 
-| Name          | Type   | Description                              | Field Number |
-|---------------|--------|------------------------------------------|--------------|
-| version       | string | The Tendermint software semantic version | 1            |
-| block_version | uint64 | The Tendermint Block Protocol version    | 2            |
-| p2p_version   | uint64 | The Tendermint P2P Protocol version      | 3            |
-| abci_version  | string | The Tendermint ABCI semantic version     | 4            |
+    | Name          | Type   | Description                              | Field Number |
+    |---------------|--------|------------------------------------------|--------------|
+    | version       | string | The Tendermint software semantic version | 1            |
+    | block_version | uint64 | The Tendermint Block Protocol version    | 2            |
+    | p2p_version   | uint64 | The Tendermint P2P Protocol version      | 3            |
+    | abci_version  | string | The Tendermint ABCI semantic version     | 4            |
 
 - **Response**:
   
-| Name                | Type   | Description                                      | Field Number |
-|---------------------|--------|--------------------------------------------------|--------------|
-| data                | string | Some arbitrary information                       | 1            |
-| version             | string | The application software semantic version        | 2            |
-| app_version         | uint64 | The application protocol version                 | 3            |
-| last_block_height   | int64  | Latest block for which the app has called Commit | 4            |
-| last_block_app_hash | bytes  | Latest result of Commit                          | 5            |
+    | Name                | Type   | Description                                      | Field Number |
+    |---------------------|--------|--------------------------------------------------|--------------|
+    | data                | string | Some arbitrary information                       | 1            |
+    | version             | string | The application software semantic version        | 2            |
+    | app_version         | uint64 | The application protocol version                 | 3            |
+    | last_block_height   | int64  | Latest block for which the app has called Commit | 4            |
+    | last_block_app_hash | bytes  | Latest result of Commit                          | 5            |
 
 - **Usage**:
     - Return information about the application state.
@@ -267,22 +267,22 @@ via light client.
 
 - **Request**:
 
-| Name             | Type                                                                                                                                 | Description                                         | Field Number |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|--------------|
-| time             | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Genesis time                                        | 1            |
-| chain_id         | string                                                                                                                               | ID of the blockchain.                               | 2            |
-| consensus_params | ConsensusParams <!-- todo: link -->                                                                                                  | Initial consensus-critical parameters.              | 3            |
-| validators       | repeated [ValidatorUpdate](#validatorupdate)                                                                                         | Initial genesis validators, sorted by voting power. | 4            |
-| app_state_bytes  | bytes                                                                                                                                | Serialized initial application state. JSON bytes.   | 5            |
-| initial_height   | int64                                                                                                                                | Height of the initial block (typically `1`).        | 6            |
+    | Name             | Type                                                                                                                                 | Description                                         | Field Number |
+    |------------------|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|--------------|
+    | time             | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Genesis time                                        | 1            |
+    | chain_id         | string                                                                                                                               | ID of the blockchain.                               | 2            |
+    | consensus_params | [ConsensusParams](#consensusparams)                                                                                                  | Initial consensus-critical parameters.              | 3            |
+    | validators       | repeated [ValidatorUpdate](#validatorupdate)                                                                                         | Initial genesis validators, sorted by voting power. | 4            |
+    | app_state_bytes  | bytes                                                                                                                                | Serialized initial application state. JSON bytes.   | 5            |
+    | initial_height   | int64                                                                                                                                | Height of the initial block (typically `1`).        | 6            |
  
 - **Response**:
 
-| Name             | Type                                         | Description                                     | Field Number |
-|------------------|----------------------------------------------|-------------------------------------------------|--------------|
-| consensus_params | ConsensusParams <!-- todo: link -->          | Initial consensus-critical parameters (optional | 1            |
-| validators       | repeated [ValidatorUpdate](#validatorupdate) | Initial validator set (optional).               | 2            |
-| app_hash         | bytes                                        | Initial application hash.                       | 3            |
+    | Name             | Type                                         | Description                                     | Field Number |
+    |------------------|----------------------------------------------|-------------------------------------------------|--------------|
+    | consensus_params | [ConsensusParams](#consensusparams)          | Initial consensus-critical parameters (optional | 1            |
+    | validators       | repeated [ValidatorUpdate](#validatorupdate) | Initial validator set (optional).               | 2            |
+    | app_hash         | bytes                                        | Initial application hash.                       | 3            |
 
 - **Usage**:
     - Called once upon genesis.
@@ -298,25 +298,26 @@ via light client.
 
 - **Request**:
   
-| Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
-|--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
-| path   | string | Path of request, like an HTTP GET path. Can be used with or in liue of Data. Apps MUST interpret '/store' as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like '/accounts/...' or '/votes/...' | 2            |
-| height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
-| prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
+    | Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
+    |--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
+    | path   | string | Path of request, like an HTTP GET path. Can be used with or in liue of Data. Apps MUST interpret '/store' as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like '/accounts/...' or '/votes/...' | 2            |
+    | height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
+    | prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
+    
 - **Response**:
 
-| Name      | Type                       | Description                                                                                                                                                                                                        | Field Number |
-|-----------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| code      | uint32                     | Response code.                                                                                                                                                                                                     | 1            |
-| log       | string                     | The output of the application's logger. **May be non-deterministic.**                                                                                                                                              | 3            |
-| info      | string                     | Additional information. **May be non-deterministic.**                                                                                                                                                              | 4            |
-| index     | int64                      | The index of the key in the tree.                                                                                                                                                                                  | 5            |
-| key       | bytes                      | The key of the matching data.                                                                                                                                                                                      | 6            |
-| value     | bytes                      | The value of the matching data.                                                                                                                                                                                    | 7            |
-| proof_ops | proofOps<!-- todo:link --> | Serialized proof for the value data, if requested, to be verified against the `app_hash` for the given Height.                                                                                                     | 8            |
-| height    | int64                      | The block height from which data was derived. Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1 | 9            |
-| codespace | string                     | Namespace for the `code`.                                                                                                                                                                                          | 10           |
+    | Name      | Type                  | Description                                                                                                                                                                                                        | Field Number |
+    |-----------|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | code      | uint32                | Response code.                                                                                                                                                                                                     | 1            |
+    | log       | string                | The output of the application's logger. **May be non-deterministic.**                                                                                                                                              | 3            |
+    | info      | string                | Additional information. **May be non-deterministic.**                                                                                                                                                              | 4            |
+    | index     | int64                 | The index of the key in the tree.                                                                                                                                                                                  | 5            |
+    | key       | bytes                 | The key of the matching data.                                                                                                                                                                                      | 6            |
+    | value     | bytes                 | The value of the matching data.                                                                                                                                                                                    | 7            |
+    | proof_ops | [ProofOps](#proofops) | Serialized proof for the value data, if requested, to be verified against the `app_hash` for the given Height.                                                                                                     | 8            |
+    | height    | int64                 | The block height from which data was derived. Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1 | 9            |
+    | codespace | string                | Namespace for the `code`.                                                                                                                                                                                          | 10           |
 
 - **Usage**:
     - Query for data from the application at current or past height.
@@ -328,17 +329,18 @@ via light client.
 
 - **Request**:
 
-| Name                 | Type                                        | Description                                                                                                       | Field Number |
-|----------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------|
-| hash                 | bytes                                       | The block's hash. This can be derived from the block header.                                                      | 1            |
-| header               | [Header](../core/data_structures.md#header) | The block header.                                                                                                 | 2            |
-| last_commit_info     | [LastCommitInfo](#lastcommitinfo)           | Info about the last commit, including the round, and the list of validators and which ones signed the last block. | 3            |
-| byzantine_validators | repeated [Evidence](#evidence)              | List of evidence of validators that acted maliciously.                                                            | 4            |
+    | Name                 | Type                                        | Description                                                                                                       | Field Number |
+    |----------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------|--------------|
+    | hash                 | bytes                                       | The block's hash. This can be derived from the block header.                                                      | 1            |
+    | header               | [Header](../core/data_structures.md#header) | The block header.                                                                                                 | 2            |
+    | last_commit_info     | [LastCommitInfo](#lastcommitinfo)           | Info about the last commit, including the round, and the list of validators and which ones signed the last block. | 3            |
+    | byzantine_validators | repeated [Evidence](#evidence)              | List of evidence of validators that acted maliciously.                                                            | 4            |
+
 - **Response**:
 
-| Name   | Type                      | Description                         | Field Number |
-|--------|---------------------------|-------------------------------------|--------------|
-| events | repeated [Event](#events) | ype & Key-Value events for indexing | 1            |
+    | Name   | Type                      | Description                         | Field Number |
+    |--------|---------------------------|-------------------------------------|--------------|
+    | events | repeated [Event](#events) | ype & Key-Value events for indexing | 1            |
 
 - **Usage**:
     - Signals the beginning of a new block. Called prior to
@@ -353,23 +355,23 @@ via light client.
 
 - **Request**:
 
-| Name | Type        | Description                                                                                                                                                                                                                                         | Field Number |
-|------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| tx   | bytes       | The request transaction bytes                                                                                                                                                                                                                       | 1            |
-| type | CheckTxType | What type of `CheckTx` request is this? At present, there are two possible values: `CheckTx_New` (the default, which says that a full check is required), and `CheckTx_Recheck` (when the mempool is initiating a normal recheck of a transaction). | 2            |
+    | Name | Type        | Description                                                                                                                                                                                                                                         | Field Number |
+    |------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | tx   | bytes       | The request transaction bytes                                                                                                                                                                                                                       | 1            |
+    | type | CheckTxType | What type of `CheckTx` request is this? At present, there are two possible values: `CheckTx_New` (the default, which says that a full check is required), and `CheckTx_Recheck` (when the mempool is initiating a normal recheck of a transaction). | 2            |
 
 - **Response**:
 
-| Name       | Type                      | Description                                                           | Field Number |
-|------------|---------------------------|-----------------------------------------------------------------------|--------------|
-| code       | uint32                    | Response code.                                                        | 1            |
-| data       | bytes                     | Result bytes, if any.                                                 | 2            |
-| log        | string                    | The output of the application's logger. **May be non-deterministic.** | 3            |
-| info       | string                    | Additional information. **May be non-deterministic.**                 | 4            |
-| gas_wanted | int64                     | Amount of gas requested for transaction.                              | 5            |
-| gas_used   | int64                     | Amount of gas consumed by transaction.                                | 6            |
-| events     | repeated [Event](#events) | Type & Key-Value events for indexing transactions (eg. by account).   | 7            |
-| codespace  | string                    | Namespace for the `code`.                                             | 8            |
+    | Name       | Type                      | Description                                                           | Field Number |
+    |------------|---------------------------|-----------------------------------------------------------------------|--------------|
+    | code       | uint32                    | Response code.                                                        | 1            |
+    | data       | bytes                     | Result bytes, if any.                                                 | 2            |
+    | log        | string                    | The output of the application's logger. **May be non-deterministic.** | 3            |
+    | info       | string                    | Additional information. **May be non-deterministic.**                 | 4            |
+    | gas_wanted | int64                     | Amount of gas requested for transaction.                              | 5            |
+    | gas_used   | int64                     | Amount of gas consumed by transaction.                                | 6            |
+    | events     | repeated [Event](#events) | Type & Key-Value events for indexing transactions (eg. by account).   | 7            |
+    | codespace  | string                    | Namespace for the `code`.                                             | 8            |
 
 - **Usage**:
     - Technically optional - not involved in processing blocks.
@@ -393,16 +395,16 @@ via light client.
 
 - **Response**:
 
-| Name       | Type                      | Description                                                           | Field Number |
-|------------|---------------------------|-----------------------------------------------------------------------|--------------|
-| code       | uint32                    | Response code.                                                        | 1            |
-| data       | bytes                     | Result bytes, if any.                                                 | 2            |
-| log        | string                    | The output of the application's logger. **May be non-deterministic.** | 3            |
-| info       | string                    | Additional information. **May be non-deterministic.**                 | 4            |
-| gas_wanted | int64                     | Amount of gas requested for transaction.                              | 5            |
-| gas_used   | int64                     | Amount of gas consumed by transaction.                                | 6            |
-| events     | repeated [Event](#events) | Type & Key-Value events for indexing transactions (eg. by account).   | 7            |
-| codespace  | string                    | Namespace for the `code`.                                             | 8            |
+    | Name       | Type                      | Description                                                           | Field Number |
+    |------------|---------------------------|-----------------------------------------------------------------------|--------------|
+    | code       | uint32                    | Response code.                                                        | 1            |
+    | data       | bytes                     | Result bytes, if any.                                                 | 2            |
+    | log        | string                    | The output of the application's logger. **May be non-deterministic.** | 3            |
+    | info       | string                    | Additional information. **May be non-deterministic.**                 | 4            |
+    | gas_wanted | int64                     | Amount of gas requested for transaction.                              | 5            |
+    | gas_used   | int64                     | Amount of gas consumed by transaction.                                | 6            |
+    | events     | repeated [Event](#events) | Type & Key-Value events for indexing transactions (eg. by account).   | 7            |
+    | codespace  | string                    | Namespace for the `code`.                                             | 8            |
 
 - **Usage**:
     - The workhorse of the application - non-optional.
@@ -413,18 +415,18 @@ via light client.
 
 - **Request**:
 
-| Name   | Type  | Description                        | Field Number |
-|--------|-------|------------------------------------|--------------|
-| height | int64 | Height of the block just executed. | 1            |
+    | Name   | Type  | Description                        | Field Number |
+    |--------|-------|------------------------------------|--------------|
+    | height | int64 | Height of the block just executed. | 1            |
 
   
 - **Response**:
 
-| Name                    | Type                                         | Description                                                     | Field Number |
-|-------------------------|----------------------------------------------|-----------------------------------------------------------------|--------------|
-| validator_updates       | repeated [ValidatorUpdate](#validatorupdate) | Changes to validator set (set voting power to 0 to remove).     | 1            |
-| consensus_param_updates | [ConsensusParams](#consensusparams)          | Changes to consensus-critical time, size, and other parameters. | 2            |
-| events                  | repeated [Event](#events)                    | Type & Key-Value events for indexing                            | 3            |
+    | Name                    | Type                                         | Description                                                     | Field Number |
+    |-------------------------|----------------------------------------------|-----------------------------------------------------------------|--------------|
+    | validator_updates       | repeated [ValidatorUpdate](#validatorupdate) | Changes to validator set (set voting power to 0 to remove).     | 1            |
+    | consensus_param_updates | [ConsensusParams](#consensusparams)          | Changes to consensus-critical time, size, and other parameters. | 2            |
+    | events                  | repeated [Event](#events)                    | Type & Key-Value events for indexing                            | 3            |
 
 - **Usage**:
     - Signals the end of a block.
@@ -440,18 +442,18 @@ via light client.
 
 - **Request**:
 
-| Name   | Type  | Description                        | Field Number |
-|--------|-------|------------------------------------|--------------|
+    | Name   | Type  | Description                        | Field Number |
+    |--------|-------|------------------------------------|--------------|
 
 Empty request meant to signal to the app it can write state transitions to state.
 
 
 - **Response**:
 
-| Name          | Type  | Description                                                            | Field Number |
-|---------------|-------|------------------------------------------------------------------------|--------------|
-| data          | bytes | The Merkle root hash of the application state.                         | 2            |
-| retain_height | int64 | Blocks below this height may be removed. Defaults to `0` (retain all). | 3            |
+    | Name          | Type  | Description                                                            | Field Number |
+    |---------------|-------|------------------------------------------------------------------------|--------------|
+    | data          | bytes | The Merkle root hash of the application state.                         | 2            |
+    | retain_height | int64 | Blocks below this height may be removed. Defaults to `0` (retain all). | 3            |
 
 - **Usage**:
     - Persist the application state.
@@ -474,16 +476,16 @@ Empty request meant to signal to the app it can write state transitions to state
 
 - **Request**:
 
-| Name   | Type  | Description                        | Field Number |
-|--------|-------|------------------------------------|--------------|
+    | Name   | Type  | Description                        | Field Number |
+    |--------|-------|------------------------------------|--------------|
 
 Empty request asking the application for a list of snapshots.
 
 - **Response**:
 
-| Name      | Type                           | Description                    | Field Number |
-|-----------|--------------------------------|--------------------------------|--------------|
-| snapshots | repeated [Snapshot](#snapshot) | List of local state snapshots. | 1            |
+    | Name      | Type                           | Description                    | Field Number |
+    |-----------|--------------------------------|--------------------------------|--------------|
+    | snapshots | repeated [Snapshot](#snapshot) | List of local state snapshots. | 1            |
 
 - **Usage**:
     - Used during state sync to discover available snapshots on peers.
@@ -493,22 +495,17 @@ Empty request asking the application for a list of snapshots.
 
 - **Request**:
 
-| Name     | Type     | Description                                                             | Field Number   |
-|----------|----------|-------------------------------------------------------------------------|----------------|
-| height   | uint64   | The height of the snapshot the chunks belongs to.                       | 1              |
-| format   | uint32   | The application-specific format of the snapshot the chunk belongs to.   | 2              |
-| chunk    | uint32   | The chunk index, starting from `0` for the initial chunk.               | 3              |
-| Name     | Type     | Description                                                             | Field Number   |
-| -------- | -------- | ----------------------------------------------------------------------- | -------------- |
-| height   | uint64   | The height of the snapshot the chunks belongs to.                       | 1              |
-| format   | uint32   | The application-specific format of the snapshot the chunk belongs to.   | 2              |
-| chunk    | uint32   | The chunk index, starting from `0` for the initial chunk.               | 3              |
+    | Name   | Type   | Description                                                           | Field Number |
+    |--------|--------|-----------------------------------------------------------------------|--------------|
+    | height | uint64 | The height of the snapshot the chunks belongs to.                     | 1            |
+    | format | uint32 | The application-specific format of the snapshot the chunk belongs to. | 2            |
+    | chunk  | uint32 | The chunk index, starting from `0` for the initial chunk.             | 3            |
  
 - **Response**:
 
-| Name  | Type  | Description                                                                                                                                           | Field Number |
-|-------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| chunk | bytes | The binary chunk contents, in an arbitray format. Chunk messages cannot be larger than 16 MB _including metadata_, so 10 MB is a good starting point. | 1            |
+    | Name  | Type  | Description                                                                                                                                           | Field Number |
+    |-------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | chunk | bytes | The binary chunk contents, in an arbitray format. Chunk messages cannot be larger than 16 MB _including metadata_, so 10 MB is a good starting point. | 1            |
 
 - **Usage**:
     - Used during state sync to retrieve snapshot chunks from peers.
@@ -517,16 +514,16 @@ Empty request asking the application for a list of snapshots.
 
 - **Request**:
 
-| Name     | Type                  | Description                                                              | Field Number |
-|----------|-----------------------|--------------------------------------------------------------------------|--------------|
-| snapshot | [Snapshot](#snapshot) | The snapshot offered for restoration.                                    | 1            |
-| app_hash | bytes                 | The light client-verified app hash for this height, from the blockchain. | 2            |
+    | Name     | Type                  | Description                                                              | Field Number |
+    |----------|-----------------------|--------------------------------------------------------------------------|--------------|
+    | snapshot | [Snapshot](#snapshot) | The snapshot offered for restoration.                                    | 1            |
+    | app_hash | bytes                 | The light client-verified app hash for this height, from the blockchain. | 2            |
 
 - **Response**:
 
-| Name   | Type              | Description                       | Field Number |
-|--------|-------------------|-----------------------------------|--------------|
-| result | [Result](#result) | The result of the snapshot offer. | 1            |
+    | Name   | Type              | Description                       | Field Number |
+    |--------|-------------------|-----------------------------------|--------------|
+    | result | [Result](#result) | The result of the snapshot offer. | 1            |
 
 #### Result: 
 
@@ -557,19 +554,19 @@ Empty request asking the application for a list of snapshots.
 
 - **Request**:
 
-| Name   | Type   | Description                                                                 | Field Number |
-|--------|--------|-----------------------------------------------------------------------------|--------------|
-| index  | uint32 | The chunk index, starting from `0`. Tendermint applies chunks sequentially. | 1            |
-| chunk  | bytes  | The binary chunk contents, as returned by `LoadSnapshotChunk`.              | 2            |
-| sender | string | The P2P ID of the node who sent this chunk.                                 | 3            |
+    | Name   | Type   | Description                                                                 | Field Number |
+    |--------|--------|-----------------------------------------------------------------------------|--------------|
+    | index  | uint32 | The chunk index, starting from `0`. Tendermint applies chunks sequentially. | 1            |
+    | chunk  | bytes  | The binary chunk contents, as returned by `LoadSnapshotChunk`.              | 2            |
+    | sender | string | The P2P ID of the node who sent this chunk.                                 | 3            |
 
 - **Response**:
 
-| Name           | Type                | Description                                                                                                                                                                                                                             | Field Number |
-|----------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| result         | Result  (see below) | The result of applying this chunk.                                                                                                                                                                                                      | 1            |
-| refetch_chunks | repeated uint32     | Refetch and reapply the given chunks, regardless of `result`. Only the listed chunks will be refetched, and reapplied in sequential order.                                                                                              | 2            |
-| reject_senders | repeated string     | Reject the given P2P senders, regardless of `Result`. Any chunks already applied will not be refetched unless explicitly requested, but queued chunks from these senders will be discarded, and new chunks or other snapshots rejected. | 3            |
+    | Name           | Type                | Description                                                                                                                                                                                                                             | Field Number |
+    |----------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | result         | Result  (see below) | The result of applying this chunk.                                                                                                                                                                                                      | 1            |
+    | refetch_chunks | repeated uint32     | Refetch and reapply the given chunks, regardless of `result`. Only the listed chunks will be refetched, and reapplied in sequential order.                                                                                              | 2            |
+    | reject_senders | repeated string     | Reject the given P2P senders, regardless of `Result`. Any chunks already applied will not be refetched unless explicitly requested, but queued chunks from these senders will be discarded, and new chunks or other snapshots rejected. | 3            |
 
 ```proto
   enum Result {
@@ -603,10 +600,10 @@ The data types not listed below are the same as the [core data structures](../co
 
 - **Fields**:
 
-| Name    | Type  | Description                                                         | Field Number |
-|---------|-------|---------------------------------------------------------------------|--------------|
-| address | bytes | Address of the validator (the first 20 bytes of SHA256(public key)) | 1            |
-| power   | int64 | Voting power of the validator                                       | 3            |
+    | Name    | Type  | Description                                                         | Field Number |
+    |---------|-------|---------------------------------------------------------------------|--------------|
+    | address | bytes | Address of the validator (the first 20 bytes of SHA256(public key)) | 1            |
+    | power   | int64 | Voting power of the validator                                       | 3            |
 
 - **Usage**:
     - Validator identified by address
@@ -618,10 +615,10 @@ The data types not listed below are the same as the [core data structures](../co
 
 - **Fields**:
 
-| Name    | Type                                             | Description                   | Field Number |
-|---------|--------------------------------------------------|-------------------------------|--------------|
-| pub_key | [Public Key](../core/data_structures.md#pub_key) | Public key of the validator   | 1            |
-| power   | int64                                            | Voting power of the validator | 2            |
+    | Name    | Type                                             | Description                   | Field Number |
+    |---------|--------------------------------------------------|-------------------------------|--------------|
+    | pub_key | [Public Key](../core/data_structures.md#pub_key) | Public key of the validator   | 1            |
+    | power   | int64                                            | Voting power of the validator | 2            |
 
 - **Usage**:
     - Validator identified by PubKey
@@ -631,10 +628,10 @@ The data types not listed below are the same as the [core data structures](../co
 
 - **Fields**:
 
-| Name              | Type                    | Description                                                  | Field Number |
-|-------------------|-------------------------|--------------------------------------------------------------|--------------|
-| validator         | [Validator](#validator) | A validator                                                  | 1            |
-| signed_last_block | bool                    | Indicates whether or not the validator signed the last block | 2            |
+    | Name              | Type                    | Description                                                  | Field Number |
+    |-------------------|-------------------------|--------------------------------------------------------------|--------------|
+    | validator         | [Validator](#validator) | A validator                                                  | 1            |
+    | signed_last_block | bool                    | Indicates whether or not the validator signed the last block | 2            |
 
 - **Usage**:
     - Indicates whether a validator signed the last block, allowing for rewards
@@ -644,13 +641,13 @@ The data types not listed below are the same as the [core data structures](../co
 
 - **Fields**:
 
-| Name               | Type                                                                                                                                 | Description                                                                  | Field Number |
-|--------------------|--------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
-| type               | [EvidenceType](#evidencetype)                                                                                                        | Type of the evidence. An enum of possible evidence's.                        | 1            |
-| validator          | [Validator](#validator)                                                                                                              | The offending validator                                                      | 2            |
-| height             | int64                                                                                                                                | Height when the offense occurred                                             | 3            |
-| time               | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Time of the block that was committed at the height that the offense occurred | 4            |
-| total_voting_power | int64                                                                                                                                | Total voting power of the validator set at height `Height`                   | 5            |
+    | Name               | Type                                                                                                                                 | Description                                                                  | Field Number |
+    |--------------------|--------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
+    | type               | [EvidenceType](#evidencetype)                                                                                                        | Type of the evidence. An enum of possible evidence's.                        | 1            |
+    | validator          | [Validator](#validator)                                                                                                              | The offending validator                                                      | 2            |
+    | height             | int64                                                                                                                                | Height when the offense occurred                                             | 3            |
+    | time               | [google.protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Timestamp) | Time of the block that was committed at the height that the offense occurred | 4            |
+    | total_voting_power | int64                                                                                                                                | Total voting power of the validator set at height `Height`                   | 5            |
 
 #### EvidenceType
 
@@ -658,41 +655,41 @@ The data types not listed below are the same as the [core data structures](../co
 
 ENUM:
 
-| Name                | Field Number |
-|---------------------|--------------|
-| UNKNOWN             | 0            |
-| DUPLICATE_VOTE      | 1            |
-| LIGHT_CLIENT_ATTACK | 2            |
+    | Name                | Field Number |
+    |---------------------|--------------|
+    | UNKNOWN             | 0            |
+    | DUPLICATE_VOTE      | 1            |
+    | LIGHT_CLIENT_ATTACK | 2            |
 
 ### LastCommitInfo
 
 - **Fields**:
 
-| Name  | Type                           | Description                                                                                                           | Field Number |
-|-------|--------------------------------|-----------------------------------------------------------------------------------------------------------------------|--------------|
-| round | int32                          | Commit round. Reflects the total amount of rounds it took to come to consensus for the current block.                 | 1            |
-| votes | repeated [VoteInfo](#voteinfo) | List of validators addresses in the last validator set with their voting power and whether or not they signed a vote. | 2            |
+    | Name  | Type                           | Description                                                                                                           | Field Number |
+    |-------|--------------------------------|-----------------------------------------------------------------------------------------------------------------------|--------------|
+    | round | int32                          | Commit round. Reflects the total amount of rounds it took to come to consensus for the current block.                 | 1            |
+    | votes | repeated [VoteInfo](#voteinfo) | List of validators addresses in the last validator set with their voting power and whether or not they signed a vote. | 2            |
 
 
 ### ConsensusParams
 
 - **Fields**:
 
-| Name      | Type                                                          | Description                                                                  | Field Number |
-|-----------|---------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
-| block     | [BlockParams](#blockparams)                                   | Parameters limiting the size of a block and time between consecutive blocks. | 1            |
-| evidence  | [EvidenceParams](../core/data_structures.md#evidenceparams)   | Parameters limiting the validity of evidence of byzantine behaviour.         | 2            |
-| validator | [ValidatorParams](../core/data_structures.md#validatorparams) | Parameters limiting the types of public keys validators can use.             | 3            |
-| version   | [BlockParams](../core/data_structures.md#versionparams)       | The ABCI application version.                                                | 4            |
+    | Name      | Type                                                          | Description                                                                  | Field Number |
+    |-----------|---------------------------------------------------------------|------------------------------------------------------------------------------|--------------|
+    | block     | [BlockParams](#blockparams)                                   | Parameters limiting the size of a block and time between consecutive blocks. | 1            |
+    | evidence  | [EvidenceParams](../core/data_structures.md#evidenceparams)   | Parameters limiting the validity of evidence of byzantine behaviour.         | 2            |
+    | validator | [ValidatorParams](../core/data_structures.md#validatorparams) | Parameters limiting the types of public keys validators can use.             | 3            |
+    | version   | [BlockParams](../core/data_structures.md#versionparams)       | The ABCI application version.                                                | 4            |
 
 ### BlockParams
 
 - **Fields**:
 
-| Name      | Type  | Description                                                                                                                                                                                                 | Field Number |
-|-----------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| max_bytes | int64 | Max size of a block, in bytes.                                                                                                                                                                              | 1            |
-| max_gas   | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
+    | Name      | Type  | Description                                                                                                                                                                                                 | Field Number |
+    |-----------|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | max_bytes | int64 | Max size of a block, in bytes.                                                                                                                                                                              | 1            |
+    | max_gas   | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
 
 > Note: time_iota_ms is removed from this data structure.
 
@@ -701,31 +698,31 @@ ENUM:
 
 - **Fields**:
 
-| Name | Type                         | Description                                                                                                                                                                                                                  | Field Number |
-|------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
-| ops  | repeated [ProofOp](#proofop) | List of chained Merkle proofs, of possibly different types. The Merkle root of one op is the value being proven in the next op. The Merkle root of the final op should equal the ultimate root hash being verified against.. | 1            |
+    | Name | Type                         | Description                                                                                                                                                                                                                  | Field Number |
+    |------|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | ops  | repeated [ProofOp](#proofop) | List of chained Merkle proofs, of possibly different types. The Merkle root of one op is the value being proven in the next op. The Merkle root of the final op should equal the ultimate root hash being verified against.. | 1            |
 
 ### ProofOp
 
 - **Fields**:
 
-| Name | Type   | Description                                    | Field Number |
-|------|--------|------------------------------------------------|--------------|
-| type | string | Type of Merkle proof and how it's encoded.     | 1            |
-| key  | bytes  | Key in the Merkle tree that this proof is for. | 2            |
-| data | bytes  | Encoded Merkle proof for the key.              | 3            |
+    | Name | Type   | Description                                    | Field Number |
+    |------|--------|------------------------------------------------|--------------|
+    | type | string | Type of Merkle proof and how it's encoded.     | 1            |
+    | key  | bytes  | Key in the Merkle tree that this proof is for. | 2            |
+    | data | bytes  | Encoded Merkle proof for the key.              | 3            |
 
 ### Snapshot
 
 - **Fields**:
 
-| Name | Type   | Description                                    | Field Number |
-|------|--------|------------------------------------------------|--------------|
-| height | uint64 | The height at which the snapshot was taken (after commit).  | 1            |
-| format  | uint32  | An application-specific snapshot format, allowing applications to version their snapshot data format and make backwards-incompatible changes. Tendermint does not interpret this. | 2            |
-| chunks | uint32  | The number of chunks in the snapshot. Must be at least 1 (even if empty).           | 3            |
-| hash | bytes  | TAn arbitrary snapshot hash. Must be equal only for identical snapshots across nodes. Tendermint does not interpret the hash, it only compares them.         | 3            |
-| metadata | bytes  | Arbitrary application metadata, for example chunk hashes or other verification data.          | 3            |
+    | Name     | Type   | Description                                                                                                                                                                       | Field Number |
+    |----------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+    | height   | uint64 | The height at which the snapshot was taken (after commit).                                                                                                                        | 1            |
+    | format   | uint32 | An application-specific snapshot format, allowing applications to version their snapshot data format and make backwards-incompatible changes. Tendermint does not interpret this. | 2            |
+    | chunks   | uint32 | The number of chunks in the snapshot. Must be at least 1 (even if empty).                                                                                                         | 3            |
+    | hash     | bytes  | TAn arbitrary snapshot hash. Must be equal only for identical snapshots across nodes. Tendermint does not interpret the hash, it only compares them.                              | 3            |
+    | metadata | bytes  | Arbitrary application metadata, for example chunk hashes or other verification data.                                                                                              | 3            |
 
 - **Usage**:
     - Used for state sync snapshots, see [separate section](apps.md#state-sync) for details.
