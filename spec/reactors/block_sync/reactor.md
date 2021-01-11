@@ -65,7 +65,7 @@ type Requester {
   mtx          Mutex
   block        Block
   height       int64
-   peerID       p2p.ID
+  peerID       p2p.ID
   redoChannel  chan p2p.ID //redo may send multi-time; peerId is used to identify repeat
 }
 ```
