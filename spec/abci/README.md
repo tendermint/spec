@@ -2,7 +2,7 @@
 order: 1
 parent:
   title: ABCI
-  order: 1
+  order: 2
 ---
 
 # ABCI
