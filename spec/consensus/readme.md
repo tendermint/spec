@@ -2,7 +2,7 @@
 order: 1
 parent:
   title: Consensus
-  order: 5
+  order: 4
 ---
 
 # Consensus
