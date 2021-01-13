@@ -17,7 +17,7 @@ The Tendermint blockchains consists of a short list of data types:
 - [`Vote`](#vote)
 - [`CanonicalVote`](#canonicalvote)
 - [`SignedMsgType`](#signedmsgtype)
-- [`EvidenceData`](#evidence_data)
+- [`EvidenceList`](#evidence_list)
 - [`Evidence`](#evidence)
 - [`DuplicateVoteEvidence`](#duplicatevoteevidence)
 - [`LightClientAttackEvidence`](#lightclientattackevidence)
@@ -36,7 +36,7 @@ and a list of evidence of malfeasance (ie. signing conflicting votes).
 |------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Header     | [Header](#header)              | Header corresponding to the block. This field contains information used throughout consensus and other areas of the protocol. To find out what it contains, visit [header] (#header) | Must adhere to the validation rules of [header](#header)                                         |
 | Data       | [Data](#data)                  | Data contains a list of transactions. The contents of the transaction is unknown to Tendermint.                                                                                      | This field can be empty or populated, but no validation is performed. Applications can perform validation on individual transactions prior to block creation using [checkTx](../abci/abci.md#checktx).
-| Evidence   | [EvidenceData](#evidence_data) | Evidence contains a list of infractions committed by validators.                                                                                                                     | Can be empty, but when populated the validations rules from [evidenceData](#evidence_data) apply |
+| Evidence   | [EvidenceList](#evidence_list) | Evidence contains a list of infractions committed by validators.                                                                                                                     | Can be empty, but when populated the validations rules from [evidenceList](#evidence_list) apply |
 | LastCommit | [Commit](#commit)              | `LastCommit` includes one vote for every validator.  All votes must either be for the previous block, nil or absent. If a vote is for the previous block it must have a valid signature from the corresponding validator. The sum of the voting power of the validators that voted must be greater than 2/3 of the total voting power of the complete validator set. The number of votes in a commit is limited to 10000 (see `types.MaxVotesCount`).                                                                                             | Must be empty for the initial height and must adhere to the validation rules of [commit](#commit).  |
 
 ## Execution
@@ -274,9 +274,9 @@ Signatures in Tendermint are raw bytes representing the underlying signature.
 
 See the [signature spec](./encoding.md#key-types) for more.
 
-## EvidenceData
+## EvidenceList
 
-EvidenceData is a simple wrapper for a list of evidence:
+EvidenceList is a simple wrapper for a list of evidence:
 
 | Name     | Type                           | Description                              | Validation                                                      |
 |----------|--------------------------------|------------------------------------------|-----------------------------------------------------------------|
