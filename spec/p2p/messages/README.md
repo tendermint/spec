@@ -7,7 +7,7 @@ parent:
 
 # Messages
 
-Tendermint-Core consists of many components, while many parts of these components are implementation specific the p2p messages are not. In this section we will be covering all the p2p messages of the various components of Tendermint-Core.
+Tendermint Core consists of many components. While many parts of these components are implementation specific, the p2p messages are not. In this section we will be covering all the p2p messages of the various components of Tendermint Core.
 
 - [Block Sync](./block-sync.md)
 - [Mempool](./mempool.md)
