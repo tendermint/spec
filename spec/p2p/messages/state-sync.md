@@ -8,7 +8,7 @@ order: 5
 | Name            | Number |
 |-----------------|--------|
 | SnapshotChannel | 96     |
-| ChunkChannel | 97     |
+| ChunkChannel    | 97     |
 ## Message Types
 
 ### SnapshotRequest

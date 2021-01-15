@@ -6,9 +6,9 @@ order: 6
 
 ## Channels
 
-| Name            | Number |
-|-----------------|--------|
-| PexChannel | 0     |
+| Name       | Number |
+|------------|--------|
+| PexChannel | 0      |
 
 ## Message Types
 
