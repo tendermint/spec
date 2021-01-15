@@ -5,7 +5,10 @@ order: 5
 # State Sync
 
 ## Channels
-
+| Name            | Number |
+|-----------------|--------|
+| SnapshotChannel | 96     |
+| ChunkChannel | 97     |
 ## Message Types
 
 ### SnapshotRequest

@@ -3,6 +3,12 @@ order: 4
 ---
 # Mempool 
 
+## Channel
+
+| Name            | Number |
+|-----------------|--------|
+| MempoolChannel | 48     |
+
 ## Message Types
 
 There is currently only one message that Mempool broadcasts and receives over

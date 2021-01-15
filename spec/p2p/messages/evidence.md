@@ -6,6 +6,14 @@ order: 3
 
 ## Channel
 
+| Name            | Number |
+|-----------------|--------|
+| EvidenceChannel | 56     |
+
+```
+EvidenceChannel = 56
+```
+
 ## Message Types
 
 ### EvidenceList

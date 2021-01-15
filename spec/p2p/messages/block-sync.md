@@ -6,51 +6,55 @@ order: 2
 
 ## Channel
 
+Block sync has one channel.
+
+| Name              | Number |
+|-------------------|--------|
+| BlockchainChannel | 64     |
+
 ## Message Types
 
 There are multiple message types for Block Sync
 
 ### BlockRequest
 
+BlockRequest asks a peer for a block at the height specified.
+
 | Name   | Type  | Description               | Field Number |
 |--------|-------|---------------------------|--------------|
 | Height | int64 | Height of requested block | 1            |
-
-
-BlockRequest asks a peer for a block at the height specified.
-
 
 ### NoBlockResponse
 
+NoBlockResponse notifies the peer requesting a block that the node does not contain it.
+
 | Name   | Type  | Description               | Field Number |
 |--------|-------|---------------------------|--------------|
 | Height | int64 | Height of requested block | 1            |
 
-NoBlockResponse notifies the peer requesting a block that the node does not contain it.
-
 ### BlockResponse
+
+BlockResponse contains the block requested.
 
 | Name  | Type                                         | Description     | Field Number |
 |-------|----------------------------------------------|-----------------|--------------|
 | Block | [Block](../../core/data_structures.md#block) | Requested Block | 1            |
 
-BlockResponse contains the block requested.
-
-
 ### StatusRequest
 
-Empty message.
+StatusRequest is an empty message that notifies the peer to respond with the highest and lowest blocks it has stored.
 
-StatusRequest is an empty message that notifies the peer to respond with the highest and lowest blocks it has stored. 
+> Empty message.
 
 ### StatusResponse
+
+StatusResponse responds to a peer with the highest and lowest block stored.
 
 | Name   | Type  | Description                                                       | Field Number |
 |--------|-------|-------------------------------------------------------------------|--------------|
 | Height | int64 | Current Height of a node                                          | 1            |
 | base   | int64 | First known block, if pruning is enabled it will be higher than 1 | 1            |
 
-StatusResponse responds to a peer with the highest and lowest block stored.
 
 ### Message
 
