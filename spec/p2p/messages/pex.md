@@ -6,6 +6,8 @@ order: 6
 
 ## Channels
 
+Pex has one channel. The channel identifier is listed below. 
+
 | Name       | Number |
 |------------|--------|
 | PexChannel | 0      |

@@ -5,6 +5,8 @@ order: 4
 
 ## Channel
 
+Mempool has one channel. The channel identifier is listed below.
+
 | Name           | Number |
 |----------------|--------|
 | MempoolChannel | 48     |

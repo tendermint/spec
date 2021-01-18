@@ -6,6 +6,8 @@ order: 5
 
 ## Channels
 
+State sync has two distinct channels. The channel identifiers are listed below.
+
 | Name            | Number |
 |-----------------|--------|
 | SnapshotChannel | 96     |

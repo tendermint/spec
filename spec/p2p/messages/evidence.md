@@ -6,13 +6,11 @@ order: 3
 
 ## Channel
 
+Evidence has one channel. The channel identifier is listed below.
+
 | Name            | Number |
 |-----------------|--------|
 | EvidenceChannel | 56     |
-
-```
-EvidenceChannel = 56
-```
 
 ## Message Types
 
