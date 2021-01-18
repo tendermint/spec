@@ -6,7 +6,7 @@ order: 6
 
 ## Channels
 
-Pex has one channel. The channel identifier is listed below. 
+Pex has one channel. The channel identifier is listed below.
 
 | Name       | Number |
 |------------|--------|
@@ -16,7 +16,7 @@ Pex has one channel. The channel identifier is listed below.
 
 ### PexRequest
 
-PexRequest is an empty message requesting a list of peers. 
+PexRequest is an empty message requesting a list of peers.
 
 > EmptyRequest
 
@@ -37,8 +37,6 @@ NetAddress provides needed information for a node to dial a peer.
 | id   | string | NodeID of a peer | 1            |
 | ip   | string | The IP of a node | 2            |
 | port | port   | Port of a peer   | 3            |
-
-
 
 ### Message
 

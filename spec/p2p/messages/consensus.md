@@ -6,7 +6,7 @@ order: 7
 
 ## Channel
 
-Consensus has four separate channels. The channel identifiers are listed below. 
+Consensus has four separate channels. The channel identifiers are listed below.
 
 | Name               | Number |
 |--------------------|--------|
@@ -15,9 +15,7 @@ Consensus has four separate channels. The channel identifiers are listed below.
 | VoteChannel        | 34     |
 | VoteSetBitsChannel | 35     |
 
-
 ## Message Types
-
 
 ### Proposal
 
@@ -27,9 +25,6 @@ next block in the blockchain should be.
 | Name     | Type                                               | Description                            | Field Number |
 |----------|----------------------------------------------------|----------------------------------------|--------------|
 | proposal | [Proposal](../../core/data_structures.md#proposal) | Proposed Block to come to consensus on | 1            |
-
-
-
 
 ### Vote
 
@@ -44,8 +39,6 @@ message is signed by the validator private key.
 | Name | Type                                       | Description               | Field Number |
 |------|--------------------------------------------|---------------------------|--------------|
 | vote | [Vote](../../core/data_structures.md#vote) | Vote for a proposed Block | 1            |
-
-
 
 ### BlockPart
 
@@ -141,7 +134,7 @@ the votes a process has.
 
 ### Message
 
-Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof). 
+Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof).
 
 | Name            | Type                            | Description                            | Field Number |
 |-----------------|---------------------------------|----------------------------------------|--------------|

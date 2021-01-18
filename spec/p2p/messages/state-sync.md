@@ -12,6 +12,7 @@ State sync has two distinct channels. The channel identifiers are listed below.
 |-----------------|--------|
 | SnapshotChannel | 96     |
 | ChunkChannel    | 97     |
+
 ## Message Types
 
 ### SnapshotRequest

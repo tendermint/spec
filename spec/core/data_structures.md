@@ -150,9 +150,9 @@ See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 | Total | int32                     | Total amount of parts for a block | Must be > 0          |
 | Hash  | slice of bytes (`[]byte`) | MerkleRoot of a serialized block  | Must be of length 32 |
 
-## Part 
+## Part
 
-Part defines a part of a block. In Tendermint blocks are broken into `parts` for gossip. 
+Part defines a part of a block. In Tendermint blocks are broken into `parts` for gossip.
 
 | Name  | Type            | Description                       | Validation           |
 |-------|-----------------|-----------------------------------|----------------------|
@@ -281,7 +281,6 @@ is locked in POLRound. The message is signed by the validator private key.
 | BlockID   | [BlockID](#blockid)             | The blockID of the corresponding block.                                               | [BlockID](#blockid)                                     |
 | Timestamp | [Time](#Time)                   | Timestamp represents the time at which a validator signed.                            | [Time](#time)                                           |
 | Signature | slice of bytes (`[]byte`)       | Signature by the validator if they participated in consensus for the associated bock. | Length of signature must be > 0 and < 64                |
-
 
 ## SignedMsgType
 

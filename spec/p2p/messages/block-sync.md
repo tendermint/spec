@@ -55,7 +55,6 @@ StatusResponse responds to a peer with the highest and lowest block stored.
 | Height | int64 | Current Height of a node                                          | 1            |
 | base   | int64 | First known block, if pruning is enabled it will be higher than 1 | 1            |
 
-
 ### Message
 
 Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof). The `oneof` consists of five messages.
