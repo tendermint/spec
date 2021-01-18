@@ -141,6 +141,8 @@ the votes a process has.
 
 ### Message
 
+Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof). 
+
 | Name            | Type                            | Description                            | Field Number |
 |-----------------|---------------------------------|----------------------------------------|--------------|
 | new_round_step  | [NewRoundStep](#newroundstep)   | Height of corresponding block          | 1            |
