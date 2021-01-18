@@ -151,12 +151,14 @@ See [MerkleRoot](./encoding.md#MerkleRoot) for details.
 | Hash  | slice of bytes (`[]byte`) | MerkleRoot of a serialized block  | Must be of length 32 |
 
 ## Part 
-<!-- todo: -->
-message Part {
-  uint32                  index = 1;
-  bytes                   bytes = 2;
-  tendermint.crypto.Proof proof = 3 [(gogoproto.nullable) = false];
-}
+
+Part defines a part of a block. In Tendermint blocks are broken into `parts` for gossip. 
+
+| Name  | Type            | Description                       | Validation           |
+|-------|-----------------|-----------------------------------|----------------------|
+| index | int32           | Total amount of parts for a block | Must be > 0          |
+| bytes | bytes           | MerkleRoot of a serialized block  | Must be of length 32 |
+| proof | [Proof](#proof) | MerkleRoot of a serialized block  | Must be of length 32 |
 
 ## Time
 
@@ -465,3 +467,12 @@ func SumTruncated(bz []byte) []byte {
 | Name        | Type   | Description                   | Field Number |
 |-------------|--------|-------------------------------|--------------|
 | app_version | uint64 | The ABCI application version. | 1            |
+
+### Proof
+
+| Name      | Type           | Description                                   | Field Number |
+|-----------|----------------|-----------------------------------------------|--------------|
+| total     | int64          | Total number of items.                        | 1            |
+| index     | int64          | Index item to prove.                          | 2            |
+| leaf_hash | bytes          | Hash of item value.                           | 3            |
+| aunts     | repeated bytes | Hashes from leaf's sibling to a root's child. | 4            |
