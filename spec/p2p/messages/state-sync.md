@@ -5,6 +5,7 @@ order: 5
 # State Sync
 
 ## Channels
+
 | Name            | Number |
 |-----------------|--------|
 | SnapshotChannel | 96     |

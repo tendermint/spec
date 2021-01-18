@@ -5,8 +5,8 @@ order: 4
 
 ## Channel
 
-| Name            | Number |
-|-----------------|--------|
+| Name           | Number |
+|----------------|--------|
 | MempoolChannel | 48     |
 
 ## Message Types
@@ -15,6 +15,8 @@ There is currently only one message that Mempool broadcasts and receives over
 the p2p gossip network (via the reactor): `TxsMessage`
 
 ### Txs 
+
+A list of transactions. These transactions have been checked against the application for validity. This does not mean that the transactions are valid, it is up to the application to check this.
 
 | Name | Type           | Description          | Field Number |
 |------|----------------|----------------------|--------------|
@@ -27,4 +29,4 @@ Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buff
 
 | Name | Type        | Description           | Field Number |
 |------|-------------|-----------------------|--------------|
-| txs  | [Txs](#txs) | Array of transactions | 1            |
+| txs  | [Txs](#txs) | List of transactions | 1            |
