@@ -221,9 +221,9 @@ Then execute the following steps:
 
 1. Add a new validator p3:
 
-Validator | p1  | p2 | p3
-----------|-----|----|---
-VP        | 80k | 10 | 10
+    Validator | p1  | p2 | p3
+    ----------|-----|----|---
+    VP        | 80k | 10 | 10
 
 2. Run selection once. The notation '..p'/'p..' means very small deviations compared to column priority.
 
@@ -237,11 +237,11 @@ VP        | 80k | 10 | 10
 
 3. Remove p1 and run selection once:
 
-Validator | p3     | p2    | Comment
-----------|--------|-------|------------------
-VP        | 10     | 10    |
-A         | -60k   | -15k  |
-A         | -22.5k | 22.5k | __run selection__
+    Validator | p3     | p2    | Comment
+    ----------|--------|-------|------------------
+    VP        | 10     | 10    |
+    A         | -60k   | -15k  |
+    A         | -22.5k | 22.5k | __run selection__
 
 At this point, while the total voting power is 20, the distance between priorities is 45k. It will take 4500 runs for p3 to catch up with p2.
 
