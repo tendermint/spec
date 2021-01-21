@@ -14,15 +14,15 @@ Pex has one channel. The channel identifier is listed below.
 
 ## Message Types
 
-### PexRequest
+### AddrsRequest
 
-PexRequest is an empty message requesting a list of peers.
+AddrsRequest is an empty message requesting a list of peers.
 
 > EmptyRequest
 
-### PexAddrs
+### AddrsResponse
 
-PexAddrs is an list of net addresses provided to a peer to dial.
+AddrsResponse is an list of net addresses provided to a peer to dial.
 
 | Name  | Type                               | Description                              | Field Number |
 |-------|------------------------------------|------------------------------------------|--------------|
