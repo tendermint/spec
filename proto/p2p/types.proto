@@ -17,6 +17,7 @@ message ProtocolVersion {
   uint64 app   = 3;
 }
 
+// NodeInfo is the information exchanged between two peers when conducting the handshake.
 message NodeInfo {
   ProtocolVersion protocol_version = 1 [(gogoproto.nullable) = false];
   string          node_id          = 2 [(gogoproto.customname) = "NodeID"];
