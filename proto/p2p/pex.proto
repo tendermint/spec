@@ -6,15 +6,15 @@ option go_package = "github.com/tendermint/tendermint/proto/tendermint/p2p";
 import "tendermint/p2p/types.proto";
 import "gogoproto/gogo.proto";
 
-message AddrsRequest {}
+message PexRequest {}
 
-message AddrsResponse {
-  repeated NetAddress addrs = 1 [(gogoproto.nullable) = false];
+message PexResponse {
+  repeated NetAddress addresses = 1 [(gogoproto.nullable) = false];
 }
 
-message Message {
+message PexMessage {
   oneof sum {
-    AddrsRequest  addrs_request  = 1;
-    AddrsResponse addrs_response = 2;
+    PexRequest  pex_request  = 1;
+    PexResponse pex_response = 2;
   }
 }

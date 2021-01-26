@@ -26,7 +26,7 @@ PexResponse is an list of net addresses provided to a peer to dial.
 
 | Name  | Type                               | Description                              | Field Number |
 |-------|------------------------------------|------------------------------------------|--------------|
-| addrs | repeated [PexAddress](#Pexaddress) | List of peer addresses available to dial | 1            |
+| addresses | repeated [PexAddress](#Pexaddress) | List of peer addresses available to dial | 1            |
 
 ### PexAddress
 
@@ -45,4 +45,4 @@ Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buff
 | Name         | Type                      | Description                                          | Field Number |
 |--------------|---------------------------|------------------------------------------------------|--------------|
 | pex_request  | [PexRequest](#pexrequest) | Empty request asking for a list of addresses to dial | 1            |
-| pex_response | [PexAddrs]                | List of addresses to dial                            | 2            |
+| pex_response | [PexResponse]                | List of addresses to dial                            | 2            |
