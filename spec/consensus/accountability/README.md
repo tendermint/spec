@@ -1,3 +1,10 @@
+---
+order: 1
+parent:
+  title: Accountability
+  order: 4
+---
+
 # Synopsis
  
  A TLA+ specification of a simplified Tendermint consensus, tuned for
@@ -102,5 +109,3 @@ To run the model checking experiments, use the script:
 
 This script assumes that the apalache build is available in
 `~/devl/apalache-unstable`.
-
-
