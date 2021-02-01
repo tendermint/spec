@@ -523,7 +523,9 @@ then
 The LightStore exposes the following functions to query stored LightBlocks.
 
 #### **[LCV-DATA-LS-STATE.1]**
+
 Each LightBlock is in one of the following states:
+
 ```go
 type VerifiedState int
 
@@ -555,15 +557,16 @@ func (ls LightStore) Latest() LightBlock
     - returns the highest light block
 
 #### **[LCV-FUNC-ADD.1]**
+
 ```go
 func (ls LightStore) Add(newBlock)
 ```
+
 - Expected precondition
     - the lightstore is empty
 - Expected postcondition
     - adds newBlock into light store
-	
-	
+ 
 #### **[LCV-FUNC-STORE.1]**
 
 ```go
@@ -572,8 +575,6 @@ func (ls LightStore) store_chain(newLS LightStore)
 
 - Expected postcondition
     - adds `newLS` to the lightStore.
-
-
 
 #### **[LCV-FUNC-LATEST-VERIF.2]**
 
@@ -605,19 +606,17 @@ VerifiedState, root-height Height)
     - The state of the LightBlock is set to *verifiedState*.
     - The verification-root of the LightBlock is set to *root-height*
 
-
 ```go
 func (ls LightStore) TraceTo(lightBlock LightBlock) (LightBlock, LightStore)
 ```
+
 - Expected postcondition
     - returns a **trusted** lightblock `root` from the lightstore with a height
       less than `lightBlock`
-	- returns a lightstore that contains lightblocks that constitute a
+    - returns a lightstore that contains lightblocks that constitute a
       [verification trace](TODOlinkToDetectorSpecOnceThere) from
       `root` to `lightBlock` (including `lightBlock`)
-	  
-
-
+   
 ### Inputs
 
 - *root*: A light block that is trusted
@@ -958,6 +957,7 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
           holds *lb.Header.Height >= b.Header.Height*
     - *false* in the second argument if
       the LightStore does not contain such an *lb*.
+
 ---
 
 #### **[LCV-FUNC-LOWEST.2]**
@@ -965,8 +965,10 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
 ```go
 func (ls LightStore) Lowest() (LightBlock)
 ```
+
 - Expected postcondition
     - returns the lowest trusted light block within trusting period
+
 ---
 
 #### **[LCV-FUNC-MIN.2]**

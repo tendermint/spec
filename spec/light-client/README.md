@@ -98,7 +98,6 @@ $DIR/apalache-tests/scripts/mk-run.py --memlimit 28 003bmc-apalache-error.csv $D
 
 All lines in `results.csv` should report `Error`.
 
-
 The following table summarizes the experimental results for Light client verification
 version 001. The TLA+ properties can be found in the
 [TLA+ specification](verification/Lightclient_A_1.tla).
@@ -115,9 +114,9 @@ The experimental results for version 003 are to be added.
 
 The [English specification](detection/detection_003_reviewed.md) 
 defines light client attacks (and how they differ from blockchain
-     forks), and describes the problem of a light client detecting
-     these attacks by communicating with a network of full nodes,
-     where at least one is correct.
+forks), and describes the problem of a light client detecting
+these attacks by communicating with a network of full nodes,
+where at least one is correct.
 
 The specification also contains a detection protocol that checks
 whether the header obtained from the primary via the verification
@@ -133,7 +132,6 @@ The [TLA+ specification](detection/LCDetector_003_draft.tla)
 is a formal description of the
 detection protocol for two peers, including the safety and
 termination, which can be model checked with Apalache.
-
 
 The `LCD_MC*.tla` files contain concrete parameters for the
 [TLA+ specification](detection/LCDetector_003_draft.tla),
@@ -187,9 +185,9 @@ The detailed experimental results are to be added soon.
 
 ## Accountability
 
-
 The [English specification](attacks/isolate-attackers_002_reviewed.md) 
 defines the protocol that is executed on a full node upon receiving attack [evidence](detection/detection_003_reviewed.md#tmbc-lc-evidence-data1) from a lightclient. In particular, the protocol handles three types of attacks
+
 - lunatic
 - equivocation
 - amnesia
@@ -197,7 +195,6 @@ defines the protocol that is executed on a full node upon receiving attack [evid
 We discussed in the [last part](attacks/isolate-attackers_002_reviewed.md#Part-III---Completeness) of the English specification
 that the non-lunatic cases are defined by having the same validator set in the conflicting blocks. For these cases,
 computer-aided analysis of  [Tendermint Consensus in TLA+][tendermint-accountability] shows that equivocation and amnesia capture all non-lunatic attacks.
-
 
 The [TLA+ specification](attacks/Isolation_001_draft.tla)
 is a formal description of the
