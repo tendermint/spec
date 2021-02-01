@@ -112,7 +112,7 @@ The experimental results for version 003 are to be added.
 
 ## Attack Detection
 
-The [English specification](detection/detection_003_reviewed.md) 
+The [English specification](detection/detection_003_reviewed.md)
 defines light client attacks (and how they differ from blockchain
 forks), and describes the problem of a light client detecting
 these attacks by communicating with a network of full nodes,
@@ -185,7 +185,7 @@ The detailed experimental results are to be added soon.
 
 ## Accountability
 
-The [English specification](attacks/isolate-attackers_002_reviewed.md) 
+The [English specification](attacks/isolate-attackers_002_reviewed.md)
 defines the protocol that is executed on a full node upon receiving attack [evidence](detection/detection_003_reviewed.md#tmbc-lc-evidence-data1) from a lightclient. In particular, the protocol handles three types of attacks
 
 - lunatic
