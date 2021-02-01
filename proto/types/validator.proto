@@ -16,7 +16,7 @@ message Validator {
   bytes                       address           = 1;
   tendermint.crypto.PublicKey pub_key           = 2 [(gogoproto.nullable) = false];
   uint64                      voting_power      = 3;
-  uint64                      proposer_priority = 4;
+  int64                       proposer_priority = 4;
 }
 
 // Used to compute the validator hash within the ValidatorSetHash
