@@ -566,7 +566,7 @@ func (ls LightStore) Add(newBlock)
     - the lightstore is empty
 - Expected postcondition
     - adds newBlock into light store
- 
+
 #### **[LCV-FUNC-STORE.1]**
 
 ```go
@@ -616,7 +616,7 @@ func (ls LightStore) TraceTo(lightBlock LightBlock) (LightBlock, LightStore)
     - returns a lightstore that contains lightblocks that constitute a
       [verification trace](TODOlinkToDetectorSpecOnceThere) from
       `root` to `lightBlock` (including `lightBlock`)
-   
+
 ### Inputs
 
 - *root*: A light block that is trusted
@@ -689,7 +689,7 @@ func Commit(height int64) (SignedHeader, error)
     - if *n* is correct: precondition violated or timeout
     - if *n* is faulty: arbitrary error
 
-----
+----;
 
 ```go
 func Validators(height int64) (ValidatorSet, error)
@@ -721,7 +721,7 @@ func Validators(height int64) (ValidatorSet, error)
     - if *n* is correct: precondition violated or timeout
     - if *n* is faulty: arbitrary error
 
-----
+----;
 
 ### Communicating Function
 
@@ -752,7 +752,7 @@ func FetchLightBlock(peer PeerID, height Height) LightBlock
     - if *lb.provider != peer*
     - times out after 2 Delta (by assumption *n* is faulty)
 
-----
+----;
 
 ## Core Verification
 
@@ -874,7 +874,7 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
 - Error condition:
     - if precondition violated
 
-----
+----;
 
 #### **[LCV-FUNC-SCHEDULE.1]**
 
@@ -958,7 +958,7 @@ func (ls LightStore) LatestPrevious(height Height) (LightBlock, bool)
     - *false* in the second argument if
       the LightStore does not contain such an *lb*.
 
----
+----;
 
 #### **[LCV-FUNC-LOWEST.2]**
 
@@ -969,7 +969,7 @@ func (ls LightStore) Lowest() (LightBlock)
 - Expected postcondition
     - returns the lowest trusted light block within trusting period
 
----
+----;
 
 #### **[LCV-FUNC-MIN.2]**
 
