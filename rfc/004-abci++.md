@@ -58,9 +58,11 @@ In this document, sometimes the final round of voting is referred to as precommi
 *Note, APIs in this section will change after Vote Extensions, we list the adjusted APIs further in the proposal.*
 
 Prepare proposal allows the block proposer to perform application-dependent work in a block, to lower the amount of work the rest of the network must do. batch optimizations to a block, which is a key optimization for scaling. This introduces the following method
+
 ```rust
 fn PrepareProposal(Block) -> BlockData
 ```
+
 where `BlockData` is a type alias for however data is internally stored within the consensus engine. In Tendermint Core today, this is `[]Tx`.
 
 The application may read the entire block proposal, and mutate the block data field. Mutated transactions will still get removed from the mempool later on, as the mempool rechecks all transactions after a block is executed.
@@ -72,12 +74,15 @@ PrepareProposal will be modified in the vote extensions section, for allowing th
 Process proposal sends the block data to the state machine, prior to running the last round of votes on the state machine. This enables features such as allowing validators to reject a block according to whether state machine deems it valid, and changing block execution pipeline.
 
 We introduce three new methods,
+
 ```rust
 fn VerifyHeader(header: Header, isValidator: bool) -> ResponseVerifyHeader {...}
 fn ProcessProposal(block: Block) -> ResponseProcessProposal {...}
 fn RevertProposal(height: usize, round: usize) {...}
 ```
+
 where
+
 ```rust
 struct ResponseVerifyHeader {
     accept_header: bool,
@@ -107,16 +112,20 @@ The `isValidator` flag is set according to whether the current node is a validat
 After implementing `ProcessProposal`, txs no longer need to be delivered during the block execution phase. Instead, they are already in the state machine. Thus `BeginBlock, DeliverTx, EndBlock` can all be replaced with a single ABCI method for `ExecuteBlock`. Internally the application may still structure its method for executing the block as `BeginBlock, DeliverTx, EndBlock`. However, it is overly restrictive to enforce that the block be executed after it is finalized. There are multiple other, very reasonable pipelined execution models one can go for. So instead we suggest calling this succession of methods `FinalizeBlock`. We propose the following API
 
 Replace the `BeginBlock, DeliverTx, EndBlock` ABCI methods with the following method
+
 ```rust
 fn FinalizeBlock() -> ResponseFinalizeBlock
 ```
+
 where `ResponseFinalizeBlock` has the following API, in terms of what already exists
+
 ```rust
 struct ResponseFinalizeBlock {
     updates: ResponseEndBlock,
     tx_results: Vec<ResponseDeliverTx>
 }
 ```
+
 `ResponseEndBlock` should then be renamed to `ConsensusEngineUpdates` and `ResponseDeliverTx` should be renamed to `ResponseTx`.
 
 ### Vote Extensions
@@ -125,6 +134,7 @@ Vote Extensions allow applications to force their validators to do more than jus
 This additional application data will then appear in the block header.
 
 First we discuss the API changes to the vote struct directly
+
 ```rust
 fn ExtendVote(height: u64, round: u64) -> (UnsignedAppVoteData, SelfAuthenticatingAppData)
 fn VerifyVoteExtension(signed_app_vote_data: Vec<u8>, self_authenticating_app_vote_data: Vec<u8>) -> bool
@@ -192,20 +202,20 @@ Proposed
 
 ### Positive
 
-* Enables a large number of new features for applications
+- Enables a large number of new features for applications
 
 ### Negative
 
-* This is a breaking change to all existing ABCI clients, however the application should be able to have a thin wrapper to replicate existing ABCI behavior.
-* Vote Extensions adds more complexity to core Tendermint Data Structures
+- This is a breaking change to all existing ABCI clients, however the application should be able to have a thin wrapper to replicate existing ABCI behavior.
+- Vote Extensions adds more complexity to core Tendermint Data Structures
 
 ### Neutral
 
-* IPC overhead considerations change, but mostly for the better
+- IPC overhead considerations change, but mostly for the better
 
 ## References
 
-Reference for IPC delay constants: http://pages.cs.wisc.edu/~adityav/Evaluation_of_Inter_Process_Communication_Mechanisms.pdf
+Reference for IPC delay constants: <http://pages.cs.wisc.edu/~adityav/Evaluation_of_Inter_Process_Communication_Mechanisms.pdf>
 
 ### Short list of blocked features / scaling improvements with required ABCI++ Phases
 
