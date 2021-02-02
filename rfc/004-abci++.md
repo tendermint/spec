@@ -24,7 +24,7 @@ We propose introducing three new phases to ABCI to enable these new features.
 
 #### Prepare Proposal phase
 
-This phase aims to allow the block proposer to perform more computation, to reduce load on all other full nodes, and lite clients in the network.
+This phase aims to allow the block proposer to perform more computation, to reduce load on all other full nodes, and light clients in the network.
 It is intended to enable features such as batch optimizations on the transaction data (e.g. signature aggregation, zk rollup style validity proofs, etc.), enabling stateless blockchains with validator provided authentication paths, etc.
 
 This new phase will only be executed by the block proposer. The application will take in the block header and raw transaction data output by the consensus engine's mempool. It will then return block data that is prepared for gossip on the network, and additional fields to include into the block header.
@@ -64,6 +64,8 @@ fn PrepareProposal(Block) -> BlockData
 where `BlockData` is a type alias for however data is internally stored within the consensus engine. In Tendermint Core today, this is `[]Tx`.
 
 The application may read the entire block proposal, and mutate the block data field. Mutated transactions will still get removed from the mempool later on, as the mempool rechecks all transactions after a block is executed.
+
+PrepareProposal will be modified in the vote extensions section, for allowing the application to modify the header.
 
 ### Process Proposal
 
@@ -194,7 +196,7 @@ Proposed
 
 ### Negative
 
-* This is a breaking change to all existing ABCI clients, however this should be a thin
+* This is a breaking change to all existing ABCI clients, however the application should be able to have a thin wrapper to replicate existing ABCI behavior.
 * Vote Extensions adds more complexity to core Tendermint Data Structures
 
 ### Neutral
