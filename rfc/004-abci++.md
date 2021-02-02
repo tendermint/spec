@@ -15,7 +15,7 @@ ABCI is the interface between the consensus engine and the application.
 It defines when the application can talk to consensus during the execution of a blockchain.
 At the moment, the application can only act at one phase in consensus, immediately after a block has been finalized.
 
-This restriction on the application prohibits numerous features for the application, including many scalability improvements that are now better understood than whan ABCI was first written.
+This restriction on the application prohibits numerous features for the application, including many scalability improvements that are now better understood than when ABCI was first written.
 For example, many of the scalability proposals can be boiled down to "Make the miner / block proposers / validators do work, so the network does not have to".
 This includes optimizations such as tx-level signature aggregation, state transition proofs, etc.
 Furthermore, many new security properties cannot be achieved in the current paradigm, as the application cannot enforce validators do more than just finalize txs.
