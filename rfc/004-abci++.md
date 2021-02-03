@@ -65,7 +65,7 @@ fn PrepareProposal(Block) -> BlockData
 
 where `BlockData` is a type alias for however data is internally stored within the consensus engine. In Tendermint Core today, this is `[]Tx`.
 
-The application may read the entire block proposal, and mutate the block data field. Mutated transactions will still get removed from the mempool later on, as the mempool rechecks all transactions after a block is executed.
+The application may read the entire block proposal, and mutate the block data fields. Mutated transactions will still get removed from the mempool later on, as the mempool rechecks all transactions after a block is executed.
 
 PrepareProposal will be modified in the vote extensions section, for allowing the application to modify the header.
 
