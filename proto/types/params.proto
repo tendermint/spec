@@ -20,7 +20,7 @@ message ConsensusParams {
 // BlockParams contains limits on the block size.
 message BlockParams {
   // Max block size, in bytes.
-  uint64 max_bytes = 1;
+  int64 max_bytes = 1;
   // Max gas per block.
   // Note: must be greater or equal to -1
   int64 max_gas = 2;
@@ -32,7 +32,7 @@ message EvidenceParams {
   //
   // The basic formula for calculating this is: MaxAgeDuration / {average block
   // time}.
-  uint64 max_age_num_blocks = 1;
+  int64 max_age_num_blocks = 1;
 
   // Max age of evidence, in time.
   //
@@ -45,7 +45,7 @@ message EvidenceParams {
   // This sets the maximum size of total evidence in bytes that can be committed in a single block.
   // and should fall comfortably under the max block bytes.
   // Default is 1048576 or 1MB
-  uint64 max_bytes = 3;
+  int64 max_bytes = 3;
 }
 
 // ValidatorParams restrict the public key types validators can use.

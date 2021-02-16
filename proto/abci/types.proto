@@ -277,7 +277,7 @@ message ConsensusParams {
 // BlockParams contains limits on the block size.
 message BlockParams {
   // Note: must be greater than 0
-  uint64 max_bytes = 1;
+  int64 max_bytes = 1;
   // Note: must be greater or equal to -1
   int64 max_gas = 2;
 }
@@ -322,13 +322,13 @@ message TxResult {
 message Validator {
   bytes address = 1;  // The first 20 bytes of SHA256(public key)
   // PubKey pub_key = 2 [(gogoproto.nullable)=false];
-  uint64 power = 3;  // The voting power
+  int64 power = 3;  // The voting power
 }
 
 // ValidatorUpdate
 message ValidatorUpdate {
   tendermint.crypto.PublicKey pub_key = 1 [(gogoproto.nullable) = false];
-  uint64                      power   = 2;
+  int64                       power   = 2;
 }
 
 // VoteInfo
@@ -357,7 +357,7 @@ message Evidence {
   // Total voting power of the validator set in case the ABCI application does
   // not store historical validators.
   // https://github.com/tendermint/tendermint/issues/4581
-  uint64 total_voting_power = 5;
+  int64 total_voting_power = 5;
 }
 
 //----------------------------------------

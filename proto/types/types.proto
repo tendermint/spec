@@ -144,9 +144,9 @@ message LightBlock {
 
 message BlockMeta {
   BlockID block_id   = 1 [(gogoproto.customname) = "BlockID", (gogoproto.nullable) = false];
-  uint64  block_size = 2;
+  int64   block_size = 2;
   Header  header     = 3 [(gogoproto.nullable) = false];
-  uint64  num_txs    = 4;
+  int64   num_txs    = 4;
 }
 
 // TxProof represents a Merkle proof of the presence of a transaction in the Merkle tree.
