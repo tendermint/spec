@@ -79,11 +79,13 @@ retrieve and verify blocks up to (and including) the specified backfill height
 
 The application has control of block retention via `retain_height`, called here:
 
+```proto
 message ResponseCommit {
   // reserve 1
   bytes data          = 2;
   int64 retain_height = 3;
 }
+```
 
 Beforehand, a retain height that was less than the nodes current base was
 ignored. With the same backfill mechanism, the application should now be able to
