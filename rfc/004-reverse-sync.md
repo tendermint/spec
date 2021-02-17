@@ -122,7 +122,7 @@ of the current base via `RequestEndBlock`:
 
 ```proto 
 message RequestEndBlock {
-	Height uint64
+  Height uint64
   Base uint64
 }
 ```
