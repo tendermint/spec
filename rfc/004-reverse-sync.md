@@ -67,7 +67,7 @@ message Snapshot {
   uint32 chunks          = 3;  // Number of chunks in the snapshot
   bytes  hash            = 4;  // Arbitrary snapshot hash, equal only if identical
   bytes  metadata        = 5;  // Arbitrary application metadata
-  int64  backfill_height = 6;  // Height to backfill blocks from before starting application (inclusive)
+  uint64 backfill_height = 6;  // Height to backfill blocks from before starting application (inclusive)
 }
 ```
 
@@ -82,8 +82,8 @@ The application has control of block retention via `retain_height`, called here:
 ```proto
 message ResponseCommit {
   // reserve 1
-  bytes data          = 2;
-  int64 retain_height = 3;
+  bytes  data          = 2;
+  uint64 retain_height = 3;
 }
 ```
 
