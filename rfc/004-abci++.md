@@ -105,7 +105,7 @@ RFC: How do we handle the scenario where honest node A finalized on round x, and
 
 The application is expected to cache the block data for later execution.
 
-The `isValidator` flag is set according to whether the current node is a validator of a full node. This is intended to allow for beginning validator dependent computation that will be included later in vote extensions. (An example of this is threshold decryptions of ciphertexts)
+The `isValidator` flag is set according to whether the current node is a validator or a full node. This is intended to allow for beginning validator-dependent computation that will be included later in vote extensions. (An example of this is threshold decryptions of ciphertexts.)
 
 ### DeliverTx rename to FinalizeBlock
 
