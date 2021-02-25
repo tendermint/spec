@@ -108,7 +108,7 @@ Upon receiving an entire block proposal (in the current implementation, all "blo
 
 Once a validator knows that consensus has failed to be achieved for a given block, it must run `RevertProposal(block.height, block.round)`, in order to signal to the application to revert any potentially mutative state changes it may have made. In Tendermint, this occurs when incrementing rounds.
 
-RFC: How do we handle the scenario where honest node A finalized on round x, and honest node B finalized on round x + 1? (e.g. when 2f precommits are publicly known, and a validator precommits themself but doesn't broadcast, but they increment rounds) Is this a real concern? The state root derived could change if everyone finalizes on round x+1, not round x, as the state machine can depend non-uniformly on timestamp.
+**RFC**: How do we handle the scenario where honest node A finalized on round x, and honest node B finalized on round x + 1? (e.g. when 2f precommits are publicly known, and a validator precommits themself but doesn't broadcast, but they increment rounds) Is this a real concern? The state root derived could change if everyone finalizes on round x+1, not round x, as the state machine can depend non-uniformly on timestamp.
 
 The application is expected to cache the block data for later execution.
 
@@ -152,7 +152,7 @@ There is data that the app needs the validator to sign over in their vote, and t
 
 The `CanonicalVote` struct will acommodate the `UnsignedAppVoteData` field by adding another string to its encoding, after the `chain-id`. This should not interfere with existing hardware signing integrations, as it does not affect the constant offset for the `height` and `round`, and the vote size does not have an explicit upper bound. (So adding this unsigned app vote data field is equivalent from the HSM's perspective as having a superlong chain-ID)
 
-RFC: Please comment if you think it will be fine to have elongate the message the HSM signs, or if we need to explore pre-hashing the app vote data.
+**RFC**: Please comment if you think it will be fine to have elongate the message the HSM signs, or if we need to explore pre-hashing the app vote data.
 
 The flow of these methods is that when a validator has to precommit, Tendermint will first produce a precommit canonical vote without the application vote data. It will then pass it to the application, which will return unsigned application vote data, and self authenticating application vote data. It will bundle the `unsigned_application_vote_data` into the canonical vote, and pass it to the HSM to sign. Finally it will package the self-authenticating app vote data, and the `signed_vote_data` together, into one final Vote struct to be passed around the network.
 
