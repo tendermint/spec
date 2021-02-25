@@ -20,7 +20,7 @@ For example, many of the scalability proposals can be boiled down to "Make the m
 This includes optimizations such as tx-level signature aggregation, state transition proofs, etc.
 Furthermore, many new security properties cannot be achieved in the current paradigm, as the application cannot enforce validators do more than just finalize txs.
 This includes features such as threshold cryptography, and guaranteed IBC connection attempts.
-We propose introducing three new phases to ABCI to enable these new features.
+We propose introducing three new phases to ABCI to enable these new features, and renaming the existing methods for block execution.
 
 #### Prepare Proposal phase
 
@@ -42,6 +42,13 @@ This phase aims to allow applications to require their validators do more than j
 Example usecases of this include validator determined price oracles, validator guaranteed IBC connection attempts, and validator based threshold crypto.
 
 This adds an app-determined data field that every validator must include with their vote, and these will thus appear in the header.
+#### Rename {BeginBlock, [DeliverTx], EndBlock} to FinalizeBlock
+
+The prior phases gives the application more flexibility in their execution model for a block, and they obsolete the current methods for how the consensus engine relates the block data to the state machine. Thus we refactor the existing methods to better reflect what is happening in the new ABCI model.
+
+This rename doesn't on its own enable anything new, but instead improves naming to clarify the expectations from the application in this new communication model. The existing ABCI methods  `BeginBlock, [DeliverTx], EndBlock` are renamed to a single method called `FinalizeBlock`.
+
+#### Summary
 
 We include a more detailed list of features / scaling improvements that are blocked, and which new phases resolve them at the end of this document.
 
@@ -126,7 +133,7 @@ struct ResponseFinalizeBlock {
 }
 ```
 
-`ResponseEndBlock` should then be renamed to `ConsensusEngineUpdates` and `ResponseDeliverTx` should be renamed to `ResponseTx`.
+`ResponseEndBlock` should then be renamed to `ConsensusUpdates` and `ResponseDeliverTx` should be renamed to `ResponseTx`.
 
 ### Vote Extensions
 
