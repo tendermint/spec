@@ -162,7 +162,7 @@ fn PrepareProposal(Block, UnbatchedHeader) -> (BlockData, Header)
 where `UnbatchedHeader` essentially contains a "RawCommit", the `Header` contains a batch-optimized `commit` and an additional "Application Data" field in its root. This will involve a number of changes to core data structures, which will be gone over in the ADR.
 The `Unbatched` header and `rawcommit` will never be broadcasted, they will be completely internal to consensus.
 
-#### IPC communication affects
+#### Inter-process communication (IPC) effects
 
 For brevity in exposition above, we did not discuss the trade-offs that may occur in interprocess communication delays that these changs will introduce.
 These new ABCI methods add more locations where the application must communicate with the consensus engine.
