@@ -38,7 +38,7 @@ ABCI messages from all connections will be linearizable (received one at a
 time).
 
 The existence of this global mutex means Go application developers can get
-thread safety for their state by routing *all* reads and writes through the ABCI
+thread safety for application state by routing *all* reads and writes through the ABCI
 system. Thus it may be *unsafe* to expose application state directly to an RPC
 interface, and unless explicit measures are taken, all queries should be routed through the ABCI Query method.
 
