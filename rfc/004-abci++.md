@@ -64,7 +64,7 @@ In this document, sometimes the final round of voting is referred to as precommi
 
 *Note, APIs in this section will change after Vote Extensions, we list the adjusted APIs further in the proposal.*
 
-Prepare proposal allows the block proposer to perform application-dependent work in a block, to lower the amount of work the rest of the network must do. This enables batch optimizations to a block, which has been empirically demonstrated to be a key component for scaling. Prepare Proposal introduces the following ABCI method
+The Prepare Proposal phase allows the block proposer to perform application-dependent work in a block, to lower the amount of work the rest of the network must do. This enables batch optimizations to a block, which has been empirically demonstrated to be a key component for scaling. This phase introduces the following ABCI method
 
 ```rust
 fn PrepareProposal(Block) -> BlockData
@@ -74,11 +74,11 @@ where `BlockData` is a type alias for however data is internally stored within t
 
 The application may read the entire block proposal, and mutate the block data fields. Mutated transactions will still get removed from the mempool later on, as the mempool rechecks all transactions after a block is executed.
 
-PrepareProposal will be modified in the vote extensions section, for allowing the application to modify the header.
+The `PrepareProposal` API will be modified in the vote extensions section, for allowing the application to modify the header.
 
 ### Process Proposal
 
-Process proposal sends the block data to the state machine, prior to running the last round of votes on the state machine. This enables features such as allowing validators to reject a block according to whether state machine deems it valid, and changing block execution pipeline.
+The Process Proposal phase sends the block data to the state machine, prior to running the last round of votes on the state machine. This enables features such as allowing validators to reject a block according to whether state machine deems it valid, and changing block execution pipeline.
 
 We introduce three new methods,
 
@@ -137,7 +137,7 @@ struct ResponseFinalizeBlock {
 
 ### Vote Extensions
 
-Vote Extensions allow applications to force their validators to do more than just validate within consensus. This is done by allowing the application to add more data to their votes, in the final round of voting. (Namely the precommit)
+The Vote Extensions phase allow applications to force their validators to do more than just validate within consensus. This is done by allowing the application to add more data to their votes, in the final round of voting. (Namely the precommit)
 This additional application data will then appear in the block header.
 
 First we discuss the API changes to the vote struct directly
@@ -220,6 +220,11 @@ Proposed
 ### Negative
 
 - This is a breaking change to all existing ABCI clients, however the application should be able to have a thin wrapper to replicate existing ABCI behavior.
+    - PrepareProposal - can be a no-op
+    - Process Proposal - has to cache the block, but can otherwise be a no-op
+    - Vote Extensions - can be a no-op
+    - Finalize Block - Can black-box call BeginBlock, DeliverTx, EndBlock given the cached block data
+
 - Vote Extensions adds more complexity to core Tendermint Data Structures
 - Allowing alternate alternate execution models will lead to a proliferation of new ways for applications to violate expected guarantees.
 
