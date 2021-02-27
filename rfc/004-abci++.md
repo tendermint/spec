@@ -64,7 +64,7 @@ In this document, sometimes the final round of voting is referred to as precommi
 
 *Note, APIs in this section will change after Vote Extensions, we list the adjusted APIs further in the proposal.*
 
-Prepare proposal allows the block proposer to perform application-dependent work in a block, to lower the amount of work the rest of the network must do. batch optimizations to a block, which is a key optimization for scaling. This introduces the following method
+Prepare proposal allows the block proposer to perform application-dependent work in a block, to lower the amount of work the rest of the network must do. This enables batch optimizations to a block, which has been empirically demonstrated to be a key component for scaling. Prepare Proposal introduces the following ABCI method
 
 ```rust
 fn PrepareProposal(Block) -> BlockData
