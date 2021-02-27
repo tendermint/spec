@@ -213,11 +213,15 @@ Proposed
 ### Positive
 
 - Enables a large number of new features for applications
+- Supports both immediate and delayed execution models
+- Allows application specific data from each validator
+- Allows for batch optimizations across txs, and votes
 
 ### Negative
 
 - This is a breaking change to all existing ABCI clients, however the application should be able to have a thin wrapper to replicate existing ABCI behavior.
 - Vote Extensions adds more complexity to core Tendermint Data Structures
+- Allowing alternate alternate execution models will lead to a proliferation of new ways for applications to violate expected guarantees.
 
 ### Neutral
 
