@@ -38,3 +38,11 @@ maintained by Informal Systems.
 
 - [ABCI](./spec/abci/README.md): Details about interactions between the
   application and consensus engine over ABCI
+
+### RFC
+
+- [RFC](./rfc/README.md): RFCs describe proposals to change the spec. 
+  
+### ProtoBuf
+
+- [Proto](./proto/README.md): The data structures of the Tendermint protocol are located in the `proto` directory. These specify P2P messages that each implementation should follow to be compatible. 
