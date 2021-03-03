@@ -105,7 +105,7 @@ characteristics of the design, saving the more tedious details as an ADR. This
 section is divided into two approaches that can be used to achieve the defined
 backfill mechanism based on the two networking protocols: RPC or P2P.
 
-### RPC
+#### RPC
 
 The aforementioned data is already available via the following RPC endpoints:
 `/blockchain` or `/commit` for `Header`'s' and `/validators` for
@@ -113,7 +113,7 @@ The aforementioned data is already available via the following RPC endpoints:
 over RPC. Statesync already requires a list of RPC endpoints, so these could be
 reused.
 
-### P2P
+#### P2P
 
 A more congruent approach to the current infrastructure would be to request and
 send the respective resources over the p2p protocol. This would mean the
@@ -142,7 +142,7 @@ The P2P path may also enable P2P networked light clients and a state sync that
 also doesn't need to rely on RPC as the adequate data can now be transmitted
 through P2P.
 
-## Termination
+### Termination
 
 ReverseSync draws a lot of parallels with fast sync. An important consideration
 for fast sync that also extends to ReverseSync is termination. ReverseSync will
@@ -169,7 +169,7 @@ blockchain, you simply abstain from voting.
 
 As it stands, if 2/3+ vote on evidence you can't verify, in the same manner if
 2/3+ vote on a header that a node sees as invalid (perhaps due to a different
-app hash), the node will halt. 
+app hash), the node will halt.
 
 ## Status
 
