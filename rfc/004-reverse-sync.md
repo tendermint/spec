@@ -2,6 +2,7 @@
 
 ## Changelog
 
+- 2021-03-03: Simplify proposal to the state sync case.
 - 2021-02-17: Add notes on asynchronicity of processes.
 - 2020-12-10: Rename backfill blocks to reverse sync.
 - 2020-11-25: Initial draft.
@@ -26,108 +27,60 @@ then eventually switch to consensus may not have the block and validator
 history to verify evidence causing them to panic if they see 2/3 commit on what
 the node believes to be an invalid block.
 
-Furthermore, having the capability to backfill prior blocks also allows nodes with
-truncated history to become archive nodes which may be beneficial for the
-network.                                            
+Thus, this RFC sets out to instil a minimum block history invariant amongst
+honest nodes.
 
 ## Proposal
 
 A backfill mechanism can simply be defined as an algorithm for fetching,
-verifying and storing, blocks and other state data (`ValidatorSet`'s
-`ConsensusParams`'s and `ABCIResponses`'s) of a height prior to the current
-base of the node's blockchain. In matching the terminology used for other
-data retrieving protocols (i.e. fast sync and state sync), we 
-call this method **ReverseSync**. Verification and design will be 
-addressed later in the RFC. First we cover where the mechanism would be deployed.
+verifying and storing, headers and validator sets of a height prior to the
+current base of the node's blockchain. In matching the terminology used for
+other data retrieving protocols (i.e. fast sync and state sync), we
+call this method **ReverseSync**.
 
-There are two places where a backfill mechanism would be required:
-1. Upon startup via state sync where nodes must meet the prerequisite history
-before participating in consensus
-2. Where application specifies that the `retain_height` needs to be lower than
-the current blockchain base.
+We will define the mechanism in four sections:
+- Usage
+- Verification
+- Design
+- Termination
 
-### ReverseSync after State Sync
+### Usage
 
-A node, seeking to state sync, will find an adequate snapshot and offer it to
-the application with the following format:
+For now, we focus purely on the case of a state syncing node, whom after
+syncing to a height will need to verify an adequate amount of previous data in
+order to be capable of processing new blocks and advancing sate. We can call
+this the `max_historical_height`/`time` (max as in earliest/highest possible
+time/height). Both height and time are necessary as this maps to the BFT time
+used for evidence expiration. After acquiring `State`, we calculate these
+parameters as:
 
-```proto
-message RequestOfferSnapshot {
-  Snapshot snapshot = 1;  // snapshot offered by peers
-  bytes    app_hash = 2;  // light client-verified app hash for snapshot height
-}
+```go
+max_historical_height = max(state.InitialHeight, state.LastBlockHeight - state.ConsensusParams.EvidenceAgeHeight)
+max_historical_time = max(GenesisTime, state.LastBlockTime.Sub(state.ConsensusParams.EvidenceAgeTime))
 ```
 
-where `Snapshot` contains the new field `backfill_height` :
+Before starting either fast sync or consensus, we then run the following
+synchronous process:
 
-```proto
-message Snapshot {
-  uint64 height          = 1;  // The height at which the snapshot was taken
-  uint32 format          = 2;  // The application-specific snapshot format
-  uint32 chunks          = 3;  // Number of chunks in the snapshot
-  bytes  hash            = 4;  // Arbitrary snapshot hash, equal only if identical
-  bytes  metadata        = 5;  // Arbitrary application metadata
-  uint64 backfill_height = 6;  // Height to backfill blocks from before starting application (inclusive)
-}
+```go
+func ReverseSync(
+  max_historical_height int64
+  max_historical_time time.Time
+) error
 ```
 
-If all chunks are accepted and state sync is successful then the node will
-retrieve and verify blocks up to (and including) the specified backfill height
-**before** participating in consensus.
+Where we fetch and verify blocks until a block `A` where
+`A.Height <= max_historical_height` and `A.Time <= max_historical_time`.
 
-### ReverseSync on application request
-
-The application has control of block retention via `retain_height`, called here:
-
-```proto
-message ResponseCommit {
-  // reserve 1
-  bytes  data          = 2;
-  uint64 retain_height = 3;
-}
-```
-
-Beforehand, a retain height that was less than the nodes current base was
-ignored. With the same backfill mechanism, the application should now be able to
-lower the retention height below the current base height (whether to accommodate
-changing consensus parameters, app specific needs, or a local config).
-This accommodates the use case of a truncated node that wishes to become an
-archive node.
-
-#### Choosing between Strong or Weak Gaurantees about Data
-
-It can be said previously, that block pruning, with respect to the application, 
-offered strong gaurantees about data i.e. if the application pruned to height 100, 
-the operation was synchronous and thus the application knew it would prune to 100 
-before the next height. This meant that the application always knew the height and 
-base of the blockchain at every step. The opposite, weak gaurantees, implies that 
-the application can't gaurantee that what it asked from Tendermint, with respect 
-to data, has happened.
-
-The downside of strong gaurantees is that it is blocking. If a validator decided 
-to prune a million blocks at once, the validator could potentially fall behind. 
-There's an argument then that pruning (and for that matter reverse sync) shouldn't 
-lie on the consensus critical path but rather be an asynchronous background process 
-of the node.
-
-Further to this argument, nodes will not be able to prune past the evidence age 
-regardless of the retain height that the application requests. Finally, applications 
-may ask to fetch blocks back to a height that none of the nodes peers have. 
-The mechanism must ensure termination even if it doesn't reach the height requested 
-by the app.
-
-Taking all these points into consideration, ReverseSync and pruning should be
-operations that run asynchronously in the background. Application can be informed
-of the current base via `RequestEndBlock`:
-
-```proto 
-message RequestEndBlock {
-  Height uint64
-  Base uint64
-}
-```
+Upon successfully reverse syncing a node can now safely continue. As this
+feature is only used as part of state sync, one can think of this as merely an
+extension to it.
 
 ### Verification
+
+ReverseSync is used to fetch and verify the following data structures:
+- `Header`
+- `ValidatorSet`
 
 Nodes will need to verify these prior blocks. This can be achieved by first
 retrieving the header at the base height from the block store. The node then
@@ -138,46 +91,85 @@ header in the new block directly below:
 header[height].LastBlockID == hash(header[height-1])
 ```
 
-The node can therefore trust the new header. This then can be followed with
-using the hashes in the trusted header to validate the other block and state
-info. This is recursively done till the backfill height.  
+The node can therefore trust the new header. It then fetches the validator set
+and validates it as such:
+
+```go
+header[height-1].ValidatorHash == hash(validatorSet[height-1])
+```
 
 ### Design
 
-This section will provide a high level picture of the design with the specifics being
-addressed in a following ADR. The reverse mechanism requires the gossiping of two new
-messages to allow the passsing of state data:
+This section will provide a high level overview of some of the more important
+characteristics of the design, saving the more tedious details as an ADR. This
+section is divided into two approaches that can be used to achieve the defined
+backfill mechanism based on the two networking protocols: RPC or P2P.
+
+### RPC
+
+The aforementioned data is already available via the following RPC endpoints:
+`/blockchain` or `/commit` for `Header`'s' and `/validators` for
+`ValidatorSet`'s'. It may be the best option to fetch and verify these resources
+over RPC. Statesync already requires a list of RPC endpoints, so these could be
+reused.
+
+### P2P
+
+A more congruent approach to the current infrastructure would be to request and
+send the respective resources over the p2p protocol. This would mean the
+addition of two new messages.
 
 ```proto
-message StateDataRequest {
+message ValidatorSetRequest {
   uint64 height = 1;
 }
 ```
 
 ```proto
-message StateDataResponse {
+message ValidatorSetResponse {
   uint64 height = 1;
   ValidatorSet validator_set = 2;
-  ConsensusParams consensus_params = 3;
-  ABCIResponses abci_responses = 4;
 }
 ```
 
-This would be sent across a new channel most likely within the blockchain reactor 
-(one can view ReverseSync as a similar process to FastSync and thus should most
-likey be in the same domain).
+In addition, Tendermint currently sends messages for entire blocks only. This
+would be inconvenient if we only wanted to acquire the header (although there
+may be benefits in saving the entire block). Hence we may want to consider
+increasing the granularity of the request of resources by separating out
+components such as header, commit and data (includes evidence).
+
+The P2P path may also enable P2P networked light clients and a state sync that
+also doesn't need to rely on RPC as the adequate data can now be transmitted
+through P2P.
+
+## Termination
+
+ReverseSync draws a lot of parallels with fast sync. An important consideration
+for fast sync that also extends to ReverseSync is termination. ReverseSync will
+finish it's task when one of the following conditions have been met:
+
+1. It reaches a block `A` where `A.Height <= max_historical_height` and
+`A.Time <= max_historical_time`.
+2. None of it's peers reports to have the block at the height below the
+processes current block.
+3. A global timeout.
+
+This implies that we can't guarantee adequate history and thus the term
+"invariant" can't be used in the strictest sense. In the case that the first
+condition isn't met, the node will optimistically attempt to continue with
+either fast sync or consensus.
 
 ## Alternative Solutions
 
-If we do not want to extend the blockchain's functionality, it is possible to
-use the embedded light client within state sync instead to verify backwards outside
-of the unbondind period and request a snapshot at that height instead. 
+The need for a minimum block history invariant stems purely from the need to
+validate evidence (although there may be some application relevant needs as
+well). Because of this, an alternative, could be to simply trust whatever the
+2/3+ majority has agreed upon and in the case where a node is at the head of the
+blockchain, you simply abstain from voting.
 
-Taking one step further back, some of the problems listed in the introduction
-could be resolved by other means. Full nodes (and even validators to a certain
-extent) could simply bypass validation if they didn't have the necessary
-history trusting purely in consensus. Node operators running nodes with truncated 
-history could start up a separate full node if they wanted complete history.
+As it stands, if 2/3+ vote on evidence you can't verify, in the same manner if
+2/3+ vote on a header that a node sees as invalid (perhaps due to a different
+app hash), the node will halt. 
 
 ## Status
 
@@ -187,32 +179,20 @@ Proposed
 
 ### Positive
 
-- Greater flexibility over the data that a node has. This makes it easier to
-become a node with full history.
-- Ensures a minimum block history invariant.
+- Ensures a minimum block history invariant for honest nodes.
 
 ### Negative
 
-- Applications need to be careful about adjusting the retain height too
-frequently as this will put extra load on the network.
 - Statesync will be slower as more processing is required.
-- Implementation needs to be aware of multiple concurrent processes affecting
-both the blockchain base and height
 
 ### Neutral
 
 - By having validator sets served through p2p, this would make it easier to
-extend p2p support to light clients.
-- `Backfill_height` can be relative to the latest height of the providing node,
-not just an absolute height. This means that an older snapshot might not require
-as much backfilling as a newer one.
+extend p2p support to light clients and state sync.
+- In the future, it may also be possible to extend this feature to allow for
+nodes to freely fetch and verify prior blocks
 
 ## References
 
 - [RFC-001: Block retention](https://github.com/tendermint/spec/blob/master/rfc/001-block-retention.md)
 - [Original issue](https://github.com/tendermint/tendermint/issues/4629)
-
-## Notes
-
-- In the future, if a decision is made to bring the light client into the p2p framework, then this state 
-data will likely be split up as the light client requires only the validator set for verification.
