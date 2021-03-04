@@ -56,7 +56,7 @@ We assume that the field `proposal` in the `PROPOSE` message is a pair `(v, time
 In the reception step at node `p` at local time `now_p`, upon receiving a message `m`:
 - **if** the message `m` is of type `PROPOSE` and satisfies `now_p - PRECISION <  m.time < now_p + PRECISION + MSGDELAY`, then mark the message as `timely`.  
 (`PRECISION` and `MSGDELAY` being system parameters, see [below](#safety-and-liveness))
-> after the presentation in the dev session, we realized that a different semantics for the reception step is closer aligned to the implementation. Instead of dropping propose messages, we keep all them, and mark timely ones.
+> after the presentation in the dev session, we realized that different semantics for the reception step is closer aligned to the implementation. Instead of dropping propose messages, we keep all of them, and mark timely ones.
 
 #### Processing Step
 
