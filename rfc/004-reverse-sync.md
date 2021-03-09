@@ -23,9 +23,9 @@ what blocks would be pruned. However nodes who state sync past this upper bound
 (which is necessary as snapshots must be saved within the trusting period for
 the assisting light client to verify) have no means of backfilling the blocks
 to meet the retention limit. This could be a problem as nodes who state sync and
-then eventually switch to consensus may not have the block and validator
-history to verify evidence causing them to panic if they see 2/3 commit on what
-the node believes to be an invalid block.
+then eventually switch to consensus (or fast sync) may not have the block and
+validator history to verify evidence causing them to panic if they see 2/3
+commit on what the node believes to be an invalid block.
 
 Thus, this RFC sets out to instil a minimum block history invariant amongst
 honest nodes.
@@ -47,12 +47,12 @@ We will define the mechanism in four sections:
 ### Usage
 
 For now, we focus purely on the case of a state syncing node, whom after
-syncing to a height will need to verify an adequate amount of previous data in
-order to be capable of processing new blocks and advancing sate. We can call
-this the `max_historical_height`/`time` (max as in earliest/highest possible
-time/height). Both height and time are necessary as this maps to the BFT time
-used for evidence expiration. After acquiring `State`, we calculate these
-parameters as:
+syncing to a height will need to verify historical data in order to be capable
+of processing new blocks. We can denote the earliest height that the node will
+need to verify and store in order to be able to verify any evidence that might
+arise as the `max_historical_height`/`time`. Both height and time are necessary
+as this maps to the BFT time used for evidence expiration. After acquiring
+`State`, we calculate these parameters as:
 
 ```go
 max_historical_height = max(state.InitialHeight, state.LastBlockHeight - state.ConsensusParams.EvidenceAgeHeight)
@@ -63,18 +63,18 @@ Before starting either fast sync or consensus, we then run the following
 synchronous process:
 
 ```go
-func ReverseSync(
-  max_historical_height int64
-  max_historical_time time.Time
-) error
+func ReverseSync( max_historical_height int64, max_historical_time time.Time) error
 ```
 
 Where we fetch and verify blocks until a block `A` where
 `A.Height <= max_historical_height` and `A.Time <= max_historical_time`.
 
-Upon successfully reverse syncing a node can now safely continue. As this
+Upon successfully reverse syncing, a node can now safely continue. As this
 feature is only used as part of state sync, one can think of this as merely an
 extension to it.
+
+In the future we may want to extend this functionality to allow nodes to fetch
+historical blocks for reasons of accountability or data accessibility.
 
 ### Verification
 
