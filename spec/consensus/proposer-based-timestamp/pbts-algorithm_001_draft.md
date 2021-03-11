@@ -4,7 +4,7 @@
 
 ### Outline
 
-The algorithm in the [arXiv paper](arXiv) evaluates rules of the received messages without making explicit how these messages are received. In our solution, we will make some message filtering explicit. We will assume that there are message reception steps (where messages are received and possibly stored locally for later evaluation of rules) and processing steps (the latter roughly as described in a way similar to the pseudo code of the arXiv paper).
+The algorithm in the [arXiv paper][arXiv] evaluates rules of the received messages without making explicit how these messages are received. In our solution, we will make some message filtering explicit. We will assume that there are message reception steps (where messages are received and possibly stored locally for later evaluation of rules) and processing steps (the latter roughly as described in a way similar to the pseudo code of the arXiv paper).
 
 In contrast to the original algorithm the field `proposal` in the `PROPOSE` message is a pair `(v, time)`, of the proposed consensus value `v` and the proposed time `time`. 
 
