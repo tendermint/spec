@@ -80,7 +80,7 @@ for all correct validators `V`.
 
 #### **[PBTS-CLOCK-GROW.0]**
 
-We assume that during one consensus instance, local clocks re not set back, in particular for each correct validator `V` and each height `k`, we have `beginConsensus(V,k) < endConsensus(V,k)`.
+We assume that during one consensus instance, local clocks are not set back, in particular for each correct validator `V` and each height `k`, we have `beginConsensus(V,k) < endConsensus(V,k)`.
 
 
 #### **[PBTS-CONSENSUS-TIME-VALID.0]**
