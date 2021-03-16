@@ -9,7 +9,6 @@ maintained by Interchain GmbH,
 and one in [Rust](https://github.com/informalsystems/tendermint-rs),
 maintained by Informal Systems.
 
-
 ### Data Structures
 
 - [Encoding and Digests](./spec/core/encoding.md)
@@ -27,7 +26,8 @@ maintained by Informal Systems.
 
 - [The Base P2P Layer](./p2p/node.md): multiplex the protocols ("reactors") on authenticated and encrypted TCP connections
 
-#### P2P Messages 
+#### P2P Messages
+
 - [Peer Exchange (PEX)](./p2p/messages/pex.md): gossip known peer addresses so peers can find each other
 - [Block Sync](./p2p/messages/block_sync.md): gossip blocks so peers can catch up quickly
 - [Consensus](./p2p/messages/consensus.md): gossip votes and block parts so new blocks can be committed
@@ -41,8 +41,8 @@ maintained by Informal Systems.
 
 ### RFC
 
-- [RFC](./rfc/README.md): RFCs describe proposals to change the spec. 
+- [RFC](./rfc/README.md): RFCs describe proposals to change the spec.
   
 ### ProtoBuf
 
-- [Proto](./proto/README.md): The data structures of the Tendermint protocol are located in the `proto` directory. These specify P2P messages that each implementation should follow to be compatible. 
+- [Proto](./proto/README.md): The data structures of the Tendermint protocol are located in the `proto` directory. These specify P2P messages that each implementation should follow to be compatible.
