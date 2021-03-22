@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "tendermint/crypto/proof.proto";
 import "tendermint/version/types.proto";
 import "tendermint/types/validator.proto";
+import "tendermint/types/evidence.proto";
 
 // BlockIdFlag indicates which BlcokID the signature is for
 enum BlockIDFlag {
@@ -67,7 +68,7 @@ message Header {
 
   // hashes of block data
   bytes last_commit_hash = 6;  // commit from validators from the last block
-  bytes data_hash        = 7;  // transactions
+  bytes data_hash        = 7;  // Hash of transactions and evidence_list
 
   // hashes from the app output from the prev block
   bytes validators_hash      = 8;   // validators for the current block
@@ -77,7 +78,6 @@ message Header {
   bytes last_results_hash    = 12;  // root hash of all results from the txs from the previous block
 
   // consensus info
-  bytes evidence_hash    = 13;  // evidence included in the block
   bytes proposer_address = 14;  // original proposer of the block
 }
 
@@ -87,6 +87,8 @@ message Data {
   // NOTE: not all txs here are valid.  We're just agreeing on the order first.
   // This means that block.AppHash does not include these txs.
   repeated bytes txs = 1;
+
+  tendermint.types.Evidence evidence_list = 2;
 }
 
 // Vote represents a prevote, precommit, or commit vote from validators for
