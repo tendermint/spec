@@ -10,7 +10,7 @@ The genesis file is meant to be the starting point of chain. Tendermint's genesi
 - `consensus_params`
     - `block`
         - `max_bytes`: The max amount of bytes a block can be.
-        - `max_gas`: Max sum of `GasWanted` in a proposed block.
+        - `max_gas`: The maximum amount of gas that a block can have.
         - `time_iota_ms`: This parameter has no value anymore in Tendermint-core.
 
 - `evidence`
