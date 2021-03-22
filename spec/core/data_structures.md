@@ -125,6 +125,18 @@ the data in the current block, the previous block, and the results returned by t
 | EvidenceHash      | slice of bytes (`[]byte`) | MerkleRoot of the evidence of Byzantine behaviour included in this block.                                                                                                                                                                                                                                                                                                             | Must  be of length 32                                                                                                                                                                            |
 | ProposerAddress   | slice of bytes (`[]byte`) | Address of the original proposer of the block. Validator must be in the current validatorSet.                                                                                                                                                                                                                                                                                         | Must  be of length 20                                                                                                                                                                            |
 
+### Header Hashing
+
+The hash of the header is used to identify the block a node is downloading or verifying against. To get the correct representation of the header in hash form you must protobuf encode the entire struct, then sha256 the resulting encoding. The field order of the header matters, please see [header struct](../../proto/types/types.proto) for more information on how to construct the header.
+
+```go
+  bz := proto.Marshal(Header)
+
+  sha256.New()
+  h := sha256.Sum256(bz)
+
+```
+
 ## Version
 
 | Name  | type   | Description                                                                                                     | Validation                                                                                                         |
