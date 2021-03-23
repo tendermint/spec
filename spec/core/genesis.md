@@ -1,10 +1,10 @@
 # Genesis
 
-The genesis file is meant to be the starting point of chain. Tendermint's genesis is minimal because it is not aware of application state. An application will populate the genesis file with their own required fields.
+The genesis file is the starting point of a chain. Tendermint's genesis is minimal because it is not aware of application state. An application will populate the genesis file with their own required fields.
 
 ## Genesis Fields
 
-- `genesis_time`: The genesis time is the time the blockchain is meant to start. If a nodes are started before this time they will sit idle until time specified.
+- `genesis_time`: The genesis time is the time the blockchain started or will start. If nodes are started before this time they will sit idle until the time specified.
 - `chain_id`: The chainid is the chain identifier. Every chain should have a unique identifier. When conducting a fork based upgrade, we recommend changing the chainid to avoid network or consensus errors.
 - `initial_height`: This field is the starting height of the blockchain. When conducting a chain restart to avoid restarting at height 1, the network is able to start at a specified height.
 - `consensus_params`
@@ -18,7 +18,7 @@ The genesis file is meant to be the starting point of chain. Tendermint's genesi
       - `max_age_duration`: After this preset amount of time has passed a single piece of evidence is considered invalid.
       - `max_bytes`: The max size a single piece of evidence can be.
 
-> Note: For evidence to be considered invalid evidence must be older than both `max_age_num_blocks` and `max_age_duration`
+> Note: For evidence to be considered invalid, evidence must be older than both `max_age_num_blocks` and `max_age_duration`
 
 - `validator`
       - `pub_key_types`: Defines which curves are to be accepted as a valid validator consensus key. Tendermint supports ed25519, sr25519 and secp256k1.
