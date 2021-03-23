@@ -26,13 +26,28 @@ There are two additions
 - in case the proposer's local time is smaller than the time of the previous block, the proposer waits until this is not the case anymore (to ensure the block time is monotonically increasing)
 - the proposer sends its time `now_p` as part of its proposal
 
+We update the timeout for the `PROPOSE` step according to the following reasoning:
+
+- If a correct proposer needs to wait to make sure its proposed time is larger than the `blockTime` of the previous block, then it sends by realtime `blockTime + ACCURACY` (By this time, its local clock must exceed `blockTime`)
+- the receiver will receive a `PROPOSE` message by `blockTime + ACCURACY + MSGDELAY`
+- the receiver's local clock will be `<= blockTime + 2 * ACCURACY + MSGDELAY`
+- thus when the receiver `p` enters this round it can set its timeout to a value `waitingTime => blockTime + 2 * ACCURACY + MSGDELAY - now_p`
+
+So we should set the timeout to `max(timeoutPropose(round_p), waitingTime)`.
+
+> If, in the future, a block delay parameter `BLOCKDELAY` is introduced, this means 
+that the proposer should wait for `now_p > blockTime + BLOCKDELAY` before sending a `PROPOSE` message. 
+Also, `BLOCKDELAY` needs to be added to `waitingTime`.
+
 #### **[PBTS-ALG-STARTROUND.0]**
 ```go
 function StartRound(round) {
+  blockTime ← block time of block h_p - 1
+  waitingTime ← blockTime + 2 * ACCURACY + MSGDELAY - now_p
   round_p ← round
   step_p ← propose
   if proposer(h_p, round_p) = p {
-    wait until now_p > block time of block h_p - 1 // new wait condition
+    wait until now_p > blockTime // new wait condition
     if validValue_p != nil {
       proposal ← (validValue_p, now_p) // added "now_p"
     }
@@ -42,7 +57,7 @@ function StartRound(round) {
     broadcast ⟨PROPOSAL, h_p, round_p, proposal, validRound_p⟩
   }
   else {
-    schedule OnTimeoutPropose(h_p,round_p) to be executed after timeoutPropose(round_p)
+    schedule OnTimeoutPropose(h_p,round_p) to be executed after max(timeoutPropose(round_p), waitingTime)
   }
 }
 ```
@@ -82,6 +97,7 @@ while step_p = propose ∧ (vr ≥ 0 ∧ vr < round_p) do {
   else {
     broadcast ⟨PREVOTE, hp, roundp, nil⟩
   }
+  step_p ← prevote
 }
 ```
 
