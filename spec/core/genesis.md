@@ -1,6 +1,6 @@
 # Genesis
 
-The genesis file is the starting point of a chain. Tendermint's genesis is minimal because it is not aware of application state. An application will populate the genesis file with their own required fields.
+The genesis file is the starting point of a chain. An application will populate the `app_state` field in the genesis with their required fields. Tendermint is not able to validate this section because it is unaware what application state consists of.
 
 ## Genesis Fields
 
@@ -16,7 +16,7 @@ The genesis file is the starting point of a chain. Tendermint's genesis is minim
 - `evidence`
       - `max_age_num_blocks`: After this preset amount of blocks has passed a single piece of evidence is considered invalid
       - `max_age_duration`: After this preset amount of time has passed a single piece of evidence is considered invalid.
-      - `max_bytes`: The max size a single piece of evidence can be.
+      - `max_bytes`: The max amount of bytes of all evidence included in a block.
 
 > Note: For evidence to be considered invalid, evidence must be older than both `max_age_num_blocks` and `max_age_duration`
 
@@ -30,3 +30,5 @@ The genesis file is the starting point of a chain. Tendermint's genesis is minim
     - This is an array of validators. This validator set is used as the starting validator set of the chain. This field can be empty, if the application sets the validator set in `InitChain`.
   
 - `app_hash`: The applications state root hash. This field does not need to be populated at the start of the chain, the application may provide the needed information via `Initchain`.
+
+- `app_state`: This section of the genesis file is filled in by the application. This section is filled in by the application and is unknown by Tendermint.
