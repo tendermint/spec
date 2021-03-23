@@ -31,4 +31,4 @@ The genesis file is the starting point of a chain. An application will populate 
   
 - `app_hash`: The applications state root hash. This field does not need to be populated at the start of the chain, the application may provide the needed information via `Initchain`.
 
-- `app_state`: This section of the genesis file is filled in by the application. This section is filled in by the application and is unknown by Tendermint.
+- `app_state`: This section is filled in by the application and is unknown to Tendermint.
