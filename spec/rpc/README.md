@@ -26,12 +26,9 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
   | [Commit](#commit)                         |       ✅       |       ✅       |
   | [Validators](#validators)                 |       ✅       |       ✅       |
   | [Genesis](#genesis)                       |       ✅       |       ✅       |
-  | [DumpConsensusState](#dumpconsensusstate) |       ✅       |       ❌       |
   | [ConsensusParams](#consensusparams)       |       ✅       |       ❌       |
   | [UnconfirmedTxs](#unconfirmedtxs)         |       ✅       |       ❌       |
   | [NumUnconfirmedTxs](#numunconfirmedtxs)   |       ✅       |       ❌       |
-  | [TxSearch](#txsearch)                     |       ✅       |       ✅       |
-  | [BlockSearch](#blocksearch)               |       ✅       |       ❌       |
   | [Tx](#tx)                                 |       ✅       |       ❌       |
   | [BroadCastTxSync](#broadcasttxsync)       |       ✅       |       ✅       |
   | [BroadCastTxAsync](#broadcasttxasync)     |       ✅       |       ✅       |
@@ -46,6 +43,8 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
 curl http://127.0.0.1:26657/health
 ```
 
+#### Response
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -59,6 +58,8 @@ curl http://127.0.0.1:26657/health
 ```sh
 curl http://127.0.0.1:26657/status
 ```
+
+#### Response
 
 ```json
 {
@@ -111,10 +112,9 @@ curl http://127.0.0.1:26657/status
 curl http://127.0.0.1:26657/net_info
 ```
 
-```json
-    Example Value
-    Schema
+#### Response
 
+```json
 {
   "id": 0,
   "jsonrpc": "2.0",
@@ -210,6 +210,8 @@ example:
 curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
 ```
 
+#### Response
+
 ```json
 {
   "id": 0,
@@ -273,6 +275,8 @@ example:
 ```sh
 curl http://127.0.0.1:26657/block?height=1
 ```
+
+#### Response
 
 ```json
 {
@@ -381,6 +385,8 @@ example:
 curl http://127.0.0.1:26657/block_by_hash?hash=0xD70952032620CC4E2737EB8AC379806359D8E0B17B0488F627997A0B043ABDED
 ```
 
+#### Response
+
 ```json
 {
   "id": 0,
@@ -486,6 +492,8 @@ curl  http://127.0.0.1:26657/block_results
 curl  http://127.0.0.1:26657/block_results?height=1
 ```
 
+#### Response
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -582,6 +590,8 @@ curl  http://127.0.0.1:26657/commit
 curl  http://127.0.0.1:26657/commit?height=1
 ```
 
+#### Response
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -655,6 +665,8 @@ curl  http://127.0.0.1:26657/validators
 curl  http://127.0.0.1:26657/commit?height=1
 ```
 
+#### Response
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -680,27 +692,268 @@ curl  http://127.0.0.1:26657/commit?height=1
 
 ### Genesis
 
-### DumpConsensusState
+```sh
+curl  http://127.0.0.1:26657/genesis
+```
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "genesis": {
+      "genesis_time": "2019-04-22T17:00:00Z",
+      "chain_id": "cosmoshub-2",
+      "initial_height": "2",
+      "consensus_params": {
+        "block": {
+          "max_bytes": "22020096",
+          "max_gas": "1000",
+          "time_iota_ms": "1000"
+        },
+        "evidence": {
+          "max_age": "100000"
+        },
+        "validator": {
+          "pub_key_types": [
+            "ed25519"
+          ]
+        }
+      },
+      "validators": [
+        {
+          "address": "B00A6323737F321EB0B8D59C6FD497A14B60938A",
+          "pub_key": {
+            "type": "tendermint/PubKeyEd25519",
+            "value": "cOQZvh/h9ZioSeUMZB/1Vy1Xo5x2sjrVjlE/qHnYifM="
+          },
+          "power": "9328525",
+          "name": "Certus One"
+        }
+      ],
+      "app_hash": "",
+      "app_state": {}
+    }
+  }
+}
+```
 
 ### ConsensusParams
 
+```sh
+curl  http://127.0.0.1:26657/consensus_params
+```
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "block_height": "1",
+    "consensus_params": {
+      "block": {
+        "max_bytes": "22020096",
+        "max_gas": "1000",
+        "time_iota_ms": "1000"
+      },
+      "evidence": {
+        "max_age": "100000"
+      },
+      "validator": {
+        "pub_key_types": [
+          "ed25519"
+        ]
+      }
+    }
+  }
+}
+```
+
 ### UnconfirmedTxs
+
+```sh
+curl  http://127.0.0.1:26657/unconfirmed_txs
+```
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "n_txs": "82",
+    "total": "82",
+    "total_bytes": "19974",
+    "txs": [
+      "gAPwYl3uCjCMTXENChSMnIkb5ZpYHBKIZqecFEV2tuZr7xIUA75/FmYq9WymsOBJ0XSJ8yV8zmQKMIxNcQ0KFIyciRvlmlgcEohmp5wURXa25mvvEhQbrvwbvlNiT+Yjr86G+YQNx7kRVgowjE1xDQoUjJyJG+WaWBwSiGannBRFdrbma+8SFK2m+1oxgILuQLO55n8mWfnbIzyPCjCMTXENChSMnIkb5ZpYHBKIZqecFEV2tuZr7xIUQNGfkmhTNMis4j+dyMDIWXdIPiYKMIxNcQ0KFIyciRvlmlgcEohmp5wURXa25mvvEhS8sL0D0wwgGCItQwVowak5YB38KRIUCg4KBXVhdG9tEgUxMDA1NBDoxRgaagom61rphyECn8x7emhhKdRCB2io7aS/6Cpuq5NbVqbODmqOT3jWw6kSQKUresk+d+Gw0BhjiggTsu8+1voW+VlDCQ1GRYnMaFOHXhyFv7BCLhFWxLxHSAYT8a5XqoMayosZf9mANKdXArA="
+    ]
+  }
+}
+```
 
 ### NumUnconfirmedTxs
 
-### TxSearch
+```sh
+curl  http://127.0.0.1:26657/num_unconfirmed_txs
+```
 
-### BlockSearch
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "n_txs": "31",
+    "total": "82",
+    "total_bytes": "19974"
+  }
+}
+```
 
 ### Tx
+
+```sh
+curl  http://127.0.0.1:26657/num_unconfirmed_txs
+```
+
+#### Parameters
+
+- `hash (string)`: The hash of the transaction
+- `prove (bool)`: If the response should include proof the transaction was included in a block.
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "hash": "D70952032620CC4E2737EB8AC379806359D8E0B17B0488F627997A0B043ABDED",
+    "height": "1000",
+    "index": 0,
+    "tx_result": {
+      "log": "[{\"msg_index\":\"0\",\"success\":true,\"log\":\"\"}]",
+      "gas_wanted": "200000",
+      "gas_used": "28596",
+      "tags": [
+        {
+          "key": "YWN0aW9u",
+          "value": "c2VuZA==",
+          "index": false
+        }
+      ]
+    },
+    "tx": "5wHwYl3uCkaoo2GaChQmSIu8hxpJxLcCuIi8fiHN4TMwrRIU/Af1cEG7Rcs/6LjTl7YjRSymJfYaFAoFdWF0b20SCzE0OTk5OTk1MDAwEhMKDQoFdWF0b20SBDUwMDAQwJoMGmoKJuta6YchAwswBShaB1wkZBctLIhYqBC3JrAI28XGzxP+rVEticGEEkAc+khTkKL9CDE47aDvjEHvUNt+izJfT4KVF2v2JkC+bmlH9K08q3PqHeMI9Z5up+XMusnTqlP985KF+SI5J3ZOIhhNYWRlIGJ5IENpcmNsZSB3aXRoIGxvdmU="
+  }
+}
+```
 
 ## Transaction Routes
 
 ### BroadCastTxSync
 
+Returns with the response from CheckTx. Does not wait for DeliverTx result.
+
+```sh
+curl  http://127.0.0.1:26657/broadcast_tx_sync
+```
+
+#### Parameters
+
+- `tx (string)`: The transaction encoded
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "code": "0",
+    "data": "",
+    "log": "",
+    "codespace": "ibc",
+    "hash": "0D33F2F03A5234F38706E43004489E061AC40A2E"
+  },
+  "error": ""
+}
+```
+
 ### BroadCastTxAsync
 
-### BroadCastTxCommit
+Returns right away, with no response. Does not wait for CheckTx nor DeliverTx results.
+
+```sh
+curl  http://127.0.0.1:26657/broadcast_tx_async
+```
+
+#### Parameters
+
+- `tx (string)`: The transaction encoded
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "code": "0",
+    "data": "",
+    "log": "",
+    "codespace": "ibc",
+    "hash": "0D33F2F03A5234F38706E43004489E061AC40A2E"
+  },
+  "error": ""
+}
+```
+
+### CheckTx
+
+Checks the transaction without executing it.
+
+```sh
+curl  http://127.0.0.1:26657/check_tx
+```
+
+#### Parameters
+
+- `tx (string)`: String of the encoded transaction
+
+#### Response
+
+```json
+{
+  "error": "",
+  "result": {
+    "code": "0",
+    "data": "",
+    "log": "",
+    "info": "",
+    "gas_wanted": "1",
+    "gas_used": "0",
+    "events": [
+      {
+        "type": "app",
+        "attributes": [
+          {
+            "key": "YWN0aW9u",
+            "value": "c2VuZA==",
+            "index": false
+          }
+        ]
+      }
+    ],
+    "codespace": "bank"
+  },
+  "id": 0,
+  "jsonrpc": "2.0"
+}
+```
 
 ## ABCI Routes
 
