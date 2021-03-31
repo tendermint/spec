@@ -39,6 +39,8 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
 
 ### Health
 
+#### Request
+
 ```sh
 curl http://127.0.0.1:26657/health
 ```
@@ -54,6 +56,8 @@ curl http://127.0.0.1:26657/health
 ```
 
 ### Status
+
+#### Request
 
 ```sh
 curl http://127.0.0.1:26657/status
@@ -107,6 +111,8 @@ curl http://127.0.0.1:26657/status
 ```
 
 ### NetInfo
+
+#### Request
 
 ```sh
 curl http://127.0.0.1:26657/net_info
@@ -195,18 +201,16 @@ curl http://127.0.0.1:26657/net_info
 
 ### Blockchain
 
-```sh
-curl http://127.0.0.1:26657/blockchain
-```
-
 #### Parameters
 
 - Minimum height `integer`
 - Maximum height `integer`
 
-example:
+#### Request
 
 ```sh
+curl http://127.0.0.1:26657/blockchain
+
 curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
 ```
 
@@ -262,17 +266,15 @@ curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
 
 ### Block
 
-```sh
-curl http://127.0.0.1:26657/block
-```
-
 #### Parameters
 
 - Height `integer`
 
-example:
+#### Request
 
 ```sh
+curl http://127.0.0.1:26657/block
+
 curl http://127.0.0.1:26657/block?height=1
 ```
 
@@ -371,15 +373,15 @@ curl http://127.0.0.1:26657/block?height=1
 
 ### BlockByHash
 
-```sh
-curl http://127.0.0.1:26657/block_by_hash
-```
-
 #### Parameters
 
 - Block hash `string`
 
-example:
+#### Request
+
+```sh
+curl http://127.0.0.1:26657/block_by_hash
+```
 
 ```sh
 curl http://127.0.0.1:26657/block_by_hash?hash=0xD70952032620CC4E2737EB8AC379806359D8E0B17B0488F627997A0B043ABDED
@@ -480,15 +482,16 @@ curl http://127.0.0.1:26657/block_by_hash?hash=0xD70952032620CC4E2737EB8AC379806
 
 ### BlockResults
 
-```sh
-curl  http://127.0.0.1:26657/block_results
-```
-
 ### Parameters
 
 - Block height `integer`
 
+#### Request
+
 ```sh
+curl  http://127.0.0.1:26657/block_results
+
+
 curl  http://127.0.0.1:26657/block_results?height=1
 ```
 
@@ -577,16 +580,17 @@ curl  http://127.0.0.1:26657/block_results?height=1
 
 ### Commit
 
-```sh
-curl  http://127.0.0.1:26657/commit
-```
-
 #### Parameters
 
 - Block height `integer`
     - If no height is set the latest commit will be returned.
 
+#### Request
+
 ```sh
+curl  http://127.0.0.1:26657/commit
+
+
 curl  http://127.0.0.1:26657/commit?height=1
 ```
 
@@ -650,10 +654,6 @@ curl  http://127.0.0.1:26657/commit?height=1
 
 ### Validators
 
-```sh
-curl  http://127.0.0.1:26657/validators
-```
-
 #### Parameters
 
 - `height`: Block height `integer`
@@ -661,8 +661,10 @@ curl  http://127.0.0.1:26657/validators
 - `page`
 - `per_page`
 
+#### Request
+
 ```sh
-curl  http://127.0.0.1:26657/commit?height=1
+curl  http://127.0.0.1:26657/validators
 ```
 
 #### Response
@@ -691,6 +693,8 @@ curl  http://127.0.0.1:26657/commit?height=1
 ```
 
 ### Genesis
+
+#### Request
 
 ```sh
 curl  http://127.0.0.1:26657/genesis
@@ -742,6 +746,8 @@ curl  http://127.0.0.1:26657/genesis
 
 ### ConsensusParams
 
+#### Request
+
 ```sh
 curl  http://127.0.0.1:26657/consensus_params
 ```
@@ -775,6 +781,8 @@ curl  http://127.0.0.1:26657/consensus_params
 
 ### UnconfirmedTxs
 
+#### Request
+
 ```sh
 curl  http://127.0.0.1:26657/unconfirmed_txs
 ```
@@ -798,9 +806,13 @@ curl  http://127.0.0.1:26657/unconfirmed_txs
 
 ### NumUnconfirmedTxs
 
+#### Request
+
 ```sh
 curl  http://127.0.0.1:26657/num_unconfirmed_txs
 ```
+
+#### Response
 
 ```json
 {
@@ -816,14 +828,16 @@ curl  http://127.0.0.1:26657/num_unconfirmed_txs
 
 ### Tx
 
-```sh
-curl  http://127.0.0.1:26657/num_unconfirmed_txs
-```
-
 #### Parameters
 
 - `hash (string)`: The hash of the transaction
 - `prove (bool)`: If the response should include proof the transaction was included in a block.
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/num_unconfirmed_txs
+```
 
 #### Response
 
@@ -858,13 +872,15 @@ curl  http://127.0.0.1:26657/num_unconfirmed_txs
 
 Returns with the response from CheckTx. Does not wait for DeliverTx result.
 
-```sh
-curl  http://127.0.0.1:26657/broadcast_tx_sync
-```
-
 #### Parameters
 
 - `tx (string)`: The transaction encoded
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/broadcast_tx_sync
+```
 
 #### Response
 
@@ -887,13 +903,15 @@ curl  http://127.0.0.1:26657/broadcast_tx_sync
 
 Returns right away, with no response. Does not wait for CheckTx nor DeliverTx results.
 
-```sh
-curl  http://127.0.0.1:26657/broadcast_tx_async
-```
-
 #### Parameters
 
 - `tx (string)`: The transaction encoded
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/broadcast_tx_async
+```
 
 #### Response
 
@@ -916,18 +934,22 @@ curl  http://127.0.0.1:26657/broadcast_tx_async
 
 Checks the transaction without executing it.
 
-```sh
-curl  http://127.0.0.1:26657/check_tx
-```
-
 #### Parameters
 
 - `tx (string)`: String of the encoded transaction
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/check_tx
+```
 
 #### Response
 
 ```json
 {
+  "id": 0,
+  "jsonrpc": "2.0",
   "error": "",
   "result": {
     "code": "0",
@@ -949,9 +971,7 @@ curl  http://127.0.0.1:26657/check_tx
       }
     ],
     "codespace": "bank"
-  },
-  "id": 0,
-  "jsonrpc": "2.0"
+  }
 }
 ```
 
@@ -959,8 +979,97 @@ curl  http://127.0.0.1:26657/check_tx
 
 ### ABCIInfo
 
+Get some info about the application.
+
+#### Parameters
+
+None
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/abci_info
+```
+
+#### Response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+    "response": {
+      "data": "{\"size\":0}",
+      "version": "0.16.1",
+      "app_version": "1314126"
+    }
+  }
+}
+```
+
 ### ABCIQuery
+
+Query the application for some information.
+
+#### Parameters
+
+- `path (string)`: Path to the data. This is defined by the application.
+- `data (string)`: The data requested
+- `height (integer)`: Height at which the data is being requested for.
+- `prove (bool)`: Include proofs of the transactions inclusion in the block
+
+#### Request
+
+```sh
+curl  http://127.0.0.1:26657/abci_query?path="a/b/c"=IHAVENOIDEA&height=1&prove=true
+```
+
+#### Response
+
+```json
+{
+  "error": "",
+  "result": {
+    "response": {
+      "log": "exists",
+      "height": "0",
+      "proof": "010114FED0DAD959F36091AD761C922ABA3CBF1D8349990101020103011406AA2262E2F448242DF2C2607C3CDC705313EE3B0001149D16177BC71E445476174622EA559715C293740C",
+      "value": "61626364",
+      "key": "61626364",
+      "index": "-1",
+      "code": "0"
+    }
+  },
+  "id": 0,
+  "jsonrpc": "2.0"
+}
+```
 
 ## Evidence Routes
 
 ### BroadcastEvidence
+
+Broadcast evidence of the misbehavior.
+
+#### Parameters
+
+- `evidence (string)`:
+
+#### Request
+
+```sh
+curl http://localhost:26657/broadcast_evidence?evidence=JSON_EVIDENCE_encoded
+```
+
+#### Response
+
+```json
+    Schema
+
+{
+  "error": "",
+  "result": "",
+  "id": 0,
+  "jsonrpc": "2.0"
+}
+```
