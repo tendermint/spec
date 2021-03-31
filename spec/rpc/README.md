@@ -11,35 +11,43 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
   | HTTPS        |       ✅       |       ❌       |
   | WS           |       ✅       |       ✅       |
   
-  | Routes                                    | Tendermint-Go | Tendermint-Rs |
-  |-------------------------------------------|:-------------:|:-------------:|
-  | [Subscribe](#subscribe)                   |       ✅       |       ✅       |
-  | [Unsubscribe](#unsubscribe)               |       ✅       |       ✅       |
-  | [UnsubscribeAll](#unsubscribeall)         |       ✅       |       ❌       |
-  | [Health](#health)                         |       ✅       |       ✅       |
-  | [Status](#status)                         |       ✅       |       ✅       |
-  | [NetInfo](#netinfo)                       |       ✅       |       ✅       |
-  | [blockchain](#blockchain)                 |       ✅       |       ✅       |
-  | [block](#block)                           |       ✅       |       ✅       |
-  | [BlockByHash](#blockbyhash)               |       ✅       |       ❌       |
-  | [BlockResults](#blockresults)             |       ✅       |       ✅       |
-  | [Commit](#commit)                         |       ✅       |       ✅       |
-  | [Validators](#validators)                 |       ✅       |       ✅       |
-  | [Genesis](#genesis)                       |       ✅       |       ✅       |
-  | [ConsensusParams](#consensusparams)       |       ✅       |       ❌       |
-  | [UnconfirmedTxs](#unconfirmedtxs)         |       ✅       |       ❌       |
-  | [NumUnconfirmedTxs](#numunconfirmedtxs)   |       ✅       |       ❌       |
-  | [Tx](#tx)                                 |       ✅       |       ❌       |
-  | [BroadCastTxSync](#broadcasttxsync)       |       ✅       |       ✅       |
-  | [BroadCastTxAsync](#broadcasttxasync)     |       ✅       |       ✅       |
-  | [BroadCastTxCommit](#broadcasttxcommit)   |       ✅       |       ✅       |
-  | [BroadcastEvidence](#broadcastevidence)   |       ✅       |       ✅       |
+  | Routes                                  | Tendermint-Go | Tendermint-Rs |
+  |-----------------------------------------|:-------------:|:-------------:|
+  | [Subscribe](#subscribe)                 |       ✅       |       ✅       |
+  | [Unsubscribe](#unsubscribe)             |       ✅       |       ✅       |
+  | [UnsubscribeAll](#unsubscribeall)       |       ✅       |       ❌       |
+  | [Health](#health)                       |       ✅       |       ✅       |
+  | [Status](#status)                       |       ✅       |       ✅       |
+  | [NetInfo](#netinfo)                     |       ✅       |       ✅       |
+  | [blockchain](#blockchain)               |       ✅       |       ✅       |
+  | [block](#block)                         |       ✅       |       ✅       |
+  | [BlockByHash](#blockbyhash)             |       ✅       |       ❌       |
+  | [BlockResults](#blockresults)           |       ✅       |       ✅       |
+  | [Commit](#commit)                       |       ✅       |       ✅       |
+  | [Validators](#validators)               |       ✅       |       ✅       |
+  | [Genesis](#genesis)                     |       ✅       |       ✅       |
+  | [ConsensusParams](#consensusparams)     |       ✅       |       ❌       |
+  | [UnconfirmedTxs](#unconfirmedtxs)       |       ✅       |       ❌       |
+  | [NumUnconfirmedTxs](#numunconfirmedtxs) |       ✅       |       ❌       |
+  | [Tx](#tx)                               |       ✅       |       ❌       |
+  | [BroadCastTxSync](#broadcasttxsync)     |       ✅       |       ✅       |
+  | [BroadCastTxAsync](#broadcasttxasync)   |       ✅       |       ✅       |
+  | [ABCIInfo](#abciinfo)                   |       ✅       |       ✅       |
+  | [ABCIQuery](#abciquery)                 |       ✅       |       ✅       |
+  | [BroadCastTxAsync](#broadcasttxasync)   |       ✅       |       ✅       |
+  | [BroadcastEvidence](#broadcastevidence) |       ✅       |       ✅       |
 
 ## Info Routes
 
 ### Health
 
+Node heartbeat
+
+#### Parameters
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/health
@@ -57,10 +65,24 @@ curl http://127.0.0.1:26657/health
 
 ### Status
 
+Get Tendermint status including node info, pubkey, latest block hash, app hash, block height and time.
+
+#### Parameters
+
+None
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/status
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"status\"}"
 ```
 
 #### Response
@@ -112,10 +134,24 @@ curl http://127.0.0.1:26657/status
 
 ### NetInfo
 
+Network information
+
+#### Parameters
+
+None
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/net_info
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"net_info\"}"
 ```
 
 #### Response
@@ -201,6 +237,8 @@ curl http://127.0.0.1:26657/net_info
 
 ### Blockchain
 
+Get block headers (max: 20) for minHeight <= height <= maxHeight.
+
 #### Parameters
 
 - Minimum height `integer`
@@ -208,10 +246,18 @@ curl http://127.0.0.1:26657/net_info
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl http://127.0.0.1:26657/blockchain
 
 curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"blockchain\",\"params\":{\"height\":\"1\"}}"
 ```
 
 #### Response
@@ -266,16 +312,26 @@ curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
 
 ### Block
 
+Get block at a specified height.
+
 #### Parameters
 
-- Height `integer`
+- `height (integer)`: height of the requested block. If no height is specified the latest block will be used.
 
 #### Request
+
+##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/block
 
 curl http://127.0.0.1:26657/block?height=1
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"block\",\"params\":{\"height\":\"1\"}}"
 ```
 
 #### Response
@@ -375,16 +431,20 @@ curl http://127.0.0.1:26657/block?height=1
 
 #### Parameters
 
-- Block hash `string`
+- `hash (string)`: Hash of the block to query for.
 
 #### Request
 
-```sh
-curl http://127.0.0.1:26657/block_by_hash
-```
+##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/block_by_hash?hash=0xD70952032620CC4E2737EB8AC379806359D8E0B17B0488F627997A0B043ABDED
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"block_by_hash\",\"params\":{\"hash\":\"0xD70952032620CC4E2737EB8AC379806359D8E0B17B0488F627997A0B043ABDED\"}}"
 ```
 
 #### Response
@@ -484,15 +544,23 @@ curl http://127.0.0.1:26657/block_by_hash?hash=0xD70952032620CC4E2737EB8AC379806
 
 ### Parameters
 
-- Block height `integer`
+- `height (integer)`: Height of the block which contains the results. If no height is specified, the latest block height will be used
 
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/block_results
 
 
 curl  http://127.0.0.1:26657/block_results?height=1
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"block_results\",\"params\":{\"height\":\"1\"}}"
 ```
 
 #### Response
@@ -582,16 +650,23 @@ curl  http://127.0.0.1:26657/block_results?height=1
 
 #### Parameters
 
-- Block height `integer`
-    - If no height is set the latest commit will be returned.
+- `height (integer)`: Height of the block the requested commit pertains to. If no height is set the latest commit will be returned.
 
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/commit
 
 
 curl  http://127.0.0.1:26657/commit?height=1
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"commit\",\"params\":{\"height\":\"1\"}}"
 ```
 
 #### Response
@@ -656,15 +731,22 @@ curl  http://127.0.0.1:26657/commit?height=1
 
 #### Parameters
 
-- `height`: Block height `integer`
-    - If no height is set the latest commit will be returned.
-- `page`
-- `per_page`
+- `height (integer)`: Block height at which the validators were present on. If no height is set the latest commit will be returned.
+- `page (integer)`:
+- `per_page (integer)`:
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl  http://127.0.0.1:26657/validators
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"validators\",\"params\":{\"height\":\"1\", \"page\":\"1\", \"per_page\":\"20\"}}"
 ```
 
 #### Response
@@ -694,10 +776,20 @@ curl  http://127.0.0.1:26657/validators
 
 ### Genesis
 
+Get Genesis of the chain.
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/genesis
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"genesis\"}"
 ```
 
 #### Response
@@ -746,10 +838,20 @@ curl  http://127.0.0.1:26657/genesis
 
 ### ConsensusParams
 
+Get the consensus parameters.
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/consensus_params
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"consensus_params\"}"
 ```
 
 #### Response
@@ -781,10 +883,24 @@ curl  http://127.0.0.1:26657/consensus_params
 
 ### UnconfirmedTxs
 
+Get a list of unconfirmed transactions.
+
+#### Parameters
+
+- `limit (integer)` The amount of txs to respond with.
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/unconfirmed_txs
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"unconfirmed_txs\, \"params\":{\"limit\":\"20\"}"}"
 ```
 
 #### Response
@@ -806,10 +922,24 @@ curl  http://127.0.0.1:26657/unconfirmed_txs
 
 ### NumUnconfirmedTxs
 
+Get data about unconfirmed transactions.
+
+#### Parameters
+
+None
+
 #### Request
+
+##### HTTP
 
 ```sh
 curl  http://127.0.0.1:26657/num_unconfirmed_txs
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"num_unconfirmed_txs\"}"
 ```
 
 #### Response
