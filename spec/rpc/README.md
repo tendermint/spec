@@ -45,12 +45,20 @@ Node heartbeat
 
 #### Parameters
 
+None
+
 #### Request
 
 ##### HTTP
 
 ```sh
 curl http://127.0.0.1:26657/health
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"health\"}"
 ```
 
 #### Response
@@ -241,8 +249,8 @@ Get block headers (max: 20) for minHeight <= height <= maxHeight.
 
 #### Parameters
 
-- Minimum height `integer`
-- Maximum height `integer`
+- `minHeight (integer)`: The lowest block to be returned in the response
+- `maxHeight (integer)`: The highest block to be returned in the response
 
 #### Request
 
@@ -257,7 +265,7 @@ curl http://127.0.0.1:26657/blockchain?minHeight=1&maxHeight=2
 ##### JSONRPC
 
 ```sh
-curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"blockchain\",\"params\":{\"height\":\"1\"}}"
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"blockchain\",\"params\":{\"minHeight\":\"1\", \"maxHeight\":\"2\"}}"
 ```
 
 #### Response
