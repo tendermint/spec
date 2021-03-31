@@ -835,8 +835,16 @@ curl  http://127.0.0.1:26657/num_unconfirmed_txs
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl  http://127.0.0.1:26657/num_unconfirmed_txs
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"num_unconfirmed_txs\"}"
 ```
 
 #### Response
@@ -878,8 +886,16 @@ Returns with the response from CheckTx. Does not wait for DeliverTx result.
 
 #### Request
 
+##### HTTP
+
 ```sh
-curl  http://127.0.0.1:26657/broadcast_tx_sync
+curl  http://127.0.0.1:26657/broadcast_tx_sync?tx=encoded_tx
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"broadcast_tx_sync\",\"params\":{\"tx\":\"a/encoded_tx/c\"}}"
 ```
 
 #### Response
@@ -909,8 +925,16 @@ Returns right away, with no response. Does not wait for CheckTx nor DeliverTx re
 
 #### Request
 
+##### HTTP
+
 ```sh
-curl  http://127.0.0.1:26657/broadcast_tx_async
+curl  http://127.0.0.1:26657/broadcast_tx_async?tx=encoded_tx
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"broadcast_tx_async\",\"params\":{\"tx\":\"a/encoded_tx/c\"}}"
 ```
 
 #### Response
@@ -940,8 +964,16 @@ Checks the transaction without executing it.
 
 #### Request
 
+##### HTTP
+
 ```sh
-curl  http://127.0.0.1:26657/check_tx
+curl  http://127.0.0.1:26657/check_tx?tx=encoded_tx
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"check_tx\",\"params\":{\"tx\":\"a/encoded_tx/c\"}}"
 ```
 
 #### Response
@@ -987,8 +1019,16 @@ None
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl  http://127.0.0.1:26657/abci_info
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"abci_info\"}"
 ```
 
 #### Response
@@ -1020,8 +1060,16 @@ Query the application for some information.
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl  http://127.0.0.1:26657/abci_query?path="a/b/c"=IHAVENOIDEA&height=1&prove=true
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"abci_query\",\"params\":{\"path\":\"a/b/c\", \"height\":\"1\", \"bool\":\"true\"}}"
 ```
 
 #### Response
@@ -1057,15 +1105,21 @@ Broadcast evidence of the misbehavior.
 
 #### Request
 
+##### HTTP
+
 ```sh
 curl http://localhost:26657/broadcast_evidence?evidence=JSON_EVIDENCE_encoded
+```
+
+#### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"broadcast_evidence\",\"params\":{\"evidence\":\"JSON_EVIDENCE_encoded\"}}"
 ```
 
 #### Response
 
 ```json
-    Schema
-
 {
   "error": "",
   "result": "",
