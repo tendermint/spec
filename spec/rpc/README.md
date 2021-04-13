@@ -909,7 +909,7 @@ curl  http://127.0.0.1:26657/unconfirmed_txs
 ##### JSONRPC
 
 ```sh
-curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"unconfirmed_txs\, \"params\":{\"limit\":\"20\"}"}"
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"unconfirmed_txs\, \"params\":{\"limit\":\"20\"}}"
 ```
 
 #### Response
