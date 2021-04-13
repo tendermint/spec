@@ -242,7 +242,7 @@ curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\
 
 ### Blockchain
 
-Get block headers (max: 20) for minHeight <= height <= maxHeight.
+Get block headers.
 
 #### Parameters
 
@@ -844,6 +844,10 @@ curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\
 ### ConsensusParams
 
 Get the consensus parameters.
+
+#### Parameters
+
+- `height (integer)`: Bloch height at which the consensus params would like to be fetched for. 
 
 #### Request
 
