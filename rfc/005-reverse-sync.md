@@ -2,6 +2,7 @@
 
 ## Changelog
 
+- 2021-04-19: Use P2P to gossip necessary data for reverse sync.
 - 2021-03-03: Simplify proposal to the state sync case.
 - 2021-02-17: Add notes on asynchronicity of processes.
 - 2020-12-10: Rename backfill blocks to reverse sync.
@@ -40,8 +41,8 @@ call this method **ReverseSync**.
 
 We will define the mechanism in four sections:
 - Usage
-- Verification
 - Design
+- Verification
 - Termination
 
 ### Usage
@@ -63,7 +64,7 @@ Before starting either fast sync or consensus, we then run the following
 synchronous process:
 
 ```go
-func ReverseSync( max_historical_height int64, max_historical_time time.Time) error
+func ReverseSync(max_historical_height int64, max_historical_time time.Time) error
 ```
 
 Where we fetch and verify blocks until a block `A` where
@@ -76,71 +77,59 @@ extension to it.
 In the future we may want to extend this functionality to allow nodes to fetch
 historical blocks for reasons of accountability or data accessibility.
 
+### Design
+
+This section will provide a high level overview of some of the more important
+characteristics of the design, saving the more tedious details as an ADR.
+
+#### P2P
+
+Implementation of this RFC will require the addition of a new channel and two
+new messages.
+
+```proto
+message LightBlockRequest {
+  uint64 height = 1;
+}
+```
+
+```proto
+message LightBlockResponse {
+  Header header = 1;
+  Commit commit = 2;
+  ValidatorSet validator_set = 3;
+}
+```
+
+The P2P path may also enable P2P networked light clients and a state sync that
+also doesn't need to rely on RPC.
+
 ### Verification
 
-ReverseSync is used to fetch and verify the following data structures:
+ReverseSync is used to fetch the following data structures:
 - `Header`
+- `Commit`
 - `ValidatorSet`
 
-Nodes will need to verify these prior blocks. This can be achieved by first
-retrieving the header at the base height from the block store. The node then
-checks that the `LastBlockID` corresponds with the hash calculated from the
-header in the new block directly below:
+Nodes will also need to be able to verify these. This can be achieved by first
+retrieving the header at the base height from the block store. From this trusted
+header, the node hashes each of the three data structures and checks that they are correct.
 
+1. The trusted header's last block ID matches the hash of the new header 
 ```go
 header[height].LastBlockID == hash(header[height-1])
 ```
 
-The node can therefore trust the new header. It then fetches the validator set
-and validates it as such:
-
+2. The trusted header's last commit hash matches the hash of the new commit
 ```go
-header[height-1].ValidatorHash == hash(validatorSet[height-1])
+header[height].LastCommitHash == hash(commit[height-1])
 ```
 
-### Design
-
-This section will provide a high level overview of some of the more important
-characteristics of the design, saving the more tedious details as an ADR. This
-section is divided into two approaches that can be used to achieve the defined
-backfill mechanism based on the two networking protocols: RPC or P2P.
-
-#### RPC
-
-The aforementioned data is already available via the following RPC endpoints:
-`/blockchain` or `/commit` for `Header`'s' and `/validators` for
-`ValidatorSet`'s'. It may be the best option to fetch and verify these resources
-over RPC. Statesync already requires a list of RPC endpoints, so these could be
-reused.
-
-#### P2P
-
-A more congruent approach to the current infrastructure would be to request and
-send the respective resources over the p2p protocol. This would mean the
-addition of two new messages.
-
-```proto
-message ValidatorSetRequest {
-  uint64 height = 1;
-}
+3. Given that the node now trusts the new header, check that the header's validator set
+hash matches the hash of the validator set
+```go
+header[height-1].ValidatorsHash == hash(validatorSet[height-1])
 ```
-
-```proto
-message ValidatorSetResponse {
-  uint64 height = 1;
-  ValidatorSet validator_set = 2;
-}
-```
-
-In addition, Tendermint currently sends messages for entire blocks only. This
-would be inconvenient if we only wanted to acquire the header (although there
-may be benefits in saving the entire block). Hence we may want to consider
-increasing the granularity of the request of resources by separating out
-components such as header, commit and data (includes evidence).
-
-The P2P path may also enable P2P networked light clients and a state sync that
-also doesn't need to rely on RPC as the adequate data can now be transmitted
-through P2P.
 
 ### Termination
 
@@ -156,8 +145,8 @@ processes current block.
 
 This implies that we can't guarantee adequate history and thus the term
 "invariant" can't be used in the strictest sense. In the case that the first
-condition isn't met, the node will optimistically attempt to continue with
-either fast sync or consensus.
+condition isn't met, the node will log an error and optimistically attempt 
+to continue with either fast sync or consensus.
 
 ## Alternative Solutions
 
@@ -171,6 +160,15 @@ As it stands, if 2/3+ vote on evidence you can't verify, in the same manner if
 2/3+ vote on a header that a node sees as invalid (perhaps due to a different
 app hash), the node will halt.
 
+Another alternative is the method with which the relevant data is retrieved.
+Instead of introducing new messages to the P2P layer, RPC could have been used 
+instead.
+
+The aforementioned data is already available via the following RPC endpoints:
+`/commit` for `Header`'s' and `/validators` for `ValidatorSet`'s'. It was
+decided predominantly due to the instability of the current RPC infrastructure
+that P2P be used instead. 
+
 ## Status
 
 Proposed
@@ -179,7 +177,8 @@ Proposed
 
 ### Positive
 
-- Ensures a minimum block history invariant for honest nodes.
+- Ensures a minimum block history invariant for honest nodes. This will allow
+  nodes to verify evidence.
 
 ### Negative
 
