@@ -27,6 +27,11 @@ The Tendermint blockchains consists of a short list of data types:
 - [`ValidatorSet`](#validatorset)
 - [`Address`](#address)
 - [`ConsensusParams`](#consensusparams)
+- [`BlockParams`](#blockparams)
+- [`EvidenceParams`](#evidenceparams)
+- [`ValidatorParams`](#validatorparams)
+- [`VersionParams`](#versionparams)
+
 
 ## Block
 
@@ -266,7 +271,7 @@ func (vote *Vote) Verify(chainID string, pubKey crypto.PubKey) error {
 }
 ```
 
-### Proposal
+## Proposal
 
 Proposal contains height and round for which this proposal is made, BlockID as a unique identifier
 of proposed block, timestamp, and POLRound (a so-called Proof-of-Lock (POL) round) that is needed for
@@ -447,7 +452,7 @@ func SumTruncated(bz []byte) []byte {
 | max_bytes    | int64 | Max size of a block, in bytes.                                                                                                                                                                              | 1            |
 | max_gas      | int64 | Max sum of `GasWanted` in a proposed block. NOTE: blocks that violate this may be committed if there are Byzantine proposers. It's the application's responsibility to handle this when processing a block! | 2            |
 
-### EvidenceParams
+## EvidenceParams
 
 | Name               | Type                                                                                                                               | Description                                                                                                                                                                                                                                                                    | Field Number |
 |--------------------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
@@ -455,13 +460,13 @@ func SumTruncated(bz []byte) []byte {
 | max_age_duration   | [google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration) | Max age of evidence, in time. It should correspond with an app's "unbonding period" or other similar mechanism for handling [Nothing-At-Stake attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed). | 2            |
 | max_bytes          | int64                                                                                                                              | maximum size in bytes of total evidence allowed to be entered into a block                                                                                                                                                                                                     | 3            |
 
-### ValidatorParams
+## ValidatorParams
 
 | Name          | Type            | Description                                                           | Field Number |
 |---------------|-----------------|-----------------------------------------------------------------------|--------------|
 | pub_key_types | repeated string | List of accepted public key types. Uses same naming as `PubKey.Type`. | 1            |
 
-### VersionParams
+## VersionParams
 
 | Name        | Type   | Description                   | Field Number |
 |-------------|--------|-------------------------------|--------------|
