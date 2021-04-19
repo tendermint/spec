@@ -26,10 +26,7 @@ The Tendermint blockchains consists of a short list of data types:
 - [`Validator`](#validator)
 - [`ValidatorSet`](#validatorset)
 - [`Address`](#address)
-- [`ConsensusParams](#consensusparams)
-- [`EvidenceParams`](#evidenceparams)
-- [`ValidatorParams`](#validatorparams)
-- [`VersionParams`](#versionparams)
+- [`ConsensusParams`](#consensusparams)
 
 ## Block
 
@@ -110,7 +107,7 @@ the data in the current block, the previous block, and the results returned by t
 
 | Name              | Type                      | Description                                                                                                                                                                                                                                                                                                                                                                           | Validation                                                                                                                                                                                       |
 |-------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Version           | [Version](#version)       | Version defines the application and protocol verion being used.                                                                                                                                                                                                                                                                                                                       | Must adhere to the validation rules of [Version](#version)                                                                                                                                       |
+| Version           | [Version](#version)       | Version defines the application and protocol version being used.                                                                                                                                                                                                                                                                                                                       | Must adhere to the validation rules of [Version](#version)                                                                                                                                       |
 | ChainID           | String                    | ChainID is the ID of the chain. This must be unique to your chain.                                                                                                                                                                                                                                                                                                                    | ChainID must be less than 50 bytes.                                                                                                                                                              |
 | Height            | uint64                     | Height is the height for this header.                                                                                                                                                                                                                                                                                                                                                 | Must be > 0, >= initialHeight, and == previous Height+1                                                                                                                                          |
 | Time              | [Time](#time)             | The timestamp is equal to the weighted median of validators present in the last commit. Read more on time in the [BFT-time section](../consensus/bft-time.md). Note: the timestamp of a vote must be greater by at least one millisecond than that of the block being voted on.                                                                                                       | Time must be >= previous header timestamp + consensus parameters TimeIotaMs.  The timestamp of the first block must be equal to the genesis time (since there's no votes to compute the median). |
@@ -126,6 +123,10 @@ the data in the current block, the previous block, and the results returned by t
 | ProposerAddress   | slice of bytes (`[]byte`) | Address of the original proposer of the block. Validator must be in the current validatorSet.                                                                                                                                                                                                                                                                                         | Must  be of length 20                                                                                                                                                                            |
 
 ## Version
+
+NOTE: that this is more specifically the consensus version and doesn't include information like the
+P2P Version. (TODO: we should write a comprehensive document about
+versioning that this can refer to)
 
 | Name  | type   | Description                                                                                                     | Validation                                                                                                         |
 |-------|--------|-----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -430,7 +431,7 @@ func SumTruncated(bz []byte) []byte {
 }
 ```
 
-### ConsensusParams
+## ConsensusParams
 
 | Name      | Type                                | Description                                                                  | Field Number |
 |-----------|-------------------------------------|------------------------------------------------------------------------------|--------------|
