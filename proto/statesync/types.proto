@@ -40,10 +40,10 @@ message ChunkResponse {
   bool   missing = 5;
 }
 
-message LightClientRequest {
+message LightBlockRequest {
   uint64 height = 1;
 }
 
-message LightClientResponse {
+message LightBlockResponse {
   LightBlock light_block = 1; 
 }
