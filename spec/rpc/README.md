@@ -847,7 +847,7 @@ Get the consensus parameters.
 
 #### Parameters
 
-- `height (integer)`: Bloch height at which the consensus params would like to be fetched for. 
+- `height (integer)`: Block height at which the consensus params would like to be fetched for. 
 
 #### Request
 
