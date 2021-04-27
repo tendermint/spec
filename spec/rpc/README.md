@@ -1,3 +1,10 @@
+---
+order: 1
+parent:
+  title: RPC
+  order: 6
+---
+
 # RPC spec
 
 This file defines the JSON-RPC spec of Tendermint. This is meant to be implemented by all clients.
@@ -31,7 +38,7 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
   | [BroadCastTxAsync](#broadcasttxasync)   |                             ✅                              |                                 ✅                                 |
   | [ABCIInfo](#abciinfo)                   |                             ✅                              |                                 ✅                                 |
   | [ABCIQuery](#abciquery)                 |                             ✅                              |                                 ✅                                 |
-  | [BroadCastTxAsync](#broadcasttxasync)   |                             ✅                              |                                 ✅                                 |
+  | [BroadcastTxAsync](#broadcasttxasync)   |                             ✅                              |                                 ✅                                 |
   | [BroadcastEvidence](#broadcastevidence) |                             ✅                              |                                 ✅                                 |
 
 ## Info Routes
@@ -847,7 +854,7 @@ Get the consensus parameters.
 
 #### Parameters
 
-- `height (integer)`: Block height at which the consensus params would like to be fetched for. 
+- `height (integer)`: Block height at which the consensus params would like to be fetched for.
 
 #### Request
 
