@@ -242,7 +242,7 @@ curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\
 
 ### Blockchain
 
-Get block headers.
+Get block headers. Returned in descending order. May be limited in quantity.
 
 #### Parameters
 
