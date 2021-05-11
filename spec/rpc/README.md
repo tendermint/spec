@@ -30,6 +30,7 @@ This file defines the JSON-RPC spec of Tendermint. This is meant to be implement
   | [Commit](#commit)                       |                             ✅                              |                                 ✅                                 |
   | [Validators](#validators)               |                             ✅                              |                                 ✅                                 |
   | [Genesis](#genesis)                     |                             ✅                              |                                 ✅                                 |
+  | [GenesisChunked](#genesischunked)       |                             ✅                              |                                 ❌                                 |
   | [ConsensusParams](#consensusparams)     |                             ✅                              |                                 ❌                                 |
   | [UnconfirmedTxs](#unconfirmedtxs)       |                             ✅                              |                                 ❌                                 |
   | [NumUnconfirmedTxs](#numunconfirmedtxs) |                             ✅                              |                                 ❌                                 |
@@ -844,6 +845,42 @@ curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\
       "app_hash": "",
       "app_state": {}
     }
+  }
+}
+```
+
+### GenesisChunked
+
+Get the genesis document in a chunks to support easily transfering larger documents. 
+
+#### Parameters
+
+- `chunkID`: the index number of the chunk that you wish to fetch.
+
+#### Request
+
+##### HTTP
+
+```sh
+curl  http://127.0.0.1:26657/genesis_chunked?chunkID=0
+```
+
+##### JSONRPC
+
+```sh
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"genesis_chunked\",\"params\":{\"chunkID\":0}}"
+```
+
+#### Response
+
+```
+{
+  "jsonrpc": "2.0",
+  "id": 0,
+  "result": {
+     "chunk": 0,
+	 "total": 10,
+	 "data": "dGVuZGVybWludAo="
   }
 }
 ```
