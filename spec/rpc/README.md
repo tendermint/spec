@@ -855,20 +855,21 @@ Get the genesis document in a chunks to support easily transfering larger docume
 
 #### Parameters
 
-- `chunkID`: the index number of the chunk that you wish to fetch.
+- `chunk` (integer): the index number of the chunk that you wish to
+  fetch. These IDs are 0 indexed.
 
 #### Request
 
 ##### HTTP
 
 ```sh
-curl  http://127.0.0.1:26657/genesis_chunked?chunkID=0
+curl  http://127.0.0.1:26657/genesis_chunked?chunk=0
 ```
 
 ##### JSONRPC
 
 ```sh
-curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"genesis_chunked\",\"params\":{\"chunkID\":0}}"
+curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"genesis_chunked\",\"params\":{\"chunk\":0}}"
 ```
 
 #### Response
