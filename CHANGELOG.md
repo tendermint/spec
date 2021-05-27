@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the spec will be documented in this file for easy reference. Changes are grouped by version.
 
 ## [Unreleased]
 
