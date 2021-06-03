@@ -790,7 +790,7 @@ curl -X POST https://localhost:26657 -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\
 ### Genesis
 
 Get Genesis of the chain. If the response is large, this operation
-will return an error: use `genesis_chunked` instead. 
+will return an error: use `genesis_chunked` instead.
 
 #### Request
 
