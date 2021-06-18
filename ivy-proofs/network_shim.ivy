@@ -28,9 +28,7 @@ object msg = {
 }
 
 # This is our model of the network:
-trusted isolate net = {
-# `trusted` indicates to Ivy that this is a trusted object, i.e. we assume
-# without proof that receive is only called when its requirement is true.
+isolate net = {
 
     export action recv(dst:node,v:msg)
     action send(src:node,dst:node,v:msg)
