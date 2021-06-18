@@ -387,10 +387,8 @@ module tendermint(abstract_protocol) = {
 # messages on behalf of well-behaved nodes. In practice this is implemented
 # using cryprography (e.g. public-key cryptography).
 
-        export action byzantine_send = {
+        export action byzantine_send(m:msg, dst:node) = {
             assume ~well_behaved(n);
-            var m:msg;
-            var dst:node;
             assume ~well_behaved(m.m_src); # cannot forge the identity of well-behaved nodes
             call shim.send(n,dst,m);
         }
