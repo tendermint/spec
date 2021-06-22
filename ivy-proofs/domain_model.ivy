@@ -78,6 +78,7 @@ object nset = { # the type of node sets
         # NOTE: this is not checked at all by Ivy and so may not be very sound... it is however useful to generate C++ code and run it for debugging purposes
         <<< header
             #include <set>
+            #include <exception>
             namespace hash_space {
                 template <typename T>
                     class hash<std::set<T> > {
@@ -120,11 +121,7 @@ object nset = { # the type of node sets
 
         template <>
         `nset` _arg<`nset`>(std::vector<ivy_value> &args, unsigned idx, long long bound) {
-            ivy_value &arg = args[idx];
-            if (arg.fields.size())
-                throw out_of_bounds(idx);
-            `nset` a;
-            return a;
+            throw std::invalid_argument("Not implemented"); // no syntax for nset values in the REPL
         }
 
     >>>
