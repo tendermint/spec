@@ -116,6 +116,14 @@ isolate simple_scenario = {
             call protocol.server.l_49_decide(iter.val,0,0,q);
             iter := iter.next;
         };
+        # I tried to use implementation-level definitions here, like the fact that nodes are ints, but couldn't get that to work. Probably it's the right thing, as it could cause soundness issues.
+        # var i:node;
+        # i := 0;
+        # while i < node.size
+        # {
+            # call protocol.server.l_49_decide(i,0,0,q);
+            # i := i+1;
+        # };
     }
 } with round, node, proposers, value, nset, protocol, shim, net
 

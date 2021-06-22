@@ -51,7 +51,6 @@ isolate proposers = {
             n := f(r);
         }
     }
-    # attribute test = impl
 }
 
 isolate value = { # the type of values
