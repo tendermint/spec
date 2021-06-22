@@ -21,8 +21,8 @@ isolate protocol = {
 # One option to check that this scenario is valid is to run it in Ivy's REPL.
 # For this, first compile the scenario:
 #```ivyc target=repl isolate=code trace=true tendermint_test.ivy
-# Then, run the produced binary:
-#``` ./tendermint_test
+# Then, run the produced binary (e.g. for 4 nodes):
+#``` ./tendermint_test 4
 # Finally, call the actions:
 #``` simple_scenario.run
 # Note that Ivy will check at runtime that all action preconditions are
@@ -125,6 +125,9 @@ isolate simple_scenario = {
             # i := i+1;
         # };
     }
+
+    # TODO: add more scenarios
+
 } with round, node, proposers, value, nset, protocol, shim, net
 
 # extract code = protocol, shim, round, node
