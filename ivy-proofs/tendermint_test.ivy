@@ -8,7 +8,7 @@ isolate ghost_ = {
 }
 
 isolate protocol = {
-    instantiate tendermint(ghost_)
+    instantiate tendermint(ghost_) # here we instantiate the parameter of the tendermint module with `ghost_`; however note that we don't extract any code for `ghost_` (it's not in the list of object in the extract, and it's thus sliced away).
     implementation {
         definition init_val(n:node) = <<< `n`%2 >>>
     }
