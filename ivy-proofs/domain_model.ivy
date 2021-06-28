@@ -75,7 +75,7 @@ object nset = { # the type of node sets
     export action insert(s:nset, n:node) returns (t:nset)
     export action empty returns (s:nset)
     implementation {
-        # NOTE: this is not checked at all by Ivy and so may not be very sound... it is however useful to generate C++ code and run it for debugging purposes
+        # NOTE: this is not checked at all by Ivy; it is however useful to generate C++ code and run it for debugging purposes
         <<< header
             #include <set>
             #include <exception>

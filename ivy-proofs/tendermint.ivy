@@ -175,7 +175,6 @@ module tendermint(abstract_protocol) = {
             _recved_proposal(msg.m_src, msg.m_round, msg.m_value, msg.m_vround) := true;
         }
 
-
         # line 22-27
         export action l_22(v:value) = {
             require _has_started;
@@ -228,7 +227,6 @@ module tendermint(abstract_protocol) = {
             _recved_prevote(msg.m_src, msg.m_round, msg.m_value) := true;
         }
 
-
         # line 34-35
         export action l_34(r:round, q:nset) = {
             require _has_started;
@@ -266,9 +264,7 @@ module tendermint(abstract_protocol) = {
 
             validValue := v; # line 42
             validRound := r; # line 43
-
         }
-
 
         # line 44-46
         export action l_44(r:round, q:nset) = {
@@ -362,7 +358,6 @@ module tendermint(abstract_protocol) = {
 
             prevote_timer_scheduled(r) := false;
         }
-
 
         # line 65-67
         export action onTimeoutPrecommit(r:round) = {

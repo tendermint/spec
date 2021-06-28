@@ -23,8 +23,8 @@ isolate protocol = {
 #```ivyc target=repl isolate=code trace=true tendermint_test.ivy
 # Then, run the produced binary (e.g. for 4 nodes):
 #``` ./tendermint_test 4
-# Finally, call the actions:
-#``` simple_scenario.run
+# Finally, call the action:
+#``` scenarios.scenario_1
 # Note that Ivy will check at runtime that all action preconditions are
 # satisfied. For example, runing the scenario twice will cause a violation of
 # the precondition of the `start` action, because a node cannot start twice
@@ -33,21 +33,22 @@ isolate protocol = {
 # Another possibility would be to run `ivy_check` on the scenario, but that
 # does not seem to work at the moment.
 
-isolate simple_scenario = {
-    export action run = { # could also be `after init` to make sure it runs only once
-        # First we build a quorum (in fact containing all nodes) which we will use as parameter to actions:
-        var q:nset;
+isolate scenarios = {
+    individual all:nset # will be used as parameter to actions requiring a quorum
+
+    after init {
         var iter := node.iter.create(0);
         while ~iter.is_end
         {
-            q := q.insert(iter.val);
+            all := all.insert(iter.val);
             iter := iter.next;
         };
-        assert nset.is_quorum(q); # we can also use asserts to make sure we are getting what we expect
+        assert nset.is_quorum(all); # we can also use asserts to make sure we are getting what we expect
+    }
 
-        # now we run a simple scenario where everything goes right:
+    export action scenario_1 = {
         # all nodes start:
-        iter := node.iter.create(0);
+        var iter := node.iter.create(0);
         while ~iter.is_end
         {
             call protocol.server.start(iter.val);
@@ -92,7 +93,7 @@ isolate simple_scenario = {
         iter := node.iter.create(0);
         while ~iter.is_end
         {
-            call protocol.server.l_36(iter.val,0,0,q);
+            call protocol.server.l_36(iter.val,0,0,all);
             iter := iter.next;
         };
         # all nodes receive each other's pre-commits
@@ -113,17 +114,9 @@ isolate simple_scenario = {
         iter := node.iter.create(0);
         while ~iter.is_end
         {
-            call protocol.server.l_49_decide(iter.val,0,0,q);
+            call protocol.server.l_49_decide(iter.val,0,0,all);
             iter := iter.next;
         };
-        # I tried to use implementation-level definitions here, like the fact that nodes are ints, but couldn't get that to work. Probably it's the right thing, as it could cause soundness issues.
-        # var i:node;
-        # i := 0;
-        # while i < node.size
-        # {
-            # call protocol.server.l_49_decide(i,0,0,q);
-            # i := i+1;
-        # };
     }
 
     # TODO: add more scenarios
@@ -131,4 +124,4 @@ isolate simple_scenario = {
 } with round, node, proposers, value, nset, protocol, shim, net
 
 # extract code = protocol, shim, round, node
-extract code = round, node, proposers, value, nset, protocol, shim, net, simple_scenario
+extract code = round, node, proposers, value, nset, protocol, shim, net, scenarios
