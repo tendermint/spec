@@ -1,6 +1,6 @@
 # Draft of Light Client Supervisor for discussion
 
-## TODOs
+## #s
 
 This specification in done in parallel with updates on the
 verification specification. So some hyperlinks have to be placed to
@@ -9,25 +9,22 @@ the correct files eventually.
 # Light Client Sequential Supervisor
 
 The light client implements a read operation of a
-[header](TMBC-HEADER-link) from the [blockchain](TMBC-SEQ-link), by
-communicating with full nodes, a so-called primary and several
-so-called witnesses. As some full nodes may be faulty, this
+header from the blockchain, by communicating with full nodes, a so-called
+primary and several so-called witnesses. As some full nodes may be faulty, this
 functionality must be implemented in a fault-tolerant way.
 
-In the Tendermint blockchain, the validator set may change with every
-new block.  The staking and unbonding mechanism induces a [security
-model](TMBC-FM-2THIRDS-link): starting at time *Time* of the
-[header](TMBC-HEADER-link),
-more than two-thirds of the next validators of a new block are correct
-for the duration of *TrustedPeriod*.
+In the Tendermint blockchain, the validator set may change with every new block.
+The staking and unbonding mechanism induces a security model: starting at time
+*Time* of the header, more than two-thirds of the next validators of a new block
+are correct for the duration of *TrustedPeriod*.
 
 [Light Client Verification](https://informal.systems) implements the fault-tolerant read
 operation designed for this security model. That is, it is safe if the
 model assumptions are satisfied and makes progress if it communicates
 to a correct primary.
 
-However, if the [security model](TMBC-FM-2THIRDS-link) is violated,
-faulty peers (that have been validators at some point in the past) may
+However, if the security model is violated, faulty peers (that have been
+validators at some point in the past) may
 launch attacks on the Tendermint network, and on the light
 client. These attacks as well as an axiomatization of blocks in
 general are defined in [a document that contains the definitions that
@@ -81,7 +78,7 @@ upcoming PRs.
 
 # Part I - Tendermint Blockchain
 
-See [verification spec](addLinksWhenDone)
+See [verification spec](#)
 
 # Part II - Sequential Problem Definition
 
@@ -106,7 +103,7 @@ The light client never stores a header which is not in the blockchain.
 ## Computational Model
 
 The light client communicates with remote processes only via the
-[verification](TODO) and the [detection](TODO) protocols. The
+[verification](#) and the [detection](#) protocols. The
 respective assumptions are given there.
 
 ## Distributed Problem Statement
@@ -133,9 +130,9 @@ The light client has a local data structure called LightStore
 that contains light blocks (that contain a header).
 
 > The light store exposes functions to query and update it. They are
-> specified [here](TODO:onceVerificationIsMerged).
+> specified [here](#:onceVerificationIsMerged).
 
-**TODO:** reference light store invariant [LCV-INV-LS-ROOT.2] once
+**#:** reference light store invariant [LCV-INV-LS-ROOT.2] once
 verification is merged
 
 #### **[LC-DIST-SAFE.1]**
@@ -164,8 +161,8 @@ wait for another input.
 
 [LC-DIST-SAFE.1] is guaranteed by the detector; in particular it
 follows from
-[[LCD-DIST-INV-STORE.1]](TODO)
-[[LCD-DIST-LIVE.1]](TODO)
+[[LCD-DIST-INV-STORE.1]](#)
+[[LCD-DIST-LIVE.1]](#)
 
 # Part IV - Light Client Supervisor Protocol
 
@@ -290,7 +287,7 @@ type LightStore struct {
 ```
 
 We use the functions that the LightStore exposes, which
-are defined in the [verification specification](TODO).
+are defined in the [verification specification](#).
 
 ### Inputs
 
