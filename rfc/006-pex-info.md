@@ -49,7 +49,7 @@ message PexNode {
 message PexRequestInfo {
   // Optional network/chain id to restrict the query to only return nodes which
   // are part of that chain.
-  string network;
+  string network = 1;
 }
 
 message PexResponseInfo {
