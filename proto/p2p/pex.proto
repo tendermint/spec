@@ -17,21 +17,28 @@ message PexResponse {
   repeated PexAddress addresses = 1 [(gogoproto.nullable) = false];
 }
 
-message PexAddressV2 {
-  string url = 1 [(gogoproto.customname) = "URL"];
+message PexNode {
+  // Encoded endpoint including protocol, id and path.
+  string   url  = 1 [(gogoproto.customname) = "URL"];
+  // Unaltered NodeInfo obtained during handshake with the peer.
+  NodeInfo info = 2;
 }
 
-message PexRequestV2 {}
+message PexRequestInfo {
+  // Optional network/chain id to restrict the query to only return nodes which
+  // are part of that chain.
+  string network;
+}
 
-message PexResponseV2 {
-  repeated PexAddressV2 addresses = 1 [(gogoproto.nullable) = false];
+message PexResponseInfo {
+  repeated PexNode nodes = 1 [gogoproto.nullable) = false];
 }
 
 message PexMessage {
   oneof sum {
-    PexRequest    pex_request     = 1;
-    PexResponse   pex_response    = 2;
-    PexRequestV2  pex_request_v2  = 3;
-    PexResponseV2 pex_response_v2 = 4;
+    PexRequest      pex_request       = 1;
+    PexResponse     pex_response      = 2;
+    PexRequestInfo  pex_request_info  = 3;
+    PexResponseInfo pex_response_info = 4;
   }
 }
