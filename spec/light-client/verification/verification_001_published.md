@@ -517,6 +517,16 @@ func (ls LightStore) Get(height Height) (LightBlock, bool)
     - returns a LightBlock at a given height or false in the second argument if
     the LightStore does not contain the specified LightBlock.
 
+#### **[LCV-FUNC-VALID-LIGHT-BLOCK.1]**
+
+```go
+func (lb LightBlock) ValidateBasic() error
+```
+
+- Expected postcondition
+  - *Header*, *Commit* and *ValidatorSet* are [**well-formed**][block]
+  - *Header.ValidatorsHash* == hash(*ValidatorSet*)
+
 #### **[LCV-FUNC-LATEST-VERIF.1]**
 
 ```go
@@ -734,7 +744,11 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
         }
 
         // Verify
-        verdict = ValidAndVerified(lightStore.LatestVerified, current)
+        if sequential {
+          verdict = VerifySequential(lightStore.LatestVerified, current)
+        } else {
+          verdict = ValidAndVerified(lightStore.LatestVerified, current)
+        }
 
         // Decide whether/how to continue
         if verdict == SUCCESS {
@@ -780,7 +794,7 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
 ```
 
 - Expected precondition:
-    - *untrusted* is valid, that is, satisfies the soundness [checks][block]
+    - *untrusted* and *trusted* are valid, that is, satisfies **[LCV-FUNC-VALID-LIGHT-BLOCK.1]**
     - *untrusted* is **well-formed**, that is,
         - *untrusted.Header.Time < now + clockDrift*
         - *untrusted.Validators = hash(untrusted.Header.Validators)*
@@ -821,6 +835,52 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
 - Error condition:
     - if precondition violated
 
+
+#### **[LCV-FUNC-VALID-SEQ.1]**
+
+```go
+func VerifySequential(trusted LightBlock, untrusted LightBlock) Result
+```
+
+- Expected precondition:
+    - *untrusted* and *trusted* are valid, that is, satisfies **[LCV-FUNC-VALID-LIGHT-BLOCK.1]**
+    - *untrusted.Header.Time < now + clockDrift*
+    - *untrusted.Header.Time > now - trustingPeriod*
+    - blocks are adjacent. That is `trusted.Header.Height` + 1 == `untrusted.Header.Height`
+    - *trusted.Commit* is a commit for the header
+     *trusted.Header*, i.e., it contains
+     the correct hash of the header, and +2/3 of signatures
+    - the `Time` of `trusted` is smaller than the `Time` of `untrusted`
+- Expected postcondition:
+    - Returns `SUCCESS`:
+      - if `trusted.NextValidatorsHash` == hash(`untrusted.ValidatorSet`)
+      - if 2/3+ of `untrusted.ValidatorSet` signed the commit for
+        `untrusted.Header`
+    - Else returns an appropriate `ERROR` 
+
+
+#### **[LCV-FUNC-VALID-BACKWARDS.1]**
+
+```go
+func VerifyBackwards(trusted LightBlock, untrusted LightBlock) Result
+```
+
+- Expected precondition:
+    - *untrusted* and *trusted* are valid, that is, satisfies **[LCV-FUNC-VALID-LIGHT-BLOCK.1]**
+    - *untrusted.Header.Time < now + clockDrift*
+    - *untrusted.Header.Time > now - trustingPeriod*
+    - blocks are adjacent. That is `trusted.Header.Height` - 1 == `untrusted.Header.Height`
+    - *trusted.Commit* is a commit for the header
+     *trusted.Header*, i.e., it contains
+     the correct hash of the header, and +2/3 of signatures
+- Expected postcondition:
+    - Returns `SUCCESS`:
+      - if `trusted.Header.LastBlockID.Header` == hash(`untrusted.Header`)
+      - if `untrusted.Header.ValidatorsHash` == hash(`untrusted.ValidatorsSet`)
+      - if `trusted.Header.LastCommitHash` == hash(`untrusted.Commit`)
+    - Else returns an appropriate `ERROR`
+
+
 ----
 
 #### **[LCV-FUNC-SCHEDULE.1]**
@@ -829,9 +889,11 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
 func Schedule(lightStore, nextHeight, targetHeight) Height
 ```
 
-- Implementation remark: If picks the next height to be verified.
-  We keep the precise choice of the next header under-specified. It is
-  subject to performance optimizations that do not influence the correctness
+- In the case of sequential verification, `Schedule` will always return the very
+  next height.
+- Implementation remark: We keep the precise choice of the next header 
+  under-specified. It is subject to performance optimizations that do not 
+  influence the correctness
 - Expected postcondition: **[LCV-SCHEDULE-POST.1]**
    Return *H* s.t.
    1. if *lightStore.LatestVerified.Height = nextHeight* and
