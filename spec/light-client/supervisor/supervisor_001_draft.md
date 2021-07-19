@@ -463,67 +463,91 @@ func Sequential-Supervisor (initdata LCInitData) (Error) {
 #### Initialization
 
 The light client is based on subjective initialization. It has to
-trust the initial data given to it by the user. It cannot do any
-detection of attack. So either upon initialization we obtain a
-lightblock and just initialize the lightstore with it. Or in case of a
-genesis file, we download, verify, and cross-check the first block, to
-initialize the lightstore with this first block. The reason is that
-we want to maintain [LCV-INV-TP.1] from the beginning.
+trust the initial data given to it by the user. It cannot perform any
+detection of an attack yet instead requires an initial point of trust.
+There are three forms of initial data:
 
-> If the lightclient is initialized with a lightblock, one might think
-> it may increase trust, when one cross-checks the initial light
-> block. However, if a peer provides a conflicting
-> lightblock, the question is to distinguish the case of a
-> [bogus](https://informal.systems) block (upon which operation should proceed) from a
-> [light client attack](https://informal.systems) (upon which operation should stop). In
-> case of a bogus block, the lightclient might be forced to do
-> backwards verification until the blocks are out of the trusting
-> period, to make sure no previous validator set could have generated
-> the bogus block, which effectively opens up a DoS attack on the lightclient
-> without adding effective robustness.
+- A trusted block from a prior initialization
+- A trusted height and hash
+- A genesis file
+
+The golang light client implementation checks this initial data in that 
+order; first attempting to find a trusted block from the trusted store, 
+then acquiring a light block from the primart at the trusted height and matching
+the hash, or finally checking for a genesis file to verify the initial header.
+
+The light client doesn't need to check if the trusted block is within the
+trusted period because it already trusts it, however, if the light block is 
+outside the trust period, there is a higher chance the light client won't be
+able to verify anything. 
+
+Cross-checking this trusted block with providers upon initialization is helpful
+for ensuring liveness and correct configuration of such nodes but does not 
+increase trust since proving a conflicting block is a 
+[light client attack](https://informal.systems) 
+and not just a [bogus](https://informal.systems) block could result in
+performing backwards verification beyond the trusted period, thus a fruitless
+endeavour.
+
+However, with the notion of it's better to fail earlier than later, the golang
+light client implementation will perform a consistency check on all providers
+and will error if one returns a different header, allowing the user
+the opportunity to reinitialize.
 
 #### **[LC-FUNC-INIT.1]:**
 
 ```go
-func InitLightClient (initData LCInitData) (LightStore, Error) {
+func InitLightClient(initData LCInitData) (LightStore, Error) {
+    var initialBlock LightBlock
 
-    if LCInitData.LightBlock != nil {
-        // we trust the provided initial block.
-        newblock := LCInitData.LightBlock
+    switch {
+    case LCInitData.TrustedBlock != nil:
+        // we trust the block from a prior initialization
+        initialBlock = LCInitData.TrustedBlock
+
+    case LCInitData.TrustedHash != nil:
+        untrustedBlock := FetchLightBlock(PeerList.Primary(), LCInitData.TrustedHeight)
+        
+
+        // verify that the hashes match
+        if untrustedBlock.Hash() != LCInitData.TrustedHash {
+            return nil, Error("Primary returned block with different hash")
+        }
+        // after checking the hash we now trust the block
+        initialBlock = untrustedBlock        
     }
-    else {
-        genesisBlock := makeblock(initData.genesisDoc);
+    case LCInitData.Genesis != nil:
+        untrustedBlock := FetchLightBlock(PeerList.Primary(), LCInitData.Genesis.InitialHeight)
+        
+        // verify that 2/3+ of the validator set signed the untrustedBlock
+        if err := VerifyCommit(untrustedBlock.Commit, LCInitData.Genesis.Validators); err != nil {
+            return nil, err
+        }
 
-        result := NoResult;
-        while result != ResultSuccess {
-            current = FetchLightBlock(PeerList.primary(), genesisBlock.Header.Height + 1)
-            // QUESTION: is the height with "+1" OK?
+        // we can now trust the block
+        initialBlock = untrustedBlock
+    default:
+        return nil, Error("No initial data was provided")
 
-            if CANNOT_VERIFY = ValidAndVerify(genesisBlock, current) {
-                Replace_Primary();
-            }
-            else {
-                result = ResultSuccess
-            }
-        }
-  
-        // cross-check
-  auxLS := new LightStore
-  auxLS.Add(current)
-        Evidences := AttackDetector(genesisBlock, auxLS)
-        if Evidences.Empty {
-            newBlock := current
-        }
-        else {
-            // [LC-SUMBIT-EVIDENCE.1]
-            submitEvidence(Evidences);
-            return(nil, ErrorAttack);
-        }
+    if err := CrossCheck(initialBlock, PeerList.Witnesses()); err != nil {
+        return nil, err
     }
 
+    // initialize light store
     lightStore := new LightStore;
     lightStore.Add(newBlock);
     return (lightStore, OK);
+}
+
+func CrossCheck(lb LightBlock, witnesses []Provider) error {
+    for _, witness := range witnesses {
+        witnessBlock := FetchLightBlock(witness, lb.Height)
+
+        if witnessBlock.Hash() != lb.Hash() {
+            return Error("Witness has different block")
+        }
+    }
+    return OK
 }
 
 ```
