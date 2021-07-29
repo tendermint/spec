@@ -4,8 +4,8 @@ Evidence is an important component of Tendermint's security model. Whilst the co
 consensus protocol provides correctness gaurantees for state machine replication
 that can tolerate up to 1/3 failures, the evidence system looks to detect and
 gossip byzantine faults of greater than 1/3 in power. It is worth noting that
-the evidence system is designed purely to detect possible attacks, gossip them, 
-commit them on chain and inform the application running on top of Tendermint. 
+the evidence system is designed purely to detect possible attacks, gossip them,
+commit them on chain and inform the application running on top of Tendermint.
 Evidence in itself does not punish "bad actors", this is left to the discretion
 of the application. A common form of punishment is slashing where the validators
 that were caught violating the protocol have all or a portion of their voting
@@ -42,20 +42,19 @@ type DuplicateVoteEvidence struct {
 }
 ```
 
-
 ### Light Client Attacks
 
 Light clients also comply with the 1/3+ security model, however, by using a
-different, more lightweight verification method they are subject to a 
+different, more lightweight verification method they are subject to a
 different kind of 1/3+ attack whereby the byzantine validators could sign an
 alternative light block that the light client will think is valid. Detection,
 explained in greater detail
 [here](../light-client/detection/detection_003_reviewed.md), involved comparison
 with multiple other nodes in the hope that at least one is "honest". An "honest"
 node will return a challenging light block for the light client to validate. If
-this challenging light block also meets the 
-[validation criteria](../light-client/verification/verification_001_published.md) 
-then the light client sends "forged" light block to the node. 
+this challenging light block also meets the
+[validation criteria](../light-client/verification/verification_001_published.md)
+then the light client sends "forged" light block to the node.
 
 ```go
 type LightClientAttackEvidence struct {
@@ -67,16 +66,16 @@ type LightClientAttackEvidence struct {
 ## Verification
 
 If a node receives evidence, it will first try to verify it, then persist it.
-Evidence of byzantine behavior should only be committed once (uniqueness) and should be
-committed within a certain period from the point that it occurred (timely).
-Timelines is defined by the `EvidenceParams`: `MaxAgeNumBlocks` and
+Evidence of byzantine behavior should only be committed once (uniqueness) and
+should be committed within a certain period from the point that it occurred
+(timely).Timelines is defined by the `EvidenceParams`: `MaxAgeNumBlocks` and
 `MaxAgeDuration`. In Proof of Stake chains where validators are bonded, evidence
 age should be less than the unbonding period so validators still can be
 punished. Given these two propoerties the following initial checks are made.
 
 1. Has the evidence expired? This is done by taking the height of the `Vote`
    within `DuplicateVoteEvidence` or `CommonHeight` within
-   `LightClientAttakEvidence`. The evidence height is then used to retrieve the 
+   `LightClientAttakEvidence`. The evidence height is then used to retrieve the
    header and thus the time of the block that corresponds to the evidence. If
    `CurrentHeight - MaxAgeNumBlocks > EvidenceHeight` && `CurrentTime -
    MaxAgeDuration > EvidenceTime`, the evidence is considered expired and
@@ -100,13 +99,13 @@ Valid `DuplicateVoteEvidence` must adhere to the following rules:
 - Vote signature must be correctly signed. This also uses `ChainID` so we know
   that the fault occurred on this chain
 
-
 ### LightClientAttackEvidence
 
 Valid Light Client Attack Evidence must adhere to the following rules:
 
-- If the header of the light block is invalid, thus indicating a lunatic attack, the node must check that
-    they can use `verifySkipping` from their header at the common height to the conflicting header
+- If the header of the light block is invalid, thus indicating a lunatic attack,
+  the node must check that they can use `verifySkipping` from their header at
+  the common height to the conflicting header
 
 - If the header is valid, then the validator sets are the same and this is
   either a form of equivocation or amnesia. We therefore check that 2/3 of the
@@ -156,7 +155,8 @@ message Evidence {
   // The height when the offense occurred
   int64 height = 3;
   // The corresponding time where the offense occurred
-  google.protobuf.Timestamp time = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp time = 4 [
+    (gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // Total voting power of the validator set in case the ABCI application does
   // not store historical validators.
   // https://github.com/tendermint/tendermint/issues/4581
@@ -170,23 +170,23 @@ sent to the application. Because of this, extra fields are necessary:
 
 ```go
 type DuplicateVoteEvidence struct {
-	VoteA *Vote
-	VoteB *Vote
+  VoteA *Vote
+  VoteB *Vote
 
-	// abci specific information
-	TotalVotingPower int64
-	ValidatorPower   int64
-	Timestamp        time.Time
+  // abci specific information
+  TotalVotingPower int64
+  ValidatorPower   int64
+  Timestamp        time.Time
 }
 
 type LightClientAttackEvidence struct {
-	ConflictingBlock *LightBlock
-	CommonHeight     int64
+  ConflictingBlock *LightBlock
+  CommonHeight     int64
 
-	// abci specific information
-	ByzantineValidators []*Validator
-	TotalVotingPower    int64       
-	Timestamp           time.Time 
+  // abci specific information
+  ByzantineValidators []*Validator
+  TotalVotingPower    int64       
+  Timestamp           time.Time 
 }
 ```
 
