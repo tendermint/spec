@@ -529,6 +529,7 @@ func InitLightClient(initData LCInitData) (LightStore, Error) {
     default:
         return nil, Error("No initial data was provided")
 
+    // This is done in the golang version but is optional and not strictly part of the protocol
     if err := CrossCheck(initialBlock, PeerList.Witnesses()); err != nil {
         return nil, err
     }
