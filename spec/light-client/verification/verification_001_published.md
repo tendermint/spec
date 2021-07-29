@@ -856,28 +856,6 @@ func VerifySequential(trusted LightBlock, untrusted LightBlock) Result
       - if `trusted.NextValidatorsHash` == hash(`untrusted.ValidatorSet`)
       - if 2/3+ of `untrusted.ValidatorSet` signed the commit for
         `untrusted.Header`
-    - Else returns an appropriate `ERROR` 
-
-
-#### **[LCV-FUNC-VALID-BACKWARDS.1]**
-
-```go
-func VerifyBackwards(trusted LightBlock, untrusted LightBlock) Result
-```
-
-- Expected precondition:
-    - *untrusted* and *trusted* are valid, that is, satisfies **[LCV-FUNC-VALID-LIGHT-BLOCK.1]**
-    - *untrusted.Header.Time < now + clockDrift*
-    - *untrusted.Header.Time > now - trustingPeriod*
-    - blocks are adjacent. That is `trusted.Header.Height` - 1 == `untrusted.Header.Height`
-    - *trusted.Commit* is a commit for the header
-     *trusted.Header*, i.e., it contains
-     the correct hash of the header, and +2/3 of signatures
-- Expected postcondition:
-    - Returns `SUCCESS`:
-      - if `trusted.Header.LastBlockID.Header` == hash(`untrusted.Header`)
-      - if `untrusted.Header.ValidatorsHash` == hash(`untrusted.ValidatorsSet`)
-      - if `trusted.Header.LastCommitHash` == hash(`untrusted.Commit`)
     - Else returns an appropriate `ERROR`
 
 
