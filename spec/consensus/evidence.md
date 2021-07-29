@@ -2,8 +2,8 @@
 
 Evidence is an important component of Tendermint's security model. Whilst the core
 consensus protocol provides correctness gaurantees for state machine replication
-that can tolerate up to 1/3 failures, the evidence system looks to detect and
-gossip byzantine faults of greater than 1/3 in power. It is worth noting that
+that can tolerate less than 1/3 failures, the evidence system looks to detect and
+gossip byzantine faults whose combined power is greater than  or equal to 1/3. It is worth noting that
 the evidence system is designed purely to detect possible attacks, gossip them,
 commit them on chain and inform the application running on top of Tendermint.
 Evidence in itself does not punish "bad actors", this is left to the discretion
@@ -28,7 +28,7 @@ replication of state across all nodes, a validator tries to convince some subset
 of nodes to commit one block whilst convincing another subset to commit a
 different block. This is achieved by double voting (hence
 `DuplicateVoteEvidence`). A successful duplicate vote attack requires greater
-than 1/3 voting power and a network partition between the aforementioned
+than 1/3 voting power and a (temporary) network partition between the aforementioned
 subsets. This is because in consensus, votes are gossiped around. When a node
 observes two conflicting votes from the same peer, it will use the two votes of
 evidence and begin gossiping this evidence to other nodes.
@@ -68,7 +68,7 @@ type LightClientAttackEvidence struct {
 If a node receives evidence, it will first try to verify it, then persist it.
 Evidence of byzantine behavior should only be committed once (uniqueness) and
 should be committed within a certain period from the point that it occurred
-(timely).Timelines is defined by the `EvidenceParams`: `MaxAgeNumBlocks` and
+(timely). Timelines is defined by the `EvidenceParams`: `MaxAgeNumBlocks` and
 `MaxAgeDuration`. In Proof of Stake chains where validators are bonded, evidence
 age should be less than the unbonding period so validators still can be
 punished. Given these two propoerties the following initial checks are made.
