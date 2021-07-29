@@ -590,6 +590,7 @@ func (ls LightStore) FilterVerified() LightSTore
 - *nextHeight*: initially *targetHeight*
   > *nextHeight* should be thought of the "height of the next header we need
   > to download and verify"
+- *sequential*: (bool) default set to false (i.e. using skipping verification). If set to true will verify sequentially instead.
 
 ### Assumptions
 
