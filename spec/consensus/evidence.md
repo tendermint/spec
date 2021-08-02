@@ -31,7 +31,7 @@ different block. This is achieved by double voting (hence
 than 1/3 voting power and a (temporary) network partition between the aforementioned
 subsets. This is because in consensus, votes are gossiped around. When a node
 observes two conflicting votes from the same peer, it will use the two votes of
-evidence and begin gossiping this evidence to other nodes.
+evidence and begin gossiping this evidence to other nodes. [Verification](#duplicatevoteevidence) is addressed further down.
 
 ```go
 type DuplicateVoteEvidence struct {
@@ -49,17 +49,20 @@ different, more lightweight verification method they are subject to a
 different kind of 1/3+ attack whereby the byzantine validators could sign an
 alternative light block that the light client will think is valid. Detection,
 explained in greater detail
-[here](../light-client/detection/detection_003_reviewed.md), involved comparison
+[here](../light-client/detection/detection_003_reviewed.md), involves comparison
 with multiple other nodes in the hope that at least one is "honest". An "honest"
 node will return a challenging light block for the light client to validate. If
 this challenging light block also meets the
 [validation criteria](../light-client/verification/verification_001_published.md)
-then the light client sends "forged" light block to the node.
+then the light client sends the "forged" light block to the node.
+[Verification](#lightclientattackevidence) is addressed further down.
 
 ```go
 type LightClientAttackEvidence struct {
     ConflictingBlock LightBlock
     CommonHeight int64
+
+      // and abci specific fields
 }
 ```
 
