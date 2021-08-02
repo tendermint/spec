@@ -523,9 +523,12 @@ func (ls LightStore) Get(height Height) (LightBlock, bool)
 func (lb LightBlock) ValidateBasic() error
 ```
 
+- Expected precondition
+    - *Header*, *Commit* and *ValidatorSet* are [**well-formed**][block]
+    - *Header.ValidatorsHash* == hash(*ValidatorSet*)
+
 - Expected postcondition
-  - *Header*, *Commit* and *ValidatorSet* are [**well-formed**][block]
-  - *Header.ValidatorsHash* == hash(*ValidatorSet*)
+    - No error in case the precondition is statisfied
 
 #### **[LCV-FUNC-LATEST-VERIF.1]**
 
