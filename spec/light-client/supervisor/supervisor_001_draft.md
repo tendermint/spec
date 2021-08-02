@@ -300,8 +300,10 @@ The lightclient is initialized with LCInitData
 
 ```go
 type LCInitData struct {
-    lightBlock     LightBlock
-    genesisDoc     GenesisDoc
+    TrustedBlock   LightBlock
+    Genesis        GenesisDoc
+    TrustedHash    []byte
+    TrustedHeight  int64
 }
 ```
 
