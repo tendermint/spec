@@ -467,26 +467,27 @@ func Sequential-Supervisor (initdata LCInitData) (Error) {
 The light client is based on subjective initialization. It has to
 trust the initial data given to it by the user. It cannot perform any
 detection of an attack yet instead requires an initial point of trust.
-There are three forms of initial data:
+There are three forms of initial data which are used to obtain the 
+first trusted block:
 
 - A trusted block from a prior initialization
 - A trusted height and hash
 - A genesis file
 
-The golang light client implementation checks this initial data in that 
-order; first attempting to find a trusted block from the trusted store, 
-then acquiring a light block from the primart at the trusted height and matching
+The golang light client implementation checks this initial data in that
+order; first attempting to find a trusted block from the trusted store,
+then acquiring a light block from the primary at the trusted height and matching
 the hash, or finally checking for a genesis file to verify the initial header.
 
 The light client doesn't need to check if the trusted block is within the
-trusted period because it already trusts it, however, if the light block is 
+trusted period because it already trusts it, however, if the light block is
 outside the trust period, there is a higher chance the light client won't be
-able to verify anything. 
+able to verify anything.
 
 Cross-checking this trusted block with providers upon initialization is helpful
-for ensuring liveness and correct configuration of such nodes but does not 
-increase trust since proving a conflicting block is a 
-[light client attack](https://informal.systems) 
+for ensuring that the node is responsive and correctly congfigured but does not
+increase trust since proving a conflicting block is a
+[light client attack](https://informal.systems)
 and not just a [bogus](https://informal.systems) block could result in
 performing backwards verification beyond the trusted period, thus a fruitless
 endeavour.
@@ -522,7 +523,7 @@ func InitLightClient(initData LCInitData) (LightStore, Error) {
         untrustedBlock := FetchLightBlock(PeerList.Primary(), LCInitData.Genesis.InitialHeight)
         
         // verify that 2/3+ of the validator set signed the untrustedBlock
-        if err := VerifyCommit(untrustedBlock.Commit, LCInitData.Genesis.Validators); err != nil {
+        if err := VerifyCommitFull(untrustedBlock.Commit, LCInitData.Genesis.Validators); err != nil {
             return nil, err
         }
 

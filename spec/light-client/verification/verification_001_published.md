@@ -769,7 +769,7 @@ func VerifyToTarget(primary PeerID, lightStore LightStore,
 - Error conditions
     - if the precondition is violated
     - if `ValidAndVerified` or `FetchLightBlock` report an error
-    - if [**[LCV-INV-TP.1]**](#LCV-INV-TP.1) is violated
+    - if [**[LCV-INV-TP.1]**](#lcv-inv-tp1) is violated
   
 ### Details of the Functions
 
@@ -788,7 +788,7 @@ func ValidAndVerified(trusted LightBlock, untrusted LightBlock) Result
     - *trusted.Header.Time > now - trustingPeriod*
     - *trusted.Commit* is a commit for the header
      *trusted.Header*, i.e., it contains
-     the correct hash of the header, and +2/3 of signatures
+     the correct hash of the header, and +2/3 of signatures (see [`VerifyCommitLight`]((#lcv-func-verifycommitlight1)))
     - the `Height` and `Time` of `trusted` are smaller than the Height and
   `Time` of `untrusted`, respectively
     - the *untrusted.Header* is well-formed (passes the tests from
@@ -865,7 +865,7 @@ have the state *StateVerified*.
 - Only if `ValidAndVerified` returns with `SUCCESS`, the state of a light block is
   set to *StateVerified*.
 
-#### Argument for [**[LCV-DIST-LIVE.1]**](#lcv-dist-life)
+#### Argument for [**[LCV-DIST-LIVE.1]**](#lcv-dist-live1)
 
 - If *primary* is correct,
     - `FetchLightBlock` will always return a light block consistent
@@ -873,7 +873,7 @@ have the state *StateVerified*.
     - `ValidAndVerified` either verifies the header using the trusting
       period or falls back to sequential
       verification
-    - If [**[LCV-INV-TP.1]**](#LCV-INV-TP.1) holds, eventually every
+    - If [**[LCV-INV-TP.1]**](#lcv-inv-tp1) holds, eventually every
    header will be verified and core verification **terminates successfully**.
     - successful termination depends on the age of *lightStore.LatestVerified*
       (for instance, initially on the age of  *trustedHeader*) and the
@@ -889,7 +889,7 @@ have the state *StateVerified*.
 
 ## Liveness Scenarios
 
-The liveness argument above assumes [**[LCV-INV-TP.1]**](#LCV-INV-TP.1)
+The liveness argument above assumes [**[LCV-INV-TP.1]**](#lcv-inv-tp1)
 
 which requires that there is a header that does not expire before the
 target height is reached. Here we discuss scenarios to ensure this.
@@ -1070,6 +1070,81 @@ func Backwards (primary PeerID, lightStore LightStore, targetHeight Height)
 
 The following function just decided based on the required height which
 method should be used.
+
+#### **[LCV-FUNC-VERIFYCOMMITLIGHT.1]**
+
+VerifyCommitLight verifies that 2/3+ of the signatures for a validator set were for
+a given blockID. The function will finish early and thus may not check all signatures.
+
+```go
+func VerifyCommitLight(chainID string, vals *ValidatorSet, blockID BlockID,
+height int64, commit *Commit) error {
+  // run a basic validation of the arguments
+  if err := verifyBasicValsAndCommit(vals, commit, height, blockID); err != nil {
+    return err
+  }
+
+  // calculate voting power needed
+  votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
+
+  var (
+    val                *Validator
+    valIdx             int32
+    seenVals                 = make(map[int32]int, len(commit.Signatures))
+    talliedVotingPower int64 = 0
+    voteSignBytes      []byte
+  )
+  for idx, commitSig := range commit.Signatures {
+    // ignore all commit signatures that are not for the block
+    if !commitSig.ForBlock() {
+      continue
+    }
+
+    // If the vals and commit have a 1-to-1 correspondance we can retrieve
+    // them by index else we need to retrieve them by address
+    if lookUpByIndex {
+      val = vals.Validators[idx]
+    } else {
+      valIdx, val = vals.GetByAddress(commitSig.ValidatorAddress)  
+
+      // if the signature doesn't belong to anyone in the validator set
+      // then we just skip over it
+      if val == nil {
+        continue
+      }
+
+      // because we are getting validators by address we need to make sure
+      // that the same validator doesn't commit twice
+      if firstIndex, ok := seenVals[valIdx]; ok {
+        secondIndex := idx
+        return fmt.Errorf("double vote from %v (%d and %d)", val, firstIndex, secondIndex)
+      }
+      seenVals[valIdx] = idx
+    }
+
+    voteSignBytes = commit.VoteSignBytes(chainID, int32(idx))
+
+    if !val.PubKey.VerifySignature(voteSignBytes, commitSig.Signature) {
+      return fmt.Errorf("wrong signature (#%d): %X", idx, commitSig.Signature)
+    }
+
+    // Add the voting power of the validator
+    // to the tally
+    talliedVotingPower += val.VotingPower
+
+    // check if we have enough signatures and can thus exit early
+    if talliedVotingPower > votingPowerNeeded {
+      return nil
+    }
+  }
+
+  if got, needed := talliedVotingPower, votingPowerNeeded; got <= needed {
+    return ErrNotEnoughVotingPowerSigned{Got: got, Needed: needed}
+  }
+
+  return nil
+}
+```
 
 #### **[LCV-FUNC-IBCMAIN.1]**
 
