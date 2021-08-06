@@ -119,7 +119,7 @@ A reciever to the request will use the state store to fetch the consensus params
 
 ### Message
 
-Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof). The `oneof` consists of six messages.
+Message is a [`oneof` protobuf type](https://developers.google.com/protocol-buffers/docs/proto#oneof). The `oneof` consists of eight messages.
 
 | Name                 | Type                                       | Description                                  | Field Number |
 |----------------------|--------------------------------------------|----------------------------------------------|--------------|
