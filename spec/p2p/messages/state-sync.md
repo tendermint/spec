@@ -6,7 +6,7 @@ order: 5
 
 ## Channels
 
-State sync has three distinct channels. The channel identifiers are listed below.
+State sync has four distinct channels. The channel identifiers are listed below.
 
 | Name              | Number |
 |-------------------|--------|
