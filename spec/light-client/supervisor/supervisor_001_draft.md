@@ -485,7 +485,7 @@ outside the trust period, there is a higher chance the light client won't be
 able to verify anything.
 
 Cross-checking this trusted block with providers upon initialization is helpful
-for ensuring that the node is responsive and correctly congfigured but does not
+for ensuring that the node is responsive and correctly configured but does not
 increase trust since proving a conflicting block is a
 [light client attack](https://informal.systems)
 and not just a [bogus](https://informal.systems) block could result in
