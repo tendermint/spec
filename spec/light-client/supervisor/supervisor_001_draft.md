@@ -237,7 +237,7 @@ Replace_Primary(root-of-trust LightBlock)
         - pick a new secondary *nsec* while ensuring [LC-INV-ROOT-AGREED.1]
         - that is, we need to ensure that root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
 - Expected precondition
-    - *FullNodes* is nonempty
+    - *FullNodes \ primary* is nonempty
 - Expected postcondition
     - *primary* is moved to *FaultyNodes*
     - a secondary *s* is moved from *Secondaries* to primary
