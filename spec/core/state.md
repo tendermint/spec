@@ -7,7 +7,7 @@ the state keeps track of them.
 
 The `State` object itself is an implementation detail, since it is never
 included in a block or gossiped over the network, and we never compute
-its hash. The persisence or query interface of of the `State` object
+its hash. The persistence or query interface of the `State` object
 is an implementation detail and not included in the specification.
 However, the types in the `State` object are part of the specification, since
 the Merkle roots of the `State`objects are included in blocks and values are used during
