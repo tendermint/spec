@@ -208,7 +208,7 @@ initialization. Initially this set is partitioned into
 
 - one full node that is the *primary* (singleton set),
 - a set *Secondaries* (of fixed size, e.g., 3),
-- a set *FullNodes*.
+- a set *FullNodes*; it excludes *primary* and *Secondaries* nodes.
 - A set *FaultyNodes* of nodes that the light client suspects of
     being faulty; it is initially empty
 
@@ -237,7 +237,7 @@ Replace_Primary(root-of-trust LightBlock)
         - pick a new secondary *nsec* while ensuring [LC-INV-ROOT-AGREED.1]
         - that is, we need to ensure that root-of-trust = FetchLightBlock(nsec, root-of-trust.Header.Height)
 - Expected precondition
-    - *FullNodes \ primary* is nonempty
+    - *FullNodes* is nonempty
 - Expected postcondition
     - *primary* is moved to *FaultyNodes*
     - a secondary *s* is moved from *Secondaries* to primary
