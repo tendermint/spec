@@ -45,33 +45,33 @@ More details on managing state across connections can be found in the section on
 
 ## Errors
 
-Some methods (`Echo, Info, InitChain, BeginBlock, EndBlock, Commit`),
-don't return errors because an error would indicate a critical failure
-in the application and there's nothing Tendermint can do. The problem
-should be addressed and both Tendermint and the application restarted.
+The `Query`, `CheckTx` and `DeliverTx` methods include a `Code` field in their `Response*`.
+This field is meant to contain an application-specific response response code.
+A response code of `0` indicates no error.  Any other response code 
+indicates to Tendermint that an error occurred.
 
-All other methods (`Query, CheckTx, DeliverTx`) return an
-application-specific response `Code uint32`, where only `0` is reserved
-for `OK`.
-
-Finally, `Query`, `CheckTx`, and `DeliverTx` include a `Codespace string`, whose
-intended use is to disambiguate `Code` values returned by different domains of the
+These methods also return a `Codespace string` to Tendermint. These field is 
+used to disambiguate `Code` values returned by different domains of the
 application. The `Codespace` is a namespace for the `Code`.
+
+The `Echo`, `Info`, `InitChain`, `BeginBlock`, `EndBlock`, `Commit` methods
+do not return errors. An error in any of these methods represents a critical 
+issue that Tendermint has no reasonable way to handle. The problem should be 
+addressed and both Tendermint and the application should be restarted.
 
 ## Events
 
-Some methods (`CheckTx, BeginBlock, DeliverTx, EndBlock`)
-include an `Events` field in their `Response*`. Each event contains a type and a
-list of attributes, which are key-value pairs denoting something about what happened
-during the method's execution.
+The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events` 
+field in their `Response*`. Each event contains a `type` and a list of `EventAttribute`s, 
+which are key-value pairs denoting something about what happened during the method's execution.
 
-Events can be used to index transactions and blocks according to what happened
+`Event`s can be used to index transactions and blocks according to what happened
 during their execution. Note that the set of events returned for a block from
 `BeginBlock` and `EndBlock` are merged. In case both methods return the same
-tag, only the value defined in `EndBlock` is used.
+key, only the value defined in `EndBlock` is used.
 
 Each event has a `type` which is meant to categorize the event for a particular
-`Response*` or tx. A `Response*` or tx may contain multiple events with duplicate
+`Response*` or `Tx`. A `Response*` or `Tx` may contain multiple events with duplicate
 `type` values, where each distinct entry is meant to categorize attributes for a
 particular event. Every key and value in an event's attributes must be UTF-8
 encoded strings along with the event type itself.
@@ -83,7 +83,9 @@ message Event {
 }
 ```
 
-The attributes of an `Event` consist of a `key`, `value` and a `index`. The index field notifies the indexer within Tendermint to index the event. This field is non-deterministic and will vary across different nodes in the network.
+The attributes of an `Event` consist of a `key`, `value` and a `index`. The 
+index field notifies the indexer within Tendermint to index the event. This 
+field is non-deterministic and will vary across different nodes in the network.
 
 ```protobuf
 message EventAttribute {
@@ -130,11 +132,12 @@ Example:
 
 ## EvidenceType
 
-A part of Tendermint's security model is the use of evidence which serves as proof of
+Tendermint's security model relies on the use of "evidence". Evidence is proof of
 malicious behaviour by a network participant. It is the responsibility of Tendermint
-to detect such malicious behaviour, to gossip this and commit it to the chain and once
-verified by all validators to pass it on to the application through the ABCI. It is the
-responsibility of the application then to handle the evidence and exercise punishment.
+to detect such malicious behaviour. When malicious behavior is detected, Tendermint 
+will gossip it to other nodes and commit it to the chain and once it is verified by all validators.
+This evidence will then be passed it on to the application through the ABCI. It is the responsibility of the 
+application to handle the evidence and exercise punishment.
 
 EvidenceType has the following protobuf format:
 
@@ -148,12 +151,12 @@ enum EvidenceType {
 
 There are two forms of evidence: Duplicate Vote and Light Client Attack. More
 information can be found in either [data structures](https://github.com/tendermint/spec/blob/master/spec/core/data_structures.md)
-or [accountability](https://github.com/tendermint/spec/blob/master/spec/light-client/accountability.md)
+or [accountability](https://github.com/tendermint/spec/blob/master/spec/light-client/accountability/)
 
 ## Determinism
 
 ABCI applications must implement deterministic finite-state machines to be
-securely replicated by the Tendermint consensus. This means block execution
+securely replicated by the Tendermint consensus engine. This means block execution
 over the Consensus Connection must be strictly deterministic: given the same
 ordered set of requests, all nodes will compute identical responses, for all
 BeginBlock, DeliverTx, EndBlock, and Commit. This is critical, because the
@@ -214,17 +217,22 @@ Commit are included in the header of the next block.
 
 State sync allows new nodes to rapidly bootstrap by discovering, fetching, and applying
 state machine snapshots instead of replaying historical blocks. For more details, see the
-[state sync section](apps.md#state-sync).
+[state sync section](../spec/p2p/messages/state-sync.md).
 
-When a new node is discovering snapshots in the P2P network, existing nodes will call
-`ListSnapshots` on the application to retrieve any local state snapshots. The new node will
-offer these snapshots to its local application via `OfferSnapshot`.
+New nodes will discover and request snapshots from other nodes in the P2P network.
+A Tendermint node that receives a requests for snapshots from a peer will call
+`ListSnapshots` on its application to retrieve any local state snapshots. When the 
+new node has retrieved a snapshot from a peer, it will offer this snapshot to its local 
+application via the `OfferSnapshot` method.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
-chunks from existing nodes via `LoadSnapshotChunk` and apply them sequentially to the local
+`chunks` from existing nodes. The node providing `chunks` will fetch them from 
+its local application using the `LoadSnapshotChunk` method. 
+
+As the new node receives `chunks` it will apply them sequentially to the local
 application with `ApplySnapshotChunk`. When all chunks have been applied, the application
-`AppHash` is retrieved via an `Info` query and compared to the blockchain's `AppHash` verified
-via light client.
+`AppHash` is retrieved via an `Info` query. The `AppHash` is then compared to 
+the blockchain's `AppHash` which is verified via [light client verification](../spec/light-client/verification/README.md).
 
 ## Messages
 
@@ -276,7 +284,7 @@ via light client.
     be updated during `Commit`, ensuring that `Commit` is never
     called twice for the same block height.
 
-> Note: Semantic version is reference to [semantic versioning](https://semver.org/). Semantic versions in info will be displayed as X.X.x.
+> Note: Semantic version is a reference to [semantic versioning](https://semver.org/). Semantic versions in info will be displayed as X.X.x.
 
 ### InitChain
 
@@ -316,7 +324,7 @@ via light client.
     | Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
     |--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
     | data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
-    | path   | string | Path of request, like an HTTP GET path. Can be used with or in liue of Data. Apps MUST interpret '/store' as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like '/accounts/...' or '/votes/...' | 2            |
+    | path   | string | Path of request. Like an HTTP GET path. Can be used with or in lieu of Data. Apps MUST interpret `/store` as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like `/accounts/...` or `/votes/...` | 2            |
     | height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
     | prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
 
@@ -355,16 +363,16 @@ via light client.
 
     | Name   | Type                      | Description                         | Field Number |
     |--------|---------------------------|-------------------------------------|--------------|
-    | events | repeated [Event](#events) | ype & Key-Value events for indexing | 1            |
+    | events | repeated [Event](#events) | type & Key-Value events for indexing | 1           |
 
 * **Usage**:
-    * Signals the beginning of a new block. Called prior to
-    any DeliverTxs.
+    * Signals the beginning of a new block. 
+	* Called prior to any `DeliverTx` method calls.
     * The header contains the height, timestamp, and more - it exactly matches the
     Tendermint block header. We may seek to generalize this in the future.
     * The `LastCommitInfo` and `ByzantineValidators` can be used to determine
-    rewards and punishments for the validators. NOTE validators here do not
-    include pubkeys.
+    rewards and punishments for the validators. **NOTE:** validators here do not
+    include public keys.
 
 ### CheckTx
 
@@ -373,7 +381,7 @@ via light client.
     | Name | Type        | Description                                                                                                                                                                                                                                         | Field Number |
     |------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
     | tx   | bytes       | The request transaction bytes                                                                                                                                                                                                                       | 1            |
-    | type | CheckTxType | What type of `CheckTx` request is this? At present, there are two possible values: `CheckTx_New` (the default, which says that a full check is required), and `CheckTx_Recheck` (when the mempool is initiating a normal recheck of a transaction). | 2            |
+    | type | CheckTxType | One of `CheckTx_New` or `CheckTx_Recheck`. `CheckTx_New` is the default and means that a full check of the tranasaction is required. `CheckTx_Recheck` types are used when the mempool is initiating a normal recheck of a transaction.             | 2            |
 
 * **Response**:
 
@@ -393,10 +401,10 @@ via light client.
 * **Usage**:
 
     * Technically optional - not involved in processing blocks.
-    * Guardian of the mempool: every node runs CheckTx before letting a
+    * Guardian of the mempool: every node runs `CheckTx` before letting a
     transaction into its local mempool.
     * The transaction may come from an external user or another node
-    * CheckTx need not execute the transaction in full, but rather a light-weight
+    * `CheckTx` need not execute the transaction in full, but rather a light-weight
     yet stateful validation, like checking signatures and account balances, but
     not running code in a virtual machine.
     * Transactions where `ResponseCheckTx.Code != 0` will be rejected - they will not be broadcast to
@@ -407,9 +415,9 @@ via light client.
 
 * **Request**:
 
-| Name | Type  | Description                    | Field Number |
-|------|-------|--------------------------------|--------------|
-| tx   | bytes | The request transaction bytes. | 1            |
+    | Name | Type  | Description                    | Field Number |
+    |------|-------|--------------------------------|--------------|
+    | tx   | bytes | The request transaction bytes. | 1            |
 
 * **Response**:
 
@@ -425,8 +433,8 @@ via light client.
     | codespace  | string                    | Namespace for the `code`.                                             | 8            |
 
 * **Usage**:
-    * The workhorse of the application * non-optional.
-    * Execute the transaction in full.
+    * The workhorse of the application - non-optional.
+    * When `DeliverTx` is called, the appliction must execute the transaction in full.
     * `ResponseDeliverTx.Code == 0` only if the transaction is fully valid.
 
 ### EndBlock
@@ -447,13 +455,17 @@ via light client.
 
 * **Usage**:
     * Signals the end of a block.
-    * Called after all transactions, prior to each Commit.
-    * Validator updates returned by block `H` impact blocks `H+1`, `H+2`, and
-    `H+3`, but only effects changes on the validator set of `H+2`:
-        * `H+1`: NextValidatorsHash
-        * `H+2`: ValidatorsHash (and thus the validator set)
-        * `H+3`: LastCommitInfo (ie. the last validator set)
-    * Consensus params returned for block `H` apply for block `H+1`
+    * Called after all transaction for the block have been delivered, prior to each `Commit` message.
+    * `validator updates` returned by block `H` impact blocks `H+1`, `H+2`, and
+    `H+3`. 
+	* Heights following a `validator_update` are affected in the following way:
+        * `H+1`: `NextValidatorsHash` changersd as a result of `validator_updates` value.
+        * `H+2`: The validator set change takes effect at height `H+2` and `ValidatorsHash` is updated
+        * `H+3`: `LastCommitInfo` at height H+3 is changed to include the altered
+		- validator set at height `H+3`
+    * `consensus_param_updates` returned for block `H` apply to the consensus
+	  params for block `H+1`. For more information on the consensus parameters,
+	  see the [application spec entry on consensus parameters](../spec/abci/apps.md#consensus-parameters).
 
 ### Commit
 
@@ -462,8 +474,7 @@ via light client.
     | Name   | Type  | Description                        | Field Number |
     |--------|-------|------------------------------------|--------------|
 
-    Empty request meant to signal to the app it can write state transitions to state.
-
+    Empty request meant to signal to the app it should persist application state.
 * **Response**:
 
     | Name          | Type  | Description                                                            | Field Number |
@@ -472,14 +483,14 @@ via light client.
     | retain_height | int64 | Blocks below this height may be removed. Defaults to `0` (retain all). | 3            |
 
 * **Usage**:
-    * Persist the application state.
+    * Signal the application to persist the application state.
     * Return an (optional) Merkle root hash of the application state
     * `ResponseCommit.Data` is included as the `Header.AppHash` in the next block
         * it may be empty
     * Later calls to `Query` can return proofs about the application state anchored
     in this Merkle root hash
     * Note developers can return whatever they want here (could be nothing, or a
-    constant string, etc.), so long as it is deterministic * it must not be a
+    constant string, etc.), so long as it is deterministic - it must not be a
     function of anything that did not come from the
     BeginBlock/DeliverTx/EndBlock methods.
     * Use `RetainHeight` with caution! If all nodes in the network remove historical
@@ -564,7 +575,7 @@ via light client.
     can be spoofed by adversaries, so applications should employ additional verification schemes
     to avoid denial-of-service attacks. The verified `AppHash` is automatically checked against
     the restored application at the end of snapshot restoration.
-    * For more information, see the `Snapshot` data type or the [state sync section](apps.md#state-sync).
+    * For more information, see the `Snapshot` data type or the [state sync section](../spec/p2p/messages/state-sync.md).
 
 ### ApplySnapshotChunk
 
@@ -610,7 +621,7 @@ via light client.
 
 ## Data Types
 
-The data types not listed below are the same as the [core data structures](../core/data_structures.md). The ones listed below have specific changes to better accommodate applications.
+The data types not listed below are the same as the [core data structures](../spec/core/data_structures.md). The ones listed below have specific changes to better accommodate applications.
 
 ### Validator
 
@@ -618,7 +629,7 @@ The data types not listed below are the same as the [core data structures](../co
 
     | Name    | Type  | Description                                                         | Field Number |
     |---------|-------|---------------------------------------------------------------------|--------------|
-    | address | bytes | Address of the validator (the first 20 bytes of SHA256(public key)) | 1            |
+    | address | bytes | [Address](../core/data_structures.md#address) of validator          | 1            |
     | power   | int64 | Voting power of the validator                                       | 3            |
 
 * **Usage**:
@@ -728,7 +739,7 @@ The data types not listed below are the same as the [core data structures](../co
     | metadata | bytes  | Arbitrary application metadata, for example chunk hashes or other verification data.                                                                                              | 3            |
 
 * **Usage**:
-    * Used for state sync snapshots, see [separate section](apps.md#state-sync) for details.
+    * Used for state sync snapshots, see the [state sync section](../spec/p2p/messages/state-sync.md) for details.
     * A snapshot is considered identical across nodes only if _all_ fields are equal (including
     `Metadata`). Chunks may be retrieved from all nodes that have the same snapshot.
     * When sent across the network, a snapshot message can be at most 4 MB.
