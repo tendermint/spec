@@ -27,7 +27,7 @@ calls.
 * For validating new transactions, before they're shared or included in a block.
 #### **Info** connection
 * Handles the `Info` and `Query` calls.
-* The info connection is for initialization and for queries from the user.
+* For initialization and for queries from the user.
 #### **Snapshot** connection
 * Handles the `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, and `ApplySnapshotChunk` calls.
 * For serving and restoring [state sync snapshots](apps.md#state-sync).
