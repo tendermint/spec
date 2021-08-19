@@ -10,13 +10,11 @@ title: Method and Types
 ABCI applications can run either within the _same_ process as the Tendermint 
 state-machine replication engine, or as a _separate_ process from the state-machine
 replication engine. When run within the same process, Tendermint will call the ABCI
-application methods directly as typical Go method calls. When Tendermint and the
-ABCI application are run as separate processes, Tendermint opens a set of connections
-to the application.
+application methods directly as Go method calls.
 
-When Tendermint and the application are run as separate processes, Tendermint opens
-four connections for ABCI methods. The connections each handle a subset of the ABCI
-method calls. They are defined as follows:
+When Tendermint and the ABCI application are run as separate processes, Tendermint
+opens four connections to the application for ABCI methods. The connections each 
+handle a subset of the ABCI method calls. These subsets are defined as follows:
 
 #### **Consensus** connection
 * Handles the `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` method
