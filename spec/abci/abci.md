@@ -17,18 +17,18 @@ opens four connections to the application for ABCI methods. The connections each
 handle a subset of the ABCI method calls. These subsets are defined as follows:
 
 #### **Consensus** connection
+* Driven by a consensus protocol and is responsible for block execution.
 * Handles the `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` method
 calls.
-* Driven by a consensus protocol and is responsible for block execution.
 #### **Mempool** connection
-* Handles the `CheckTx` calls.
 * For validating new transactions, before they're shared or included in a block.
+* Handles the `CheckTx` calls.
 #### **Info** connection
-* Handles the `Info` and `Query` calls.
 * For initialization and for queries from the user.
+* Handles the `Info` and `Query` calls.
 #### **Snapshot** connection
-* Handles the `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, and `ApplySnapshotChunk` calls.
 * For serving and restoring [state sync snapshots](apps.md#state-sync).
+* Handles the `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, and `ApplySnapshotChunk` calls.
 
 Additionally, there is a `Flush` method that is called on every connection,
 and an `Echo` method that is just for debugging.
