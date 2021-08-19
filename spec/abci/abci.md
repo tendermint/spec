@@ -5,27 +5,32 @@ title: Method and Types
 
 # Methods and Types
 
-## Overview
+## Connections
 
-The ABCI message types are defined in a [protobuf
-file](https://github.com/tendermint/tendermint/blob/master/proto/tendermint/abci/types.proto).
+ABCI applications can run either within the same _process_ as the Tendermint 
+state-machine replication engine _or_ as a separate process from the state-machine
+replication engine. When run within the same process, Tendermint will call the ABCI
+application methods directly as typical Go method calls. When Tendermint and the
+ABCI application are run as separate processes, Tendermint opens a set of connections
+to the application.
 
-ABCI methods are split across four separate ABCI _connections_:
+When Tendermint and the application are run as separate processes, Tendermint opens
+four connections for ABCI methods. The connections each handle a subset of the ABCI
+method calls. They are defined as follows:
 
-- Consensus connection: `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, `Commit`
-- Mempool connection: `CheckTx`
-- Info connection: `Info`, `Query`
-- Snapshot connection: `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, `ApplySnapshotChunk`
-
-The consensus connection is driven by a consensus protocol and is responsible
-for block execution.
-
-The mempool connection is for validating new transactions, before they're
-shared or included in a block.
-
-The info connection is for initialization and for queries from the user.
-
-The snapshot connection is for serving and restoring [state sync snapshots](apps.md#state-sync).
+#### **Consensus** connection
+* Handles the `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` method
+calls.
+* Driven by a consensus protocol and is responsible for block execution.
+#### **Mempool** connection
+* Handles the `CheckTx` calls.
+* For validating new transactions, before they're shared or included in a block.
+#### **Info** connection
+* Handles the `Info` and `Query` calls.
+* The info connection is for initialization and for queries from the user.
+#### **Snapshot** connection
+* Handles the `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, and `ApplySnapshotChunk` calls.
+* For serving and restoring [state sync snapshots](apps.md#state-sync).
 
 Additionally, there is a `Flush` method that is called on every connection,
 and an `Echo` method that is just for debugging.
