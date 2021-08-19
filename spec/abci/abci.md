@@ -7,8 +7,8 @@ title: Method and Types
 
 ## Connections
 
-ABCI applications can run either within the same _process_ as the Tendermint 
-state-machine replication engine _or_ as a separate process from the state-machine
+ABCI applications can run either within the _same_ process as the Tendermint 
+state-machine replication engine, or as a _separate_ process from the state-machine
 replication engine. When run within the same process, Tendermint will call the ABCI
 application methods directly as typical Go method calls. When Tendermint and the
 ABCI application are run as separate processes, Tendermint opens a set of connections
