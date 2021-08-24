@@ -50,7 +50,7 @@ This field is meant to contain an application-specific response code.
 A response code of `0` indicates no error.  Any other response code
 indicates to Tendermint that an error occurred.
 
-These methods also return a `Codespace string` to Tendermint. These field is
+These methods also return a `Codespace string` to Tendermint. This field is
 used to disambiguate `Code` values returned by different domains of the
 application. The `Codespace` is a namespace for the `Code`.
 
