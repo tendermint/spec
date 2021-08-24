@@ -459,7 +459,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * `validator updates` returned by block `H` impact blocks `H+1`, `H+2`, and
     `H+3`.
     * Heights following a `validator_update` are affected in the following way:
-        * `H+1`: `NextValidatorsHash` changersd as a result of `validator_updates` value.
+        * `H+1`: `NextValidatorsHash` includes the new `validator_updates` value.
         * `H+2`: The validator set change takes effect and `ValidatorsHash` is updated.
         * `H+3`: `LastCommitInfo` is changed to include the altered validator set.
     * `consensus_param_updates` returned for block `H` apply to the consensus
