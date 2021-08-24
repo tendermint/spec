@@ -47,22 +47,22 @@ More details on managing state across connections can be found in the section on
 
 The `Query`, `CheckTx` and `DeliverTx` methods include a `Code` field in their `Response*`.
 This field is meant to contain an application-specific response response code.
-A response code of `0` indicates no error.  Any other response code 
+A response code of `0` indicates no error.  Any other response code
 indicates to Tendermint that an error occurred.
 
-These methods also return a `Codespace string` to Tendermint. These field is 
+These methods also return a `Codespace string` to Tendermint. These field is
 used to disambiguate `Code` values returned by different domains of the
 application. The `Codespace` is a namespace for the `Code`.
 
 The `Echo`, `Info`, `InitChain`, `BeginBlock`, `EndBlock`, `Commit` methods
-do not return errors. An error in any of these methods represents a critical 
-issue that Tendermint has no reasonable way to handle. The problem should be 
+do not return errors. An error in any of these methods represents a critical
+issue that Tendermint has no reasonable way to handle. The problem should be
 addressed and both Tendermint and the application should be restarted.
 
 ## Events
 
-The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events` 
-field in their `Response*`. Each event contains a `type` and a list of `EventAttribute`s, 
+The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events`
+field in their `Response*`. Each event contains a `type` and a list of `EventAttribute`s,
 which are key-value pairs denoting something about what happened during the method's execution.
 
 `Event`s can be used to index transactions and blocks according to what happened
@@ -83,8 +83,8 @@ message Event {
 }
 ```
 
-The attributes of an `Event` consist of a `key`, `value` and a `index`. The 
-index field notifies the indexer within Tendermint to index the event. This 
+The attributes of an `Event` consist of a `key`, `value` and a `index`. The
+index field notifies the indexer within Tendermint to index the event. This
 field is non-deterministic and will vary across different nodes in the network.
 
 ```protobuf
@@ -134,9 +134,9 @@ Example:
 
 Tendermint's security model relies on the use of "evidence". Evidence is proof of
 malicious behaviour by a network participant. It is the responsibility of Tendermint
-to detect such malicious behaviour. When malicious behavior is detected, Tendermint 
+to detect such malicious behaviour. When malicious behavior is detected, Tendermint
 will gossip it to other nodes and commit it to the chain and once it is verified by all validators.
-This evidence will then be passed it on to the application through the ABCI. It is the responsibility of the 
+This evidence will then be passed it on to the application through the ABCI. It is the responsibility of the
 application to handle the evidence and exercise punishment.
 
 EvidenceType has the following protobuf format:
@@ -221,17 +221,17 @@ state machine snapshots instead of replaying historical blocks. For more details
 
 New nodes will discover and request snapshots from other nodes in the P2P network.
 A Tendermint node that receives a requests for snapshots from a peer will call
-`ListSnapshots` on its application to retrieve any local state snapshots. When the 
-new node has retrieved a snapshot from a peer, it will offer this snapshot to its local 
+`ListSnapshots` on its application to retrieve any local state snapshots. When the
+new node has retrieved a snapshot from a peer, it will offer this snapshot to its local
 application via the `OfferSnapshot` method.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
-`chunks` from existing nodes. The node providing `chunks` will fetch them from 
-its local application using the `LoadSnapshotChunk` method. 
+`chunks` from existing nodes. The node providing `chunks` will fetch them from
+its local application using the `LoadSnapshotChunk` method.
 
 As the new node receives `chunks` it will apply them sequentially to the local
 application with `ApplySnapshotChunk`. When all chunks have been applied, the application
-`AppHash` is retrieved via an `Info` query. The `AppHash` is then compared to 
+`AppHash` is retrieved via an `Info` query. The `AppHash` is then compared to
 the blockchain's `AppHash` which is verified via [light client verification](../spec/light-client/verification/README.md).
 
 ## Messages
@@ -366,7 +366,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | events | repeated [Event](#events) | type & Key-Value events for indexing | 1           |
 
 * **Usage**:
-    * Signals the beginning of a new block. 
+    * Signals the beginning of a new block.
 	* Called prior to any `DeliverTx` method calls.
     * The header contains the height, timestamp, and more - it exactly matches the
     Tendermint block header. We may seek to generalize this in the future.
@@ -457,7 +457,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * Signals the end of a block.
     * Called after all transaction for the block have been delivered, prior to each `Commit` message.
     * `validator updates` returned by block `H` impact blocks `H+1`, `H+2`, and
-    `H+3`. 
+    `H+3`.
 	* Heights following a `validator_update` are affected in the following way:
         * `H+1`: `NextValidatorsHash` changersd as a result of `validator_updates` value.
         * `H+2`: The validator set change takes effect at height `H+2` and `ValidatorsHash` is updated
