@@ -434,7 +434,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 
 * **Usage**:
     * The workhorse of the application - non-optional.
-    * When `DeliverTx` is called, the appliction must execute the transaction in full.
+    * When `DeliverTx` is called, the application must execute the transaction in full.
     * `ResponseDeliverTx.Code == 0` only if the transaction is fully valid.
 
 ### EndBlock
