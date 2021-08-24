@@ -56,8 +56,9 @@ application. The `Codespace` is a namespace for the `Code`.
 
 The `Echo`, `Info`, `InitChain`, `BeginBlock`, `EndBlock`, `Commit` methods
 do not return errors. An error in any of these methods represents a critical
-issue that Tendermint has no reasonable way to handle. The problem should be
-addressed and both Tendermint and the application should be restarted.
+issue that Tendermint has no reasonable way to handle. If there is an error in one
+of these methods, the application must crash to ensure that the error is safely
+handled by an operator.
 
 ## Events
 
@@ -135,8 +136,9 @@ Example:
 Tendermint's security model relies on the use of "evidence". Evidence is proof of
 malicious behaviour by a network participant. It is the responsibility of Tendermint
 to detect such malicious behaviour. When malicious behavior is detected, Tendermint
-will gossip it to other nodes and commit it to the chain and once it is verified by all validators.
-This evidence will then be passed it on to the application through the ABCI. It is the responsibility of the
+will gossip evidence of the behavior to other nodes and commit the evidence to 
+the chain and once it is verified by all validators. This evidence will then be 
+passed it on to the application through the ABCI. It is the responsibility of the
 application to handle the evidence and exercise punishment.
 
 EvidenceType has the following protobuf format:
@@ -220,16 +222,16 @@ state machine snapshots instead of replaying historical blocks. For more details
 [state sync section](../spec/p2p/messages/state-sync.md).
 
 New nodes will discover and request snapshots from other nodes in the P2P network.
-A Tendermint node that receives a requests for snapshots from a peer will call
+A Tendermint node that receives a request for snapshots from a peer will call
 `ListSnapshots` on its application to retrieve any local state snapshots. In addition,
 the new node will offer each snapshot received from a peer to its local application
 via the `OfferSnapshot` method.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
-`chunks` from existing nodes. The node providing `chunks` will fetch them from
+"chunks" from existing nodes. The node providing "chunks" will fetch them from
 its local application using the `LoadSnapshotChunk` method.
 
-As the new node receives `chunks` it will apply them sequentially to the local
+As the new node receives "chunks" it will apply them sequentially to the local
 application with `ApplySnapshotChunk`. When all chunks have been applied, the application
 `AppHash` is retrieved via an `Info` query. The `AppHash` is then compared to
 the blockchain's `AppHash` which is verified via [light client verification](../spec/light-client/verification/README.md).
@@ -324,7 +326,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
     |--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
     | data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
-    | path   | string | Path of request. Like an HTTP GET path. Can be used with or in lieu of Data. Apps MUST interpret `/store` as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like `/accounts/...` or `/votes/...` | 2            |
+    | path   | string | Path field of the request URI. Can be used with or in lieu of Data. Apps MUST interpret `/store` as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like `/accounts/...` or `/votes/...` | 2            |
     | height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
     | prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
 
@@ -371,8 +373,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * The header contains the height, timestamp, and more - it exactly matches the
     Tendermint block header. We may seek to generalize this in the future.
     * The `LastCommitInfo` and `ByzantineValidators` can be used to determine
-    rewards and punishments for the validators. **NOTE:** validators here do not
-    include public keys.
+    rewards and punishments for the validators.
 
 ### CheckTx
 
@@ -620,7 +621,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 
 ## Data Types
 
-The data types not listed below are the same as the [core data structures](../spec/core/data_structures.md). The ones listed below have specific changes to better accommodate applications.
+Most of the data structures used in ABCI are shared [common data structures](../spec/core/data_structures.md). In certain cases, ABCI uses different data structures which are documented here:
 
 ### Validator
 
