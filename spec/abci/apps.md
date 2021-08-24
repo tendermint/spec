@@ -231,7 +231,7 @@ the Tendermint protocol.
 If DeliverTx returns `Code != 0`, the transaction will be considered invalid,
 though it is still included in the block.
 
-DeliverTx also returns a [Code, Data, and Log](../proto/abci/types.proto#L189-L191).
+DeliverTx also returns a [Code, Data, and Log](../../proto/abci/types.proto#L189-L191).
 
 `Data` contains the result of the CheckTx transaction execution, if any. It is
 semantically meaningless to Tendermint.
