@@ -367,7 +367,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 
 * **Usage**:
     * Signals the beginning of a new block.
-	* Called prior to any `DeliverTx` method calls.
+    * Called prior to any `DeliverTx` method calls.
     * The header contains the height, timestamp, and more - it exactly matches the
     Tendermint block header. We may seek to generalize this in the future.
     * The `LastCommitInfo` and `ByzantineValidators` can be used to determine
@@ -458,14 +458,14 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * Called after all transaction for the block have been delivered, prior to each `Commit` message.
     * `validator updates` returned by block `H` impact blocks `H+1`, `H+2`, and
     `H+3`.
-	* Heights following a `validator_update` are affected in the following way:
+    * Heights following a `validator_update` are affected in the following way:
         * `H+1`: `NextValidatorsHash` changersd as a result of `validator_updates` value.
         * `H+2`: The validator set change takes effect at height `H+2` and `ValidatorsHash` is updated
         * `H+3`: `LastCommitInfo` at height H+3 is changed to include the altered
-		- validator set at height `H+3`
+        - validator set at height `H+3`
     * `consensus_param_updates` returned for block `H` apply to the consensus
-	  params for block `H+1`. For more information on the consensus parameters,
-	  see the [application spec entry on consensus parameters](../spec/abci/apps.md#consensus-parameters).
+      params for block `H+1`. For more information on the consensus parameters,
+      see the [application spec entry on consensus parameters](../spec/abci/apps.md#consensus-parameters).
 
 ### Commit
 
