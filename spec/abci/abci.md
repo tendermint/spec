@@ -456,8 +456,8 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 * **Usage**:
     * Signals the end of a block.
     * Called after all transaction for the block have been delivered, prior to each `Commit` message.
-    * `validator updates` returned by block `H` impact blocks `H+1`, `H+2`, and
-    `H+3`.
+    * Optional `validator_updates` triggered by block `H`. These updates affect validation
+      for blocks `H+1`, `H+2`, and `H+3`.
     * Heights following a `validator_update` are affected in the following way:
         * `H+1`: `NextValidatorsHash` includes the new `validator_updates` value.
         * `H+2`: The validator set change takes effect and `ValidatorsHash` is updated.
