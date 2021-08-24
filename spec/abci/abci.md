@@ -461,8 +461,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * Heights following a `validator_update` are affected in the following way:
         * `H+1`: `NextValidatorsHash` changersd as a result of `validator_updates` value.
         * `H+2`: The validator set change takes effect at height `H+2` and `ValidatorsHash` is updated
-        * `H+3`: `LastCommitInfo` at height H+3 is changed to include the altered
-        - validator set at height `H+3`
+        * `H+3`: `LastCommitInfo` is changed to include the altered validator set.
     * `consensus_param_updates` returned for block `H` apply to the consensus
       params for block `H+1`. For more information on the consensus parameters,
       see the [application spec entry on consensus parameters](../spec/abci/apps.md#consensus-parameters).
