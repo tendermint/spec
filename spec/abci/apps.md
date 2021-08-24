@@ -9,7 +9,7 @@ Please ensure you've first read the spec for [ABCI Methods and Types](abci.md)
 
 Here we cover the following components of ABCI applications:
 
-- [Connection State](#state) - the interplay between ABCI connections and application state
+- [Connection State](#connection-state) - the interplay between ABCI connections and application state
   and the differences between `CheckTx` and `DeliverTx`.
 - [Transaction Results](#transaction-results) - rules around transaction
   results and validity
@@ -21,7 +21,7 @@ Here we cover the following components of ABCI applications:
   Tendermint and the application on startup.
 - [State Sync](#state-sync) - rapid bootstrapping of new nodes by restoring state machine snapshots
 
-## State
+## Connection State
 
 Since Tendermint maintains four concurrent ABCI connections, it is typical
 for an application to maintain a distinct state for each, and for the states to
@@ -77,18 +77,13 @@ that's no problem, it just can't be part of the sequential logic of the
 
 ### Consensus Connection
 
-The Consensus Connection should maintain a `DeliverTxState` -
-the working state for block execution. It should be updated by the calls to
-`BeginBlock`, `DeliverTx`, and `EndBlock` during block execution and committed to
-disk as the "latest committed state" during `Commit`.
+The Consensus Connection should maintain a `DeliverTxState` - the working state
+for block execution. It should be updated by the calls to `BeginBlock`, `DeliverTx`,
+and `EndBlock` during block execution and committed to disk as the "latest
+committed state" during `Commit`.
 
-Updates made to the DeliverTxState by each method call must be readable by each subsequent method -
+Updates made to the `DeliverTxState` by each method call must be readable by each subsequent method -
 ie. the updates are linearizable.
-
-- [BeginBlock](#beginblock)
-- [EndBlock](#endblock)
-- [Deliver Tx](#delivertx)
-- [Commit](#commit)
 
 ### Mempool Connection
 
@@ -97,7 +92,7 @@ to sequentially process pending transactions in the mempool that have
 not yet been committed. It should be initialized to the latest committed state
 at the end of every `Commit`.
 
-The CheckTxState may be updated concurrently with the DeliverTxState, as
+The `CheckTxState` may be updated concurrently with the `DeliverTxState`, as
 messages may be sent concurrently on the Consensus and Mempool connections. However,
 before calling `Commit`, Tendermint will lock and flush the mempool connection,
 ensuring that all existing CheckTx are responded to and no new ones can
@@ -111,31 +106,31 @@ an additional `Type` parameter is made available to the CheckTx function that
 indicates whether an incoming transaction is new (`CheckTxType_New`), or a
 recheck (`CheckTxType_Recheck`).
 
-Finally, the mempool will unlock and new transactions can be processed through CheckTx again.
+Finally, after re-checking transactions in the mempool, Tendermint will unlock 
+the mempool connection. New transactions are once again able to be processed through CheckTx.
 
-Note that CheckTx doesn't have to check everything that affects transaction validity; the
-expensive things can be skipped. In fact, CheckTx doesn't have to check
-anything; it might say that any transaction is a valid transaction.
-Unlike DeliverTx, CheckTx is just there as
-a sort of weak filter to keep invalid transactions out of the blockchain. It's
-weak, because a Byzantine node doesn't care about CheckTx; it can propose a
-block full of invalid transactions if it wants.
+Note that CheckTx is just a weak filter to keep invalid transactions out of the block chain. 
+CheckTx doesn't have to check everything that affects transaction validity; the
+expensive things can be skipped.  It's weak because a Byzantine node doesn't 
+care about CheckTx; it can propose a block full of invalid transactions if it wants.
+
+-- what other line of defense do we have against invalid TX? TM itself i'm assuming? --
 
 #### Replay Protection
 
 To prevent old transactions from being replayed, CheckTx must implement
 replay protection.
 
+-- is this implementation specific or should it be included in the spec? -- 
 Tendermint provides the first defense layer by keeping a lightweight
-in-memory cache of 100k (`[mempool] cache_size`) last transactions in
-the mempool. If Tendermint is just started or the clients sent more than
-100k transactions, old transactions may be sent to the application. So
+in-memory cache of recent transactions in the mempool. If Tendermint is just 
+started or the cache is full, old transactions may be sent to the application. So
 it is important CheckTx implements some logic to handle them.
 
+-- this feels go specific
 If there are cases in your application where a transaction may become invalid in some
 future state, you probably want to disable Tendermint's
-cache. You can do that by setting `[mempool] cache_size = 0` in the
-config.
+cache.
 
 ### Query Connection
 
@@ -145,7 +140,7 @@ below).
 It should always contain the latest committed state associated with the
 latest committed block.
 
-QueryState should be set to the latest `DeliverTxState` at the end of every `Commit`,
+`QueryState` should be set to the latest `DeliverTxState` at the end of every `Commit`,
 ie. after the full block has been processed and the state committed to disk.
 Otherwise it should never be modified.
 
@@ -158,12 +153,15 @@ cause Tendermint to not connect to the corresponding peer:
 - `p2p/filter/id/<id>`, where `<is>` is the hex-encoded node ID (the hash of
   the node's p2p pubkey).
 
+  -- feels go specific.
 Note: these query formats are subject to change!
 
 ### Snapshot Connection
 
 The Snapshot Connection is optional, and is only used to serve state sync snapshots for other nodes
 and/or restore state sync snapshots to a local node being bootstrapped.
+
+For more information, see [the state sync section of this document](#state-sync).
 
 ## Transaction Results
 
@@ -182,7 +180,7 @@ the difference credited back. Tendermint adopts a similar abstraction,
 though uses it only optionally and weakly, allowing applications to define
 their own sense of the cost of execution.
 
-In Tendermint, the `ConsensusParams.Block.MaxGas` limits the amount of `gas` that can be used in a block.
+In Tendermint, the [ConsensusParams.Block.MaxGas](../proto/types/params.proto) limits the amount of `gas` that can be used in a block.
 The default value is `-1`, meaning no limit, or that the concept of gas is
 meaningless.
 
@@ -233,7 +231,7 @@ the Tendermint protocol.
 If DeliverTx returns `Code != 0`, the transaction will be considered invalid,
 though it is still included in the block.
 
-DeliverTx returns a `abci.Result`, which includes a Code, Data, and Log.
+DeliverTx also returns a [Code, Data, and Log](../proto/abci/types.proto#L189-L191).
 
 `Data` contains the result of the CheckTx transaction execution, if any. It is
 semantically meaningless to Tendermint.
