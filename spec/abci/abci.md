@@ -7,7 +7,7 @@ title: Method and Types
 
 ## Connections
 
-ABCI applications can run either within the _same_ process as the Tendermint 
+ABCI applications can run either within the _same_ process as the Tendermint
 state-machine replication engine, or as a _separate_ process from the state-machine
 replication engine. When run within the same process, Tendermint will call the ABCI
 application methods directly as Go method calls.
@@ -17,16 +17,21 @@ opens four connections to the application for ABCI methods. The connections each
 handle a subset of the ABCI method calls. These subsets are defined as follows:
 
 #### **Consensus** connection
+
 * Driven by a consensus protocol and is responsible for block execution.
 * Handles the `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` method
 calls.
 #### **Mempool** connection
 * For validating new transactions, before they're shared or included in a block.
 * Handles the `CheckTx` calls.
+
 #### **Info** connection
+
 * For initialization and for queries from the user.
 * Handles the `Info` and `Query` calls.
+
 #### **Snapshot** connection
+
 * For serving and restoring [state sync snapshots](apps.md#state-sync).
 * Handles the `ListSnapshots`, `LoadSnapshotChunk`, `OfferSnapshot`, and `ApplySnapshotChunk` calls.
 
