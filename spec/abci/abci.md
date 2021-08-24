@@ -473,7 +473,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | Name   | Type  | Description                        | Field Number |
     |--------|-------|------------------------------------|--------------|
 
-    Empty request meant to signal to the app it should persist application state.
+    Commit signals the application to persist application state. It takes no parameters.
 * **Response**:
 
     | Name          | Type  | Description                                                            | Field Number |
