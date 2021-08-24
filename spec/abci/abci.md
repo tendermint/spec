@@ -83,9 +83,9 @@ message Event {
 }
 ```
 
-The attributes of an `Event` consist of a `key`, `value` and a `index`. The
-index field notifies the indexer within Tendermint to index the event. This
-field is non-deterministic and will vary across different nodes in the network.
+The attributes of an `Event` consist of a `key`, `value` and an `index` flag. The
+index flag notifies the indexer within Tendermint to index the event. The value of
+the `index` flag is non-deterministic and may vary across different nodes in the network.
 
 ```protobuf
 message EventAttribute {
