@@ -65,7 +65,7 @@ The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events`
 field in their `Response*`. Each event contains a `type` and a list of `EventAttribute`s,
 which are key-value pairs denoting something about what happened during the method's execution.
 
-`Event`s can be used to index transactions and blocks according to what happened
+`Event` values can be used to index transactions and blocks according to what happened
 during their execution. Note that the set of events returned for a block from
 `BeginBlock` and `EndBlock` are merged. In case both methods return the same
 key, only the value defined in `EndBlock` is used.
