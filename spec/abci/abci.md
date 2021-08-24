@@ -433,7 +433,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | codespace  | string                    | Namespace for the `code`.                                             | 8            |
 
 * **Usage**:
-    * The workhorse of the application - non-optional.
+    * [**Required**] The core method of the application.
     * When `DeliverTx` is called, the application must execute the transaction in full.
     * `ResponseDeliverTx.Code == 0` only if the transaction is fully valid.
 
