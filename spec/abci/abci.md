@@ -46,7 +46,7 @@ More details on managing state across connections can be found in the section on
 ## Errors
 
 The `Query`, `CheckTx` and `DeliverTx` methods include a `Code` field in their `Response*`.
-This field is meant to contain an application-specific response response code.
+This field is meant to contain an application-specific response code.
 A response code of `0` indicates no error.  Any other response code
 indicates to Tendermint that an error occurred.
 
