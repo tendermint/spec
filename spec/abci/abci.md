@@ -434,7 +434,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 
 * **Usage**:
     * [**Required**] The core method of the application.
-    * When `DeliverTx` is called, the application must execute the transaction in full.
+    * When `DeliverTx` is called, the application must execute the transaction in full before returning control to Tendermint.
     * `ResponseDeliverTx.Code == 0` only if the transaction is fully valid.
 
 ### EndBlock
