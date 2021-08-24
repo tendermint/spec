@@ -221,9 +221,9 @@ state machine snapshots instead of replaying historical blocks. For more details
 
 New nodes will discover and request snapshots from other nodes in the P2P network.
 A Tendermint node that receives a requests for snapshots from a peer will call
-`ListSnapshots` on its application to retrieve any local state snapshots. When the
-new node has retrieved a snapshot from a peer, it will offer this snapshot to its local
-application via the `OfferSnapshot` method.
+`ListSnapshots` on its application to retrieve any local state snapshots. In addition,
+the new node will offer each snapshot received from a peer to its local application
+via the `OfferSnapshot` method.
 
 Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
 `chunks` from existing nodes. The node providing `chunks` will fetch them from
