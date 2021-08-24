@@ -13,7 +13,7 @@ replication engine. When run within the same process, Tendermint will call the A
 application methods directly as Go method calls.
 
 When Tendermint and the ABCI application are run as separate processes, Tendermint
-opens four connections to the application for ABCI methods. The connections each 
+opens four connections to the application for ABCI methods. The connections each
 handle a subset of the ABCI method calls. These subsets are defined as follows:
 
 #### **Consensus** connection
@@ -21,7 +21,9 @@ handle a subset of the ABCI method calls. These subsets are defined as follows:
 * Driven by a consensus protocol and is responsible for block execution.
 * Handles the `InitChain`, `BeginBlock`, `DeliverTx`, `EndBlock`, and `Commit` method
 calls.
+
 #### **Mempool** connection
+
 * For validating new transactions, before they're shared or included in a block.
 * Handles the `CheckTx` calls.
 
