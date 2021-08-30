@@ -1,39 +1,11 @@
 # API Reference
 
-# Table of Contents
-{{range .Files}}
-{{if .HasServices}}
-- Services
-  {{range .Services}}  - [{{.Name}}](#{{.FullName | lower | replace "." ""}})
-  {{end}}
-{{end}}
-{{if .HasMessages}}
-- Messages
-  {{range .Messages}}  - [{{.LongName}}](#{{.LongName | lower | replace "." ""}})
-  {{end}}
-{{end}}
-{{if .HasEnums}}
-- Enums
-  {{range .Enums}}  - [{{.LongName}}](#{{.LongName | lower | replace "." ""}})
-  {{end}}
-{{end}}
-{{end}}
-- [Scalar Value Types](#scalar-value-types)
-
 {{range .Files}}
 
 {{range .Services -}}
 # {{.Name}}
 {{.Description}}
 
-{{range .Methods -}}
-## {{.Name}}
-
-> **rpc** {{.Name}}([{{.RequestLongType}}](#{{.RequestLongType | lower | replace "." ""}}))
-    [{{.ResponseLongType}}](#{{.ResponseLongType | lower | replace "." ""}})
-
-{{ .Description}}
-{{end}} <!-- end methods -->
 {{end}} <!-- end services -->
 
 # Messages
@@ -43,7 +15,7 @@
 {{.Description}}
 
 {{if .HasFields}}
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 {{range .Fields -}}
 	| {{if .IsOneof}}[**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) {{.OneofDecl}}.{{end}}{{.Name}} | [{{if .IsMap}}map {{else}}{{.Label}} {{end}}{{.LongType}}](#{{.LongType | lower | replace "." ""}}) | {{if .Description}}{{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}}{{else}}none{{end}} |

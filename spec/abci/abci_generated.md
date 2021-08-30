@@ -1,157 +1,10 @@
 # API Reference
 
-# Table of Contents
-
-
-- Services
-    - [ABCIApplication](#tendermintabciabciapplication)
-  
-
-
-- Messages
-    - [Event](#event)
-    - [EventAttribute](#eventattribute)
-    - [Evidence](#evidence)
-    - [LastCommitInfo](#lastcommitinfo)
-    - [Request](#request)
-    - [RequestApplySnapshotChunk](#requestapplysnapshotchunk)
-    - [RequestBeginBlock](#requestbeginblock)
-    - [RequestCheckTx](#requestchecktx)
-    - [RequestCommit](#requestcommit)
-    - [RequestDeliverTx](#requestdelivertx)
-    - [RequestEcho](#requestecho)
-    - [RequestEndBlock](#requestendblock)
-    - [RequestFlush](#requestflush)
-    - [RequestInfo](#requestinfo)
-    - [RequestInitChain](#requestinitchain)
-    - [RequestListSnapshots](#requestlistsnapshots)
-    - [RequestLoadSnapshotChunk](#requestloadsnapshotchunk)
-    - [RequestOfferSnapshot](#requestoffersnapshot)
-    - [RequestQuery](#requestquery)
-    - [Response](#response)
-    - [ResponseApplySnapshotChunk](#responseapplysnapshotchunk)
-    - [ResponseBeginBlock](#responsebeginblock)
-    - [ResponseCheckTx](#responsechecktx)
-    - [ResponseCommit](#responsecommit)
-    - [ResponseDeliverTx](#responsedelivertx)
-    - [ResponseEcho](#responseecho)
-    - [ResponseEndBlock](#responseendblock)
-    - [ResponseException](#responseexception)
-    - [ResponseFlush](#responseflush)
-    - [ResponseInfo](#responseinfo)
-    - [ResponseInitChain](#responseinitchain)
-    - [ResponseListSnapshots](#responselistsnapshots)
-    - [ResponseLoadSnapshotChunk](#responseloadsnapshotchunk)
-    - [ResponseOfferSnapshot](#responseoffersnapshot)
-    - [ResponseQuery](#responsequery)
-    - [Snapshot](#snapshot)
-    - [TxResult](#txresult)
-    - [Validator](#validator)
-    - [ValidatorUpdate](#validatorupdate)
-    - [VoteInfo](#voteinfo)
-  
-
-
-- Enums
-    - [CheckTxType](#checktxtype)
-    - [EvidenceType](#evidencetype)
-    - [ResponseApplySnapshotChunk.Result](#responseapplysnapshotchunkresult)
-    - [ResponseOfferSnapshot.Result](#responseoffersnapshotresult)
-  
-
-
-- [Scalar Value Types](#scalar-value-types)
-
 
 
 # ABCIApplication
 
 
-## Echo
-
-> **rpc** Echo([RequestEcho](#requestecho))
-    [ResponseEcho](#responseecho)
-
-
-## Flush
-
-> **rpc** Flush([RequestFlush](#requestflush))
-    [ResponseFlush](#responseflush)
-
-
-## Info
-
-> **rpc** Info([RequestInfo](#requestinfo))
-    [ResponseInfo](#responseinfo)
-
-
-## DeliverTx
-
-> **rpc** DeliverTx([RequestDeliverTx](#requestdelivertx))
-    [ResponseDeliverTx](#responsedelivertx)
-
-
-## CheckTx
-
-> **rpc** CheckTx([RequestCheckTx](#requestchecktx))
-    [ResponseCheckTx](#responsechecktx)
-
-
-## Query
-
-> **rpc** Query([RequestQuery](#requestquery))
-    [ResponseQuery](#responsequery)
-
-
-## Commit
-
-> **rpc** Commit([RequestCommit](#requestcommit))
-    [ResponseCommit](#responsecommit)
-
-
-## InitChain
-
-> **rpc** InitChain([RequestInitChain](#requestinitchain))
-    [ResponseInitChain](#responseinitchain)
-
-
-## BeginBlock
-
-> **rpc** BeginBlock([RequestBeginBlock](#requestbeginblock))
-    [ResponseBeginBlock](#responsebeginblock)
-
-
-## EndBlock
-
-> **rpc** EndBlock([RequestEndBlock](#requestendblock))
-    [ResponseEndBlock](#responseendblock)
-
-
-## ListSnapshots
-
-> **rpc** ListSnapshots([RequestListSnapshots](#requestlistsnapshots))
-    [ResponseListSnapshots](#responselistsnapshots)
-
-
-## OfferSnapshot
-
-> **rpc** OfferSnapshot([RequestOfferSnapshot](#requestoffersnapshot))
-    [ResponseOfferSnapshot](#responseoffersnapshot)
-
-
-## LoadSnapshotChunk
-
-> **rpc** LoadSnapshotChunk([RequestLoadSnapshotChunk](#requestloadsnapshotchunk))
-    [ResponseLoadSnapshotChunk](#responseloadsnapshotchunk)
-
-
-## ApplySnapshotChunk
-
-> **rpc** ApplySnapshotChunk([RequestApplySnapshotChunk](#requestapplysnapshotchunk))
-    [ResponseApplySnapshotChunk](#responseapplysnapshotchunk)
-
-
- <!-- end methods -->
  <!-- end services -->
 
 # Messages
@@ -163,7 +16,7 @@ ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and ResponseDeliverTx.
 Later, transactions may be queried using these events.
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | type | [ string](#string) | none |
 | attributes | [repeated EventAttribute](#eventattribute) | none |
@@ -175,7 +28,7 @@ Later, transactions may be queried using these events.
 EventAttribute is a single key-value pair, associated with an event.
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | key | [ string](#string) | none |
 | value | [ string](#string) | none |
@@ -188,7 +41,7 @@ EventAttribute is a single key-value pair, associated with an event.
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | type | [ EvidenceType](#evidencetype) | none |
 | validator | [ Validator](#validator) | The offending validator |
@@ -203,7 +56,7 @@ EventAttribute is a single key-value pair, associated with an event.
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | round | [ int32](#int32) | none |
 | votes | [repeated VoteInfo](#voteinfo) | none |
@@ -215,7 +68,7 @@ EventAttribute is a single key-value pair, associated with an event.
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) value.echo | [ RequestEcho](#requestecho) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) value.flush | [ RequestFlush](#requestflush) | none |
@@ -239,7 +92,7 @@ EventAttribute is a single key-value pair, associated with an event.
 Applies a snapshot chunk
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | index | [ uint32](#uint32) | none |
 | chunk | [ bytes](#bytes) | none |
@@ -252,7 +105,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | hash | [ bytes](#bytes) | none |
 | header | [ tendermint.types.Header](#tenderminttypesheader) | none |
@@ -266,7 +119,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | tx | [ bytes](#bytes) | none |
 | type | [ CheckTxType](#checktxtype) | none |
@@ -284,7 +137,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | tx | [ bytes](#bytes) | none |
  <!-- end Fields -->
@@ -295,7 +148,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | message | [ string](#string) | none |
  <!-- end Fields -->
@@ -306,7 +159,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | height | [ int64](#int64) | none |
  <!-- end Fields -->
@@ -323,7 +176,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | version | [ string](#string) | none |
 | block_version | [ uint64](#uint64) | none |
@@ -337,7 +190,7 @@ Applies a snapshot chunk
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | time | [ google.protobuf.Timestamp](#googleprotobuftimestamp) | none |
 | chain_id | [ string](#string) | none |
@@ -359,7 +212,7 @@ lists available snapshots
 loads a snapshot chunk
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | height | [ uint64](#uint64) | none |
 | format | [ uint32](#uint32) | none |
@@ -372,7 +225,7 @@ loads a snapshot chunk
 offers a snapshot to the application
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | snapshot | [ Snapshot](#snapshot) | snapshot offered by peers |
 | app_hash | [ bytes](#bytes) | light client-verified app hash for snapshot height |
@@ -384,7 +237,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | data | [ bytes](#bytes) | none |
 | path | [ string](#string) | none |
@@ -398,7 +251,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) value.exception | [ ResponseException](#responseexception) | none |
 | [**oneof**](https://developers.google.com/protocol-buffers/docs/proto3#oneof) value.echo | [ ResponseEcho](#responseecho) | none |
@@ -423,7 +276,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | result | [ ResponseApplySnapshotChunk.Result](#responseapplysnapshotchunkresult) | none |
 | refetch_chunks | [repeated uint32](#uint32) | Chunks to refetch and reapply |
@@ -436,7 +289,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | events | [repeated Event](#event) | none |
  <!-- end Fields -->
@@ -447,7 +300,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | code | [ uint32](#uint32) | none |
 | data | [ bytes](#bytes) | none |
@@ -467,7 +320,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | data | [ bytes](#bytes) | reserve 1 |
 | retain_height | [ int64](#int64) | none |
@@ -479,7 +332,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | code | [ uint32](#uint32) | none |
 | data | [ bytes](#bytes) | none |
@@ -497,7 +350,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | message | [ string](#string) | none |
  <!-- end Fields -->
@@ -508,7 +361,7 @@ offers a snapshot to the application
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | validator_updates | [repeated ValidatorUpdate](#validatorupdate) | none |
 | consensus_param_updates | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | none |
@@ -521,7 +374,7 @@ offers a snapshot to the application
 nondeterministic
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | error | [ string](#string) | none |
  <!-- end Fields -->
@@ -538,7 +391,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | data | [ string](#string) | none |
 | version | [ string](#string) | this is the software version of the application. TODO: remove? |
@@ -553,7 +406,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | consensus_params | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | none |
 | validators | [repeated ValidatorUpdate](#validatorupdate) | none |
@@ -566,7 +419,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | snapshots | [repeated Snapshot](#snapshot) | none |
  <!-- end Fields -->
@@ -577,7 +430,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | chunk | [ bytes](#bytes) | none |
  <!-- end Fields -->
@@ -588,7 +441,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | result | [ ResponseOfferSnapshot.Result](#responseoffersnapshotresult) | none |
  <!-- end Fields -->
@@ -599,7 +452,7 @@ nondeterministic
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | code | [ uint32](#uint32) | none |
 | log | [ string](#string) | bytes data = 2; // use "value" instead.
@@ -620,7 +473,7 @@ nondeterministic |
 
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | height | [ uint64](#uint64) | The height at which the snapshot was taken |
 | format | [ uint32](#uint32) | The application-specific snapshot format |
@@ -637,7 +490,7 @@ TxResult contains results of executing the transaction.
 One usage is indexing transaction results.
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | height | [ int64](#int64) | none |
 | index | [ uint32](#uint32) | none |
@@ -651,7 +504,7 @@ One usage is indexing transaction results.
 Validator
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | address | [ bytes](#bytes) | The first 20 bytes of SHA256(public key) |
 | power | [ int64](#int64) | PubKey pub_key = 2 [(gogoproto.nullable)=false];
@@ -665,7 +518,7 @@ The voting power |
 ValidatorUpdate
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | pub_key | [ tendermint.crypto.PublicKey](#tendermintcryptopublickey) | none |
 | power | [ int64](#int64) | none |
@@ -677,7 +530,7 @@ ValidatorUpdate
 VoteInfo
 
 
-| Field | ype | Description |
+| Field | Type | Description |
 | ----- | ---- | ----------- |
 | validator | [ Validator](#validator) | none |
 | signed_last_block | [ bool](#bool) | none |
