@@ -137,7 +137,7 @@ Tendermint's security model relies on the use of "evidence". Evidence is proof o
 malicious behaviour by a network participant. It is the responsibility of Tendermint
 to detect such malicious behaviour. When malicious behavior is detected, Tendermint
 will gossip evidence of the behavior to other nodes and commit the evidence to 
-the chain and once it is verified by all validators. This evidence will then be 
+the chain once it is verified by all validators. This evidence will then be 
 passed it on to the application through the ABCI. It is the responsibility of the
 application to handle the evidence and exercise punishment.
 
