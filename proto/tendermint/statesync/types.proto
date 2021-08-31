@@ -3,7 +3,7 @@ package tendermint.statesync;
 
 import "tendermint/types/types.proto";
 
-option go_package = "github.com/tendermint/tendermint/proto/tendermint/statesync";
+
 
 message Message {
   oneof sum {
