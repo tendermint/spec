@@ -1,16 +1,104 @@
-# API Reference
-
-
 
 # ABCIApplication
 
+## Echo
+ 
+
+**Accepts:** [RequestEcho](#requestecho)
+
+**Returns:** [ResponseEcho](#responseecho)
+## Flush
+ 
+
+**Accepts:** [RequestFlush](#requestflush)
+
+**Returns:** [ResponseFlush](#responseflush)
+## Info
+ 
+
+**Accepts:** [RequestInfo](#requestinfo)
+
+**Returns:** [ResponseInfo](#responseinfo)
+## DeliverTx
+ 
+
+**Accepts:** [RequestDeliverTx](#requestdelivertx)
+
+**Returns:** [ResponseDeliverTx](#responsedelivertx)
+## CheckTx
+ 
+
+**Accepts:** [RequestCheckTx](#requestchecktx)
+
+**Returns:** [ResponseCheckTx](#responsechecktx)
+## Query
+ 
+
+**Accepts:** [RequestQuery](#requestquery)
+
+**Returns:** [ResponseQuery](#responsequery)
+## Commit
+ 
+
+**Accepts:** [RequestCommit](#requestcommit)
+
+**Returns:** [ResponseCommit](#responsecommit)
+## InitChain
+ - Called once upon genesis.
+ - If ResponseInitChain.Validators is empty, the initial validator set will be the RequestInitChain.Validators.
+ - If ResponseInitChain.Validators is not empty, it will be the initial.
+ validator set (regardless of what is in RequestInitChain.Validators).
+ - This allows the app to decide if it wants to accept the initial validator.
+ set proposed by tendermint (ie. in the genesis file), or if it wants to use.
+ a different one (perhaps computed based on some application specific
+ information in the genesis file).
+
+**Accepts:** [RequestInitChain](#requestinitchain)
+
+**Returns:** [ResponseInitChain](#responseinitchain)
+## BeginBlock
+ 
+
+**Accepts:** [RequestBeginBlock](#requestbeginblock)
+
+**Returns:** [ResponseBeginBlock](#responsebeginblock)
+## EndBlock
+ 
+
+**Accepts:** [RequestEndBlock](#requestendblock)
+
+**Returns:** [ResponseEndBlock](#responseendblock)
+## ListSnapshots
+ 
+
+**Accepts:** [RequestListSnapshots](#requestlistsnapshots)
+
+**Returns:** [ResponseListSnapshots](#responselistsnapshots)
+## OfferSnapshot
+ 
+
+**Accepts:** [RequestOfferSnapshot](#requestoffersnapshot)
+
+**Returns:** [ResponseOfferSnapshot](#responseoffersnapshot)
+## LoadSnapshotChunk
+ 
+
+**Accepts:** [RequestLoadSnapshotChunk](#requestloadsnapshotchunk)
+
+**Returns:** [ResponseLoadSnapshotChunk](#responseloadsnapshotchunk)
+## ApplySnapshotChunk
+ 
+
+**Accepts:** [RequestApplySnapshotChunk](#requestapplysnapshotchunk)
+
+**Returns:** [ResponseApplySnapshotChunk](#responseapplysnapshotchunk)
 
  <!-- end services -->
 
 # Messages
 
 
-## Event 
+## Event {: #event}
 Event allows application developers to attach additional information to
 ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and ResponseDeliverTx.
 Later, transactions may be queried using these events.
@@ -24,7 +112,7 @@ Later, transactions may be queried using these events.
  <!-- end HasFields -->
 
 
-## EventAttribute 
+## EventAttribute {: #eventattribute}
 EventAttribute is a single key-value pair, associated with an event.
 
 
@@ -37,7 +125,7 @@ EventAttribute is a single key-value pair, associated with an event.
  <!-- end HasFields -->
 
 
-## Evidence 
+## Evidence {: #evidence}
 
 
 
@@ -52,7 +140,7 @@ EventAttribute is a single key-value pair, associated with an event.
  <!-- end HasFields -->
 
 
-## LastCommitInfo 
+## LastCommitInfo {: #lastcommitinfo}
 
 
 
@@ -64,7 +152,7 @@ EventAttribute is a single key-value pair, associated with an event.
  <!-- end HasFields -->
 
 
-## Request 
+## Request {: #request}
 
 
 
@@ -88,7 +176,7 @@ EventAttribute is a single key-value pair, associated with an event.
  <!-- end HasFields -->
 
 
-## RequestApplySnapshotChunk 
+## RequestApplySnapshotChunk {: #requestapplysnapshotchunk}
 Applies a snapshot chunk
 
 
@@ -101,7 +189,7 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestBeginBlock 
+## RequestBeginBlock {: #requestbeginblock}
 
 
 
@@ -115,7 +203,7 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestCheckTx 
+## RequestCheckTx {: #requestchecktx}
 
 
 
@@ -127,13 +215,13 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestCommit 
+## RequestCommit {: #requestcommit}
 
 
  <!-- end HasFields -->
 
 
-## RequestDeliverTx 
+## RequestDeliverTx {: #requestdelivertx}
 
 
 
@@ -144,7 +232,7 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestEcho 
+## RequestEcho {: #requestecho}
 
 
 
@@ -155,7 +243,7 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestEndBlock 
+## RequestEndBlock {: #requestendblock}
 
 
 
@@ -166,13 +254,13 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestFlush 
+## RequestFlush {: #requestflush}
 
 
  <!-- end HasFields -->
 
 
-## RequestInfo 
+## RequestInfo {: #requestinfo}
 
 
 
@@ -186,29 +274,29 @@ Applies a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestInitChain 
+## RequestInitChain {: #requestinitchain}
 
 
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| time | [ google.protobuf.Timestamp](#googleprotobuftimestamp) | none |
-| chain_id | [ string](#string) | none |
-| consensus_params | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | none |
-| validators | [repeated ValidatorUpdate](#validatorupdate) | none |
-| app_state_bytes | [ bytes](#bytes) | none |
-| initial_height | [ int64](#int64) | none |
+| time | [ google.protobuf.Timestamp](#googleprotobuftimestamp) | Genesis time. |
+| chain_id | [ string](#string) | ID of the blockchain. |
+| consensus_params | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | Initial consensus critical parameters. |
+| validators | [repeated ValidatorUpdate](#validatorupdate) | Initial genesis validators, sorted by voting power. |
+| app_state_bytes | [ bytes](#bytes) | Serialized initial application state. JSON bytes. |
+| initial_height | [ int64](#int64) | Height of the initial block (typically 1). |
  <!-- end Fields -->
  <!-- end HasFields -->
 
 
-## RequestListSnapshots 
+## RequestListSnapshots {: #requestlistsnapshots}
 lists available snapshots
 
  <!-- end HasFields -->
 
 
-## RequestLoadSnapshotChunk 
+## RequestLoadSnapshotChunk {: #requestloadsnapshotchunk}
 loads a snapshot chunk
 
 
@@ -221,7 +309,7 @@ loads a snapshot chunk
  <!-- end HasFields -->
 
 
-## RequestOfferSnapshot 
+## RequestOfferSnapshot {: #requestoffersnapshot}
 offers a snapshot to the application
 
 
@@ -233,7 +321,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## RequestQuery 
+## RequestQuery {: #requestquery}
 
 
 
@@ -247,7 +335,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## Response 
+## Response {: #response}
 
 
 
@@ -272,7 +360,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseApplySnapshotChunk 
+## ResponseApplySnapshotChunk {: #responseapplysnapshotchunk}
 
 
 
@@ -285,7 +373,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseBeginBlock 
+## ResponseBeginBlock {: #responsebeginblock}
 
 
 
@@ -296,7 +384,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseCheckTx 
+## ResponseCheckTx {: #responsechecktx}
 
 
 
@@ -316,7 +404,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseCommit 
+## ResponseCommit {: #responsecommit}
 
 
 
@@ -328,7 +416,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseDeliverTx 
+## ResponseDeliverTx {: #responsedelivertx}
 
 
 
@@ -346,7 +434,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseEcho 
+## ResponseEcho {: #responseecho}
 
 
 
@@ -357,7 +445,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseEndBlock 
+## ResponseEndBlock {: #responseendblock}
 
 
 
@@ -370,7 +458,7 @@ offers a snapshot to the application
  <!-- end HasFields -->
 
 
-## ResponseException 
+## ResponseException {: #responseexception}
 nondeterministic
 
 
@@ -381,13 +469,13 @@ nondeterministic
  <!-- end HasFields -->
 
 
-## ResponseFlush 
+## ResponseFlush {: #responseflush}
 
 
  <!-- end HasFields -->
 
 
-## ResponseInfo 
+## ResponseInfo {: #responseinfo}
 
 
 
@@ -402,20 +490,20 @@ nondeterministic
  <!-- end HasFields -->
 
 
-## ResponseInitChain 
+## ResponseInitChain {: #responseinitchain}
 
 
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| consensus_params | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | none |
-| validators | [repeated ValidatorUpdate](#validatorupdate) | none |
-| app_hash | [ bytes](#bytes) | none |
+| consensus_params | [ tendermint.types.ConsensusParams](#tenderminttypesconsensusparams) | Initial consensus-critical parameters. |
+| validators | [repeated ValidatorUpdate](#validatorupdate) | Initial validator set. |
+| app_hash | [ bytes](#bytes) | Initial application hash. |
  <!-- end Fields -->
  <!-- end HasFields -->
 
 
-## ResponseListSnapshots 
+## ResponseListSnapshots {: #responselistsnapshots}
 
 
 
@@ -426,7 +514,7 @@ nondeterministic
  <!-- end HasFields -->
 
 
-## ResponseLoadSnapshotChunk 
+## ResponseLoadSnapshotChunk {: #responseloadsnapshotchunk}
 
 
 
@@ -437,7 +525,7 @@ nondeterministic
  <!-- end HasFields -->
 
 
-## ResponseOfferSnapshot 
+## ResponseOfferSnapshot {: #responseoffersnapshot}
 
 
 
@@ -448,7 +536,7 @@ nondeterministic
  <!-- end HasFields -->
 
 
-## ResponseQuery 
+## ResponseQuery {: #responsequery}
 
 
 
@@ -469,7 +557,7 @@ nondeterministic |
  <!-- end HasFields -->
 
 
-## Snapshot 
+## Snapshot {: #snapshot}
 
 
 
@@ -484,7 +572,7 @@ nondeterministic |
  <!-- end HasFields -->
 
 
-## TxResult 
+## TxResult {: #txresult}
 TxResult contains results of executing the transaction.
 
 One usage is indexing transaction results.
@@ -500,7 +588,7 @@ One usage is indexing transaction results.
  <!-- end HasFields -->
 
 
-## Validator 
+## Validator {: #validator}
 Validator
 
 
@@ -514,7 +602,7 @@ The voting power |
  <!-- end HasFields -->
 
 
-## ValidatorUpdate 
+## ValidatorUpdate {: #validatorupdate}
 ValidatorUpdate
 
 
@@ -526,7 +614,7 @@ ValidatorUpdate
  <!-- end HasFields -->
 
 
-## VoteInfo 
+## VoteInfo {: #voteinfo}
 VoteInfo
 
 

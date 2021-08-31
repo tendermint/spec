@@ -1,17 +1,21 @@
-# API Reference
-
 {{range .Files}}
-
 {{range .Services -}}
 # {{.Name}}
 {{.Description}}
+{{range .Methods -}}
+## {{.Name}}
+ {{.Description}}
 
+**Accepts:** [{{.RequestLongType}}](#{{.RequestLongType | lower | replace "." ""}})
+
+**Returns:** [{{.ResponseLongType}}](#{{.ResponseLongType | lower | replace "." ""}})
+{{end}}
 {{end}} <!-- end services -->
 
 # Messages
 {{range .Messages}}
 
-## {{.LongName}} 
+## {{.LongName}} {: #{{.LongName | lower | replace "." ""}}}
 {{.Description}}
 
 {{if .HasFields}}

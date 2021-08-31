@@ -52,12 +52,12 @@ message RequestInfo {
 }
 
 message RequestInitChain {
-  google.protobuf.Timestamp        time             = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  string                           chain_id         = 2;
-  tendermint.types.ConsensusParams consensus_params = 3;
-  repeated ValidatorUpdate         validators       = 4 [(gogoproto.nullable) = false];
-  bytes                            app_state_bytes  = 5;
-  int64                            initial_height   = 6;
+  google.protobuf.Timestamp        time             = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; // Genesis time.
+  string                           chain_id         = 2; // ID of the blockchain.
+  tendermint.types.ConsensusParams consensus_params = 3; // Initial consensus critical parameters.
+  repeated ValidatorUpdate         validators       = 4 [(gogoproto.nullable) = false]; // Initial genesis validators, sorted by voting power.
+  bytes                            app_state_bytes  = 5; // Serialized initial application state. JSON bytes.
+  int64                            initial_height   = 6; // Height of the initial block (typically 1).
 }
 
 message RequestQuery {
@@ -163,8 +163,11 @@ message ResponseInfo {
 }
 
 message ResponseInitChain {
+  // Initial consensus-critical parameters.
   tendermint.types.ConsensusParams consensus_params = 1;
-  repeated ValidatorUpdate         validators       = 2 [(gogoproto.nullable) = false];
+  // Initial validator set.
+  repeated ValidatorUpdate         validators       = 2 [(gogoproto.nullable) = false]; 
+  // Initial application hash.
   bytes                            app_hash         = 3;
 }
 
@@ -355,7 +358,17 @@ service ABCIApplication {
   rpc CheckTx(RequestCheckTx) returns (ResponseCheckTx);
   rpc Query(RequestQuery) returns (ResponseQuery);
   rpc Commit(RequestCommit) returns (ResponseCommit);
+
+//  - Called once upon genesis.
+//  - If ResponseInitChain.Validators is empty, the initial validator set will be the RequestInitChain.Validators.
+//  - If ResponseInitChain.Validators is not empty, it will be the initial.
+//  validator set (regardless of what is in RequestInitChain.Validators).
+//  - This allows the app to decide if it wants to accept the initial validator.
+//  set proposed by tendermint (ie. in the genesis file), or if it wants to use.
+//  a different one (perhaps computed based on some application specific
+//  information in the genesis file).
   rpc InitChain(RequestInitChain) returns (ResponseInitChain);
+
   rpc BeginBlock(RequestBeginBlock) returns (ResponseBeginBlock);
   rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
   rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
