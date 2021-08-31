@@ -1,4 +1,4 @@
-PROTOC_CMD=protoc --plugin=/home/william/godev/bin/protoc-gen-doc \
+PROTOC_CMD=protoc --plugin=protoc-gen-doc \
 	-I=./thirdparty/proto \
 	-I=./proto
 
