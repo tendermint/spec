@@ -60,6 +60,28 @@ issue that Tendermint has no reasonable way to handle. If there is an error in o
 of these methods, the application must crash to ensure that the error is safely
 handled by an operator.
 
+The handling of non-zero response codes by Tendermint is described below
+
+### CheckTx
+
+The `CheckTx` ABCI method controls what transactions are considered for inclusion in a block.
+When Tendermint receives a `ResponseCheckTx` with a non-zero `Code`, the associated
+transaction will be not be added to Tendermint's mempool or it will be removed if
+it is already included.
+
+### DeliverTx
+
+The `DeliverTx` ABCI method delivers transactions from Tendermint to the application.
+When Tendermint recieves a `ResponseDeliverTx` with a non-zero `Code`, the response code is logged.
+The transaction was already included in a block, so the `Code` does not influence
+Tendermint consensus.
+
+### Query
+
+The `Query` ABCI method query queries the application for information about application state.
+When Tendermint receives a `ResponseQuery` with a non-zero `Code`, this code is 
+returned directly to the client that initiated the query.
+
 ## Events
 
 The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events`
