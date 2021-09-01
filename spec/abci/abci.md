@@ -434,8 +434,9 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     * Guardian of the mempool: every node runs `CheckTx` before letting a
     transaction into its local mempool.
     * The transaction may come from an external user or another node
-    * `CheckTx` need not execute the transaction in full, but rather a light-weight
-    yet stateful validation, like checking signatures and account balances, but
+    * `CheckTx` validates the transaction against the current state of the application,
+    for example, checking signatures and account balances, but does not apply any
+    of the state changes described in the transaction.
     not running code in a virtual machine.
     * Transactions where `ResponseCheckTx.Code != 0` will be rejected - they will not be broadcast to
     other nodes or included in a proposal block.
