@@ -85,9 +85,14 @@ returned directly to the client that initiated the query.
 ## Events
 
 The `CheckTx`, `BeginBlock`, `DeliverTx`, `EndBlock` methods include an `Events`
-field in their `Response*`. Each event contains a `type` and a list of `EventAttribute`s,
-which are key-value pairs denoting something about what happened during the method's execution.
+field in their `Response*`. Applications may respond to these ABCI methods with a set of events.
+Events allow applications to associate metadata about ABCI method execution with the
+transactions and blocks this metadata relates to.
+Events returned via these ABCI methods do not impact Tendermint consensus in any way
+and instead exist to power subscriptions and queries of Tendermint state.
 
+An `Event` contains a `type` and a list of `EventAttributes`, which are key-value 
+string pairs denoting metadata about what happened during the method's execution.
 `Event` values can be used to index transactions and blocks according to what happened
 during their execution. Note that the set of events returned for a block from
 `BeginBlock` and `EndBlock` are merged. In case both methods return the same
@@ -106,8 +111,8 @@ message Event {
 }
 ```
 
-The attributes of an `Event` consist of a `key`, `value` and an `index` flag. The
-index flag notifies the indexer within Tendermint to index the event. The value of
+The attributes of an `Event` consist of a `key`, a `value`, and an `index` flag. The
+index flag notifies the Tendermint indexer to index the attribute. The value of
 the `index` flag is non-deterministic and may vary across different nodes in the network.
 
 ```protobuf
@@ -245,13 +250,15 @@ state machine snapshots instead of replaying historical blocks. For more details
 
 New nodes will discover and request snapshots from other nodes in the P2P network.
 A Tendermint node that receives a request for snapshots from a peer will call
-`ListSnapshots` on its application to retrieve any local state snapshots. In addition,
-the new node will offer each snapshot received from a peer to its local application
-via the `OfferSnapshot` method.
+`ListSnapshots` on its application to retrieve any local state snapshots. After receiving
+ snapshots from peers, the new node will offer each snapshot received from a peer
+to its local application via the `OfferSnapshot` method.
 
-Once the application accepts a snapshot and begins restoring it, Tendermint will fetch snapshot
-"chunks" from existing nodes. The node providing "chunks" will fetch them from
-its local application using the `LoadSnapshotChunk` method.
+Snapshots may be quite large and are thus broken into smaller "chunks" that can be
+assembled into the whole snapshot. Once the application accepts a snapshot and
+begins restoring it, Tendermint will fetch snapshot "chunks" from existing nodes.
+The node providing "chunks" will fetch them from its local application using
+the `LoadSnapshotChunk` method.
 
 As the new node receives "chunks" it will apply them sequentially to the local
 application with `ApplySnapshotChunk`. When all chunks have been applied, the application
@@ -348,7 +355,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
     |--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
     | data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
-    | path   | string | Path field of the request URI. Can be used with or in lieu of Data. Apps MUST interpret `/store` as a query by key on the underlying store. The key SHOULD be specified in the Data field. Apps SHOULD allow queries over specific types like `/accounts/...` or `/votes/...` | 2            |
+    | path   | string | Path field of the request URI. Can be used with or in lieu of `data`. Apps MUST interpret `/store` as a query by key on the underlying store. The key SHOULD be specified in the `data` field. Apps SHOULD allow queries over specific types like `/accounts/...` or `/votes/...` | 2            |
     | height | int64  | The block height for which you want the query (default=0 returns data for the latest committed block). Note that this is the height of the block containing the application's Merkle root hash, which represents the state as it was after committing the block at Height-1            | 3            |
     | prove  | bool   | Return Merkle proof with response if possible                                                                                                                                                                                                                                          | 4            |
 
