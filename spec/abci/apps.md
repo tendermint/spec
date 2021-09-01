@@ -99,35 +99,29 @@ ensuring that all existing CheckTx are responded to and no new ones can
 begin.
 
 After `Commit`, CheckTx is run again on all transactions that remain in the
-node's local mempool after filtering those included in the block. To prevent the
-mempool from rechecking all transactions every time a block is committed, set
-the configuration option `mempool.recheck=false`. As of Tendermint v0.32.1,
-an additional `Type` parameter is made available to the CheckTx function that
+node's local mempool after filtering those included in the block.
+An additional `Type` parameter is made available to the CheckTx function that
 indicates whether an incoming transaction is new (`CheckTxType_New`), or a
 recheck (`CheckTxType_Recheck`).
 
-Finally, after re-checking transactions in the mempool, Tendermint will unlock 
+Finally, after re-checking transactions in the mempool, Tendermint will unlock
 the mempool connection. New transactions are once again able to be processed through CheckTx.
 
-Note that CheckTx is just a weak filter to keep invalid transactions out of the block chain. 
+Note that CheckTx is just a weak filter to keep invalid transactions out of the block chain.
 CheckTx doesn't have to check everything that affects transaction validity; the
-expensive things can be skipped.  It's weak because a Byzantine node doesn't 
+expensive things can be skipped.  It's weak because a Byzantine node doesn't
 care about CheckTx; it can propose a block full of invalid transactions if it wants.
-
--- what other line of defense do we have against invalid TX? TM itself i'm assuming? --
 
 #### Replay Protection
 
 To prevent old transactions from being replayed, CheckTx must implement
 replay protection.
 
--- is this implementation specific or should it be included in the spec? -- 
 Tendermint provides the first defense layer by keeping a lightweight
 in-memory cache of recent transactions in the mempool. If Tendermint is just 
 started or the cache is full, old transactions may be sent to the application. So
 it is important CheckTx implements some logic to handle them.
 
--- this feels go specific
 If there are cases in your application where a transaction may become invalid in some
 future state, you probably want to disable Tendermint's
 cache.
@@ -371,16 +365,16 @@ value to be updated to 0.
 #### InitChain
 
 ResponseInitChain includes a ConsensusParams.
-If its nil, Tendermint will use the params loaded in the genesis
-file. If it's not nil, Tendermint will use it.
+If ConsensusParams is nil, Tendermint will use the params loaded in the genesis
+file. If ConsensusParams is not nil, Tendermint will use it.
 This way the application can determine the initial consensus params for the
 blockchain.
 
 #### EndBlock
 
 ResponseEndBlock includes a ConsensusParams.
-If its nil, Tendermint will do nothing.
-If it's not nil, Tendermint will use it.
+If ConsensusParams nil, Tendermint will do nothing.
+If ConsensusParam is not nil, Tendermint will use it.
 This way the application can update the consensus params over time.
 
 Note the updates returned in block `H` will take effect right away for block
@@ -422,8 +416,7 @@ ABCI applications can take advantage of more efficient light-client proofs for
 their state as follows:
 
 - return the Merkle root of the deterministic application state in
-`ResponseCommit.Data`.
-- it will be included as the `AppHash` in the next block.
+`ResponseCommit.Data`. This Merkle root will be included as the `AppHash` in the next block.
 - return efficient Merkle proofs about that application state in `ResponseQuery.Proof`
   that can be verified using the `AppHash` of the corresponding block.
 
