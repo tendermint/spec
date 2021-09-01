@@ -243,9 +243,9 @@ Both the `Code` and `Data` are included in a structure that is hashed into the
 the transaction by. This allows transactions to be queried according to what
 events took place during their execution.
 
-## Validator Updates
+## Updating The Validator Set
 
-The application may set the validator set during InitChain, and update it during
+The application may set the validator set during InitChain, and may update it during
 EndBlock.
 
 Note that the maximum total power of the validator set is bounded by
@@ -254,16 +254,16 @@ they do not make changes to the validator set that cause it to exceed this
 limit.
 
 Additionally, applications must ensure that a single set of updates does not contain any duplicates -
-a given public key can only appear in an update once. If an update includes
+a given public key can only appear once within a given update. If an update includes
 duplicates, the block execution will fail irrecoverably.
 
 ### InitChain
 
-ResponseInitChain can return a list of validators.
+The `InitChain` method can return a list of validators.
 If the list is empty, Tendermint will use the validators loaded in the genesis
 file.
-If the list is not empty, Tendermint will use it for the validator set.
-This way the application can determine the initial validator set for the
+If the list returned by `InitChain` is not empty, Tendermint will use its contents as the validator set.
+This way the application can set the initial validator set for the
 blockchain.
 
 ### EndBlock
@@ -312,14 +312,14 @@ evidence. They can be set in InitChain and updated in EndBlock.
 The maximum size of a complete Protobuf encoded block.
 This is enforced by Tendermint consensus.
 
-This implies a maximum tx size that is this MaxBytes, less the expected size of
+This implies a maximum transaction size that is this MaxBytes, less the expected size of
 the header, the validator set, and any included evidence in the block.
 
 Must have `0 < MaxBytes < 100 MB`.
 
 ### BlockParams.MaxGas
 
-The maximum of the sum of `GasWanted` in a proposed block.
+The maximum of the sum of `GasWanted` that will be allowed in a proposed block.
 This is *not* enforced by Tendermint consensus.
 It is left to the app to enforce (ie. if txs are included past the
 limit, they should return non-zero codes). It is used by Tendermint to limit the
@@ -327,15 +327,6 @@ txs included in a proposed block.
 
 Must have `MaxGas >= -1`.
 If `MaxGas == -1`, no limit is enforced.
-
-### BlockParams.TimeIotaMs
-
-The minimum time between consecutive blocks (in milliseconds).
-This is enforced by Tendermint consensus.
-
-Must have `TimeIotaMs > 0` to ensure time monotonicity.
-
-> *Note: This is not exposed to the application*
 
 ### EvidenceParams.MaxAgeDuration
 
@@ -366,7 +357,7 @@ This is the maximum number of evidence that can be committed to a single block.
 The product of this and the `MaxEvidenceBytes` must not exceed the size of
 a block minus it's overhead ( ~ `MaxBytes`).
 
-The amount must be a positive number.
+Must have `MaxNum > 0`.
 
 ### Updates
 
