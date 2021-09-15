@@ -447,6 +447,8 @@ When verifying the full proof, the root hash for one ProofOp is the value being
 verified for the next ProofOp in the list. The root hash of the final ProofOp in
 the list should match the `AppHash` being verified against.
 
+-- It looks like have custom encoders for the merkle proof encoder decoders. Are these documented?
+
 ### Peer Filtering
 
 When Tendermint connects to a peer, it sends two queries to the ABCI application
@@ -470,13 +472,16 @@ Tendermint only uses `/p2p`, for filtering peers. For more advanced use, see the
 implementation of
 [Query in the Cosmos-SDK](https://github.com/cosmos/cosmos-sdk/blob/v0.23.1/baseapp/baseapp.go#L333).
 
+-- how does cosmos-sdk do this if tendermint only sends/receives p2p?
+
+
 ## Crash Recovery
 
 On startup, Tendermint calls the `Info` method on the Info Connection to get the latest
 committed state of the app. The app MUST return information consistent with the
 last block it succesfully completed Commit for.
 
-If the app succesfully committed block H but not H+1, then `last_block_height = H` and `last_block_app_hash = <hash returned by Commit for block H>`. If the app
+If the app succesfully committed block H, then `last_block_height = H` and `last_block_app_hash = <hash returned by Commit for block H>`. If the app
 failed during the Commit of block H, then `last_block_height = H-1` and
 `last_block_app_hash = <hash returned by Commit for block H-1, which is the hash in the header of block H>`.
 
@@ -489,10 +494,11 @@ stateBlockHeight = height of the last block for which Tendermint completed all
     block processing and saved all ABCI results to disk
 appBlockHeight = height of the last block for which ABCI app succesfully
     completed Commit
+
 ```
 
 Note we always have `storeBlockHeight >= stateBlockHeight` and `storeBlockHeight >= appBlockHeight`
-Note also we never call Commit on an ABCI app twice for the same height.
+Note also Tendermint never calls Commit on an ABCI app twice for the same height.
 
 The procedure is as follows.
 
