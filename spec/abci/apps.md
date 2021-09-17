@@ -92,13 +92,12 @@ to sequentially process pending transactions in the mempool that have
 not yet been committed. It should be initialized to the latest committed state
 at the end of every `Commit`.
 
+Before calling `Commit`, Tendermint will lock and flush the mempool connection,
+ensuring that all existing CheckTx are responded to and no new ones can begin.
 The `CheckTxState` may be updated concurrently with the `DeliverTxState`, as
-messages may be sent concurrently on the Consensus and Mempool connections. However,
-before calling `Commit`, Tendermint will lock and flush the mempool connection,
-ensuring that all existing CheckTx are responded to and no new ones can
-begin.
+messages may be sent concurrently on the Consensus and Mempool connections.
 
-After `Commit`, CheckTx is run again on all transactions that remain in the
+After `Commit`, while still holding the mempool lock, CheckTx is run again on all transactions that remain in the
 node's local mempool after filtering those included in the block.
 An additional `Type` parameter is made available to the CheckTx function that
 indicates whether an incoming transaction is new (`CheckTxType_New`), or a
@@ -135,7 +134,7 @@ It should always contain the latest committed state associated with the
 latest committed block.
 
 `QueryState` should be set to the latest `DeliverTxState` at the end of every `Commit`,
-ie. after the full block has been processed and the state committed to disk.
+after the full block has been processed and the state committed to disk.
 Otherwise it should never be modified.
 
 Tendermint Core currently uses the Query connection to filter peers upon
@@ -236,7 +235,7 @@ Both the `Code` and `Data` are included in a structure that is hashed into the
 the transaction by. This allows transactions to be queried according to what
 events took place during their execution.
 
-## Updating The Validator Set
+## Updating the Validator Set
 
 The application may set the validator set during InitChain, and may update it during
 EndBlock.
@@ -672,7 +671,7 @@ bootstrapping the node (e.g. chain ID, consensus parameters, validator sets, and
 from the genesis file and light client RPC servers. It also fetches and records the `AppVersion`
 from the ABCI application.
 
-Once the state machine has been restored and Tendermint has retrieved has gathered this additional
+Once the state machine has been restored and Tendermint has gathered this additional
 information, it transitions to block sync (if enabled) to fetch any remaining blocks up the chain
 head, and then transitions to regular consensus operation. At this point the node operates like
 any other node, apart from having a truncated block history at the height of the restored snapshot.
