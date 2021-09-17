@@ -116,14 +116,8 @@ care about CheckTx; it can propose a block full of invalid transactions if it wa
 To prevent old transactions from being replayed, CheckTx must implement
 replay protection.
 
-Tendermint provides the first defense layer by keeping a lightweight
-in-memory cache of recent transactions in the mempool. If Tendermint is just 
-started or the cache is full, old transactions may be sent to the application. So
+It is possible for old transactions to be sent to the application. So
 it is important CheckTx implements some logic to handle them.
-
-If there are cases in your application where a transaction may become invalid in some
-future state, you probably want to disable Tendermint's
-cache.
 
 ### Query Connection
 
