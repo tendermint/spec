@@ -147,7 +147,6 @@ cause Tendermint to not connect to the corresponding peer:
 - `p2p/filter/id/<id>`, where `<is>` is the hex-encoded node ID (the hash of
   the node's p2p pubkey).
 
-  -- feels go specific.
 Note: these query formats are subject to change!
 
 ### Snapshot Connection
@@ -447,8 +446,6 @@ When verifying the full proof, the root hash for one ProofOp is the value being
 verified for the next ProofOp in the list. The root hash of the final ProofOp in
 the list should match the `AppHash` being verified against.
 
--- It looks like have custom encoders for the merkle proof encoder decoders. Are these documented?
-
 ### Peer Filtering
 
 When Tendermint connects to a peer, it sends two queries to the ABCI application
@@ -471,9 +468,6 @@ differentiating concerns, like `/p2p`, `/store`, and `/app`. Currently,
 Tendermint only uses `/p2p`, for filtering peers. For more advanced use, see the
 implementation of
 [Query in the Cosmos-SDK](https://github.com/cosmos/cosmos-sdk/blob/v0.23.1/baseapp/baseapp.go#L333).
-
--- how does cosmos-sdk do this if tendermint only sends/receives p2p?
-
 
 ## Crash Recovery
 
@@ -583,19 +577,19 @@ sent across the network, snapshot metadata messages are limited to 4 MB.
 When a new node is running state sync and discovering snapshots, Tendermint will query an existing
 application via the ABCI `ListSnapshots` method to discover available snapshots, and load binary
 snapshot chunks via `LoadSnapshotChunk`. The application is free to choose how to implement this
-and which formats to use, but should provide the following guarantees:
+and which formats to use, but must provide the following guarantees:
 
-- **Consistent:** A snapshot should be taken at a single isolated height, unaffected by
-  concurrent writes. This can e.g. be accomplished by using a data store that supports ACID
+- **Consistent:** A snapshot must be taken at a single isolated height, unaffected by
+  concurrent writes. This can be accomplished by using a data store that supports ACID
   transactions with snapshot isolation.
 
-- **Asynchronous:** Taking a snapshot can be time-consuming, so it should not halt chain progress,
+- **Asynchronous:** Taking a snapshot can be time-consuming, so it must not halt chain progress,
   for example by running in a separate thread.
 
-- **Deterministic:** A snapshot taken at the same height in the same format should be identical
+- **Deterministic:** A snapshot taken at the same height in the same format must be identical
   (at the byte level) across nodes, including all metadata. This ensures good availability of
   chunks, and that they fit together across nodes.
-  
+
 A very basic approach might be to use a datastore with MVCC transactions (such as RocksDB),
 start a transaction immediately after block commit, and spawn a new thread which is passed the
 transaction handle. This thread can then export all data items, serialize them using e.g.
@@ -617,10 +611,10 @@ trusted header hash and corresponding height from a trusted source, via the `sta
 configuration section.
 
 Once started, the node will connect to the P2P network and begin discovering snapshots. These
-will be offered to the local application, and once a snapshot is accepted Tendermint will fetch
-and apply the snapshot chunks. After all chunks have been successfully applied, Tendermint verifies
-the app's `AppHash` against the chain using the light client, then switches the node to normal
-consensus operation.
+will be offered to the local application via the `OfferSnapshot` ABCI method. Once a snapshot
+is accepted Tendermint will fetch and apply the snapshot chunks. After all chunks have been
+successfully applied, Tendermint verifies the app's `AppHash` against the chain using the light
+client, then switches the node to normal consensus operation.
 
 #### Snapshot Discovery
 
@@ -639,8 +633,7 @@ any peers that have the same snapshot (i.e. that have identical metadata fields)
 spooled in a temporary directory, and then given to the application in sequential order via
 `ApplySnapshotChunk` until all chunks have been accepted.
 
-As with taking snapshots, the method for restoring them is entirely up to the application, but will
-generally be the inverse of how they are taken.
+The method for restoring snapshot chunks is entirely up to the application.
 
 During restoration, the application can respond to `ApplySnapshotChunk` with instructions for how
 to continue. This will typically be to accept the chunk and await the next one, but it can also
@@ -674,12 +667,12 @@ P2P configuration options to whitelist a set of trusted peers that can provide v
 
 #### Transition to Consensus
 
-Once the snapshot has been restored, Tendermint gathers additional information necessary for
+Once the snapshots have all been restored, Tendermint gathers additional information necessary for
 bootstrapping the node (e.g. chain ID, consensus parameters, validator sets, and block headers)
 from the genesis file and light client RPC servers. It also fetches and records the `AppVersion`
 from the ABCI application.
 
-Once the node is bootstrapped with this information and the restored state machine, it transitions
-to fast sync (if enabled) to fetch any remaining blocks up the the chain head, and then
-transitions to regular consensus operation. At this point the node operates like any other node,
-apart from having a truncated block history at the height of the restored snapshot.
+Once the state machine has been restored and Tendermint has retrieved has gathered this additional
+information, it transitions to block sync (if enabled) to fetch any remaining blocks up the chain
+head, and then transitions to regular consensus operation. At this point the node operates like
+any other node, apart from having a truncated block history at the height of the restored snapshot.
