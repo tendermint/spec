@@ -38,6 +38,7 @@ message Request {
     RequestPrepareProposal     prepare_proposal      = 15;
     RequestExtendVote          extend_vote           = 16;
     RequestVerifyVoteExtension verify_vote_extension = 17;
+    RequestFinalizeBlock       finalize_block        = 18;
   }
 }
 
@@ -139,6 +140,14 @@ message RequestPrepareProposal {
   int64 block_data_size = 2;
 }
 
+message RequestFinalizeBlock {
+  repeated bytes          txs                  = 1;
+  bytes                   hash                 = 2;
+  tendermint.types.Header header               = 3 [(gogoproto.nullable) = false];
+  LastCommitInfo          last_commit_info     = 4 [(gogoproto.nullable) = false];
+  repeated Evidence       byzantine_validators = 5 [(gogoproto.nullable) = false];
+}
+
 //----------------------------------------
 // Response types
 
@@ -162,6 +171,7 @@ message Response {
     ResponsePrepareProposal     prepare_proposal      = 16;
     ResponseExtendVote          extend_vote           = 17;
     ResponseVerifyVoteExtension verify_vote_extension = 18;
+    ResponseFinalizeBlock       finalize_block        = 19;
   }
 }
 
@@ -304,6 +314,13 @@ message ResponseVerifyVoteExtension {
 
 message ResponsePrepareProposal {
   repeated bytes block_data = 1;
+}
+
+message ResponseFinalizeBlock {
+  repeated ResponseDeliverTx       txs                     = 1;
+  repeated ValidatorUpdate         validator_updates       = 2 [(gogoproto.nullable) = false];
+  tendermint.types.ConsensusParams consensus_param_updates = 3;
+  repeated Event                   events                  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
 }
 
 //----------------------------------------
