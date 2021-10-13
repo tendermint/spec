@@ -18,8 +18,8 @@ message PexResponse {
 }
 
 message PexMessage {
+  reserved 1, 2; // See https://github.com/tendermint/spec/pull/352
   oneof sum {
-    // 1 annd 2 are reserved for prior pex messages
     PexRequest    pex_request     = 3;
     PexResponse   pex_response    = 4;
   }
