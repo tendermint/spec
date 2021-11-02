@@ -1,7 +1,7 @@
 # Ivy Proofs
 
 ```copyright
-Copyright (c) 2020 Galois, Inc.
+Copyright (c) 2021 guanlong huang
 SPDX-License-Identifier: Apache-2.0
 ```
 
