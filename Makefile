@@ -1,4 +1,4 @@
-DOCKER_PROTO := docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/docker-build-proto
+DOCKER_PROTO_BUILDER := docker run -v $(shell pwd):/workspace --workdir /workspace tendermintdev/docker-build-proto
 HTTPS_GIT := https://github.com/tendermint/spec.git
 
 ###############################################################################
@@ -9,24 +9,23 @@ proto-all: proto-lint proto-check-breaking
 .PHONY: proto-all
 
 proto-gen:
-	# @docker pull -q tendermintdev/docker-build-proto
 	@echo "Generating Protobuf files"
-	@$(DOCKER_PROTO) buf generate 
+	@$(DOCKER_PROTO_BUILDER) buf generate --template=./proto/buf.gen.yaml --config ./proto/buf.yaml
 .PHONY: proto-gen
 
 proto-lint:
-	@$(DOCKER_PROTO) buf lint --error-format=json
+	@$(DOCKER_PROTO_BUILDER) buf lint --error-format=json --config ./proto/buf.yaml
 .PHONY: proto-lint
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@$(DOCKER_PROTO) find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	@$(DOCKER_PROTO_BUILDER) find . -name '*.proto' -path "./proto/*" -exec clang-format -i {} \;
 .PHONY: proto-format
 
 proto-check-breaking:
-	@$(DOCKER_PROTO) buf breaking --against .git#branch=master
+	@$(DOCKER_PROTO_BUILDER) buf breaking --against .git --config ./proto/buf.yaml
 .PHONY: proto-check-breaking
 
 proto-check-breaking-ci:
-	@$(DOCKER_PROTO) buf breaking --against $(HTTPS_GIT)#branch=master
+	@$(DOCKER_PROTO_BUILDER) buf breaking --against $(HTTPS_GIT) --config ./proto/buf.yaml
 .PHONY: proto-check-breaking-ci
