@@ -12,10 +12,10 @@ RUN GO111MODULE=on go get \
   mv /go/bin/protoc-gen-go* /usr/local/bin/
 
 
-FROM alpine:edge
+FROM alpine:3.14
 
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
-  apk add --update --no-cache clang-extra-tools curl git && \
+  apk add --update --no-cache build-base clang-extra-tools curl git && \
   rm -rf /var/cache/apk/*
 
 WORKDIR /work
