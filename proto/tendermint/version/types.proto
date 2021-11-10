@@ -10,5 +10,5 @@ message Consensus {
   option (gogoproto.equal) = true;
 
   uint64 block = 1;
-  uint64 app = 2;
+  uint64 app   = 2;
 }
