@@ -23,8 +23,7 @@ proto-format:
 .PHONY: proto-format
 
 proto-check-breaking:
-	@$(DOCKER_PROTO_BUILDER) ls proto
-	@$(DOCKER_PROTO_BUILDER) buf build
+	@$(DOCKER_PROTO_BUILDER) buf breaking --against .git --config ./buf.yaml
 .PHONY: proto-check-breaking
 
 proto-check-breaking-ci:
