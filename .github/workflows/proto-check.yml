@@ -5,7 +5,7 @@ on:
   workflow_dispatch: # allow running workflow manually
   pull_request:
     paths:
-      - "./proto"
+      - "proto/*"
 jobs:
   proto-lint:
     runs-on: ubuntu-latest
