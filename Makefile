@@ -10,11 +10,11 @@ proto-all: proto-lint proto-check-breaking
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@$(DOCKER_PROTO_BUILDER) buf generate --template=./proto/buf.gen.yaml --config ./proto/buf.yaml
+	@$(DOCKER_PROTO_BUILDER) buf generate --template=./buf.gen.yaml --config ./buf.yaml
 .PHONY: proto-gen
 
 proto-lint:
-	@$(DOCKER_PROTO_BUILDER) buf lint --error-format=json --config ./proto/buf.yaml
+	@$(DOCKER_PROTO_BUILDER) buf lint --error-format=json --config ./buf.yaml
 .PHONY: proto-lint
 
 proto-format:
@@ -23,9 +23,10 @@ proto-format:
 .PHONY: proto-format
 
 proto-check-breaking:
-	@$(DOCKER_PROTO_BUILDER) buf breaking --against .git --config ./proto/buf.yaml
+	@$(DOCKER_PROTO_BUILDER) ls proto
+	@$(DOCKER_PROTO_BUILDER) buf build
 .PHONY: proto-check-breaking
 
 proto-check-breaking-ci:
-	@$(DOCKER_PROTO_BUILDER) buf breaking --against $(HTTPS_GIT) --config ./proto/buf.yaml
+	@$(DOCKER_PROTO_BUILDER) buf breaking --against $(HTTPS_GIT) --config ./buf.yaml
 .PHONY: proto-check-breaking-ci
