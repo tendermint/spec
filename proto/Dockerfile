@@ -1,4 +1,5 @@
-# This Dockerfile defines a toolbox for use in linting, formatting, and compiling the Tendermint protos.
+# This Dockerfile defines an image containing tools for linting, formatting,
+# and compiling the Tendermint protos.
 
 FROM bufbuild/buf:latest as buf
 
