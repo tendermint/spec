@@ -1,12 +1,15 @@
-# This Dockerfile defines a toolbox for use in linting, formatting, and compiling the Tendermint protos.
+# This Dockerfile defines an image containing tools for linting, formatting,
+# and compiling the Tendermint protos.
 
 FROM bufbuild/buf:latest as buf
 
 FROM golang:1.17-alpine
 
 # Install a commonly used set of programs for use with our protos.
-# clang-extra-tools is included here because it provides clang-format, the program used for formatting the protos.
+# clang-extra-tools is included here because it provides clang-format,
+# used to format the .proto files.
 RUN apk add --update --no-cache build-base clang-extra-tools curl git && \
+  apk add --update --no-cache build-base clang-extra-tools curl git go && \
   rm -rf /var/cache/apk/*
 
 ENV GOLANG_PROTOBUF_VERSION=1.3.1 \

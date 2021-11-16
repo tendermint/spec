@@ -1,5 +1,4 @@
-# The version of the generation template.
-# Required.
+# The version of the generation template (required).
 # The only currently-valid value is v1beta1.
 version: v1beta1
 
