@@ -1,3 +1,12 @@
+# This workflow (re)builds and pushes a Docker image containing the
+# protobuf build tools used by the other workflows.
+#
+# When making changes that require updates to the builder image, you
+# should merge the updates first and wait for this workflow to complete,
+# so that the changes will be available for the dependent workflows.
+#
+# TODO(#7272): Update the target location of the builder image.
+
 name: Build & Push TM Proto Builder
 on:
   pull_request:
