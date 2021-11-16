@@ -6,7 +6,8 @@ FROM bufbuild/buf:latest as buf
 FROM alpine:3.14
 
 # Install a commonly used set of programs for use with our protos.
-# clang-extra-tools is included here because it provides clang-format, the program used for formatting the protos.
+# clang-extra-tools is included here because it provides clang-format,
+# used to format the .proto files.
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
   apk add --update --no-cache build-base clang-extra-tools curl git go && \
   rm -rf /var/cache/apk/*
