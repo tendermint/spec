@@ -179,8 +179,8 @@ enum EvidenceType {
 ```
 
 There are two forms of evidence: Duplicate Vote and Light Client Attack. More
-information can be found in either [data structures](https://github.com/tendermint/spec/blob/master/spec/core/data_structures.md)
-or [accountability](https://github.com/tendermint/spec/blob/master/spec/light-client/accountability/)
+information can be found in either [data structures](../core/data_structures.md)
+or [accountability](../light-client/accountability/README.md)
 
 ## Determinism
 
@@ -246,7 +246,7 @@ Commit are included in the header of the next block.
 
 State sync allows new nodes to rapidly bootstrap by discovering, fetching, and applying
 state machine snapshots instead of replaying historical blocks. For more details, see the
-[state sync section](../spec/p2p/messages/state-sync.md).
+[state sync section](../p2p/messages/state-sync.md).
 
 New nodes will discover and request snapshots from other nodes in the P2P network.
 A Tendermint node that receives a request for snapshots from a peer will call
@@ -263,7 +263,7 @@ the `LoadSnapshotChunk` method.
 As the new node receives "chunks" it will apply them sequentially to the local
 application with `ApplySnapshotChunk`. When all chunks have been applied, the application
 `AppHash` is retrieved via an `Info` query. The `AppHash` is then compared to
-the blockchain's `AppHash` which is verified via [light client verification](../spec/light-client/verification/README.md).
+the blockchain's `AppHash` which is verified via [light client verification](../light-client/verification/README.md).
 
 ## Messages
 
@@ -495,7 +495,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
         * `H+3`: `LastCommitInfo` is changed to include the altered validator set.
     * `consensus_param_updates` returned for block `H` apply to the consensus
       params for block `H+1`. For more information on the consensus parameters,
-      see the [application spec entry on consensus parameters](../spec/abci/apps.md#consensus-parameters).
+      see the [application spec entry on consensus parameters](./apps.md#consensus-parameters).
 
 ### Commit
 
@@ -651,7 +651,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 
 ## Data Types
 
-Most of the data structures used in ABCI are shared [common data structures](../spec/core/data_structures.md). In certain cases, ABCI uses different data structures which are documented here:
+Most of the data structures used in ABCI are shared [common data structures](../core/data_structures.md). In certain cases, ABCI uses different data structures which are documented here:
 
 ### Validator
 
