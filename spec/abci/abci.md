@@ -79,7 +79,7 @@ Tendermint consensus.
 ### Query
 
 The `Query` ABCI method query queries the application for information about application state.
-When Tendermint receives a `ResponseQuery` with a non-zero `Code`, this code is 
+When Tendermint receives a `ResponseQuery` with a non-zero `Code`, this code is
 returned directly to the client that initiated the query.
 
 ## Events
@@ -91,7 +91,7 @@ transactions and blocks this metadata relates to.
 Events returned via these ABCI methods do not impact Tendermint consensus in any way
 and instead exist to power subscriptions and queries of Tendermint state.
 
-An `Event` contains a `type` and a list of `EventAttributes`, which are key-value 
+An `Event` contains a `type` and a list of `EventAttributes`, which are key-value
 string pairs denoting metadata about what happened during the method's execution.
 `Event` values can be used to index transactions and blocks according to what happened
 during their execution. Note that the set of events returned for a block from
@@ -163,8 +163,8 @@ Example:
 Tendermint's security model relies on the use of "evidence". Evidence is proof of
 malicious behaviour by a network participant. It is the responsibility of Tendermint
 to detect such malicious behaviour. When malicious behavior is detected, Tendermint
-will gossip evidence of the behavior to other nodes and commit the evidence to 
-the chain once it is verified by all validators. This evidence will then be 
+will gossip evidence of the behavior to other nodes and commit the evidence to
+the chain once it is verified by all validators. This evidence will then be
 passed it on to the application through the ABCI. It is the responsibility of the
 application to handle the evidence and exercise punishment.
 
@@ -297,7 +297,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
     | abci_version  | string | The Tendermint ABCI semantic version     | 4            |
 
 * **Response**:
-  
+
     | Name                | Type   | Description                                      | Field Number |
     |---------------------|--------|--------------------------------------------------|--------------|
     | data                | string | Some arbitrary information                       | 1            |
@@ -351,7 +351,7 @@ the blockchain's `AppHash` which is verified via [light client verification](../
 ### Query
 
 * **Request**:
-  
+
     | Name   | Type   | Description                                                                                                                                                                                                                                                                            | Field Number |
     |--------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
     | data   | bytes  | Raw query bytes. Can be used with or in lieu of Path.                                                                                                                                                                                                                                  | 1            |
