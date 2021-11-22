@@ -28,6 +28,7 @@ maintained by Informal Systems.
 
 #### P2P Messages
 
+- [Peer Exchange (PEX)](./spec/p2p/messages/pex.md): gossip known peer addresses so peers can find each other
 - [Block Sync](./spec/p2p/messages/block-sync.md): gossip blocks so peers can catch up quickly
 - [Consensus](./spec/p2p/messages/consensus.md): gossip votes and block parts so new blocks can be committed
 - [Mempool](./spec/p2p/messages/mempool.md): gossip transactions so they get included in blocks
