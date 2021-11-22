@@ -15,4 +15,5 @@ There are two parts to the P2P messages, the message and the channel. The channe
 - [Mempool](./mempool.md)
 - [Evidence](./evidence.md)
 - [State Sync](./state-sync.md)
+- [Pex](./pex.md)
 - [Consensus](./consensus.md)
