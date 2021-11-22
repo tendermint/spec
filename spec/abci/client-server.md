@@ -14,7 +14,7 @@ Applications](./apps.md).
 ## Message Protocol
 
 The message protocol consists of pairs of requests and responses defined in the
-[protobuf file](https://github.com/tendermint/spec/blob/master/proto/tendermint/abci/types.proto).
+[protobuf file](../../proto/tendermint/abci/types.proto).
 
 Some messages have no fields, while others may include byte-arrays, strings, integers,
 or custom protobuf types.
