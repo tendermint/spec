@@ -22,9 +22,9 @@ Finally I would like to remark that this RFC only addresses the what, as in what
 
 We first begin with a round up of the various users and a set of assumptions on what these users expect from Tendermint in regards to versioning:
 
-1. Application Developers, those that use the ABCI to build applications on top of Tendermint, are chiefly concerned with that API. Breaking changes will force developers to modify large portions of their codebase to accommodate for the changes. Some ABCI changes such as introducing priority for the mempool don't require any effort and can be lazily adopted whilst changes like ABCI++ may force applications to redesign their entire execution system.
-2. Node Operators, those running node infrastructure, are predominantly concerned with downtime, complexity and frequency of upgrading and loss of data. They may be also concerned about changes that may break the scripts and tooling they use to supervise their nodes.
-3. External clients, for example, wallets and block explorers are those that perform any of the following:
+1. **Application Developers**, those that use the ABCI to build applications on top of Tendermint, are chiefly concerned with that API. Breaking changes will force developers to modify large portions of their codebase to accommodate for the changes. Some ABCI changes such as introducing priority for the mempool don't require any effort and can be lazily adopted whilst changes like ABCI++ may force applications to redesign their entire execution system.
+2. **Node Operators**, those running node infrastructure, are predominantly concerned with downtime, complexity and frequency of upgrading and loss of data. They may be also concerned about changes that may break the scripts and tooling they use to supervise their nodes.
+3. **External Clients**, for example, wallets and block explorers are those that perform any of the following:
      - consume the RPC endpoints of nodes like `/block`
      - subscribe to events that are streamed via websockets
      - make queries to the indexer
@@ -37,22 +37,24 @@ In a more broader sense, these four users are inextricably linked and their conc
 
 ## Proposal
 
-Tendermint will follow a same formatting structure of [SemVer](https://semver.org/) with a major, minor and patch version but with slight adjustments to what they encompass:
+Tendermint version labels will follow the syntax of [Semantic Versions 2.0.0](https://semver.org/) with a major, minor and patch version. The version components will be interpreted according to these rules:
 
-A major version in Tendermint guarantees that for the entire cycle of that major version:
+For the entire cycle of a **major version** in Tendermint:
 
 - All blocks and state data in a blockchain can be queried. All headers can be verified even across minor version changes. Nodes can both block sync and state sync from genesis to the head of the chain.
 - Nodes in a network are able to communicate and perform BFT state machine replication so long as the agreed network version is the lowest of all nodes in a network. For example, nodes using version 1.5.x and 1.2.x can operate together so long as the network version is 1.2 or lower (but still within the 1.x range). This rule essentially captures the concept of network backwards compatibility.
-- An external client should not need to modify their code to interact with a node's RPC endpoints. New endpoints can be added but existing ones can not be altered or removed.
+- Node RPC endpoints will remain compatible with existing external clients:
+    - New endpoints may be added, but old endpoints may not be removed.
+    - Old endpoints may be extended to add new request and response fields, but requests not using those fields must function as before the change.
 - Migrations should be automatic. Upgrading of one node can happen asynchronously with respect to other nodes (although agreement of a network-wide upgrade will happen synchronously via consensus).
 
-A minor version in Tendermint guarantees that for the entire cycle of that minor version:
+For the entire cycle of a **minor version** in Tendermint:
 
-- All publicly available Go API's, for example in `node` or `abci` packages will not change in a breaking way that would require any consumer (not just application developers) to modify their code.
+- Public Go API's, for example in `node` or `abci` packages will not change in a way that requires any consumer (not just application developers) to modify their code.
 - No breaking changes to the block protocol. This means that all block related data structures should not change in a way that breaks any of the hashes, the consensus engine or light client verification.
-- Upgrades should not result in any down-time (i.e. no migrations), nor should changes to the config files be required to continue with the existing behavior. Upgrading should simply be stopping the existing process, swapping the binary, and beginning the new process.
+- Upgrades between minor versions may not result in any downtime (i.e., no migrations are required), nor require any changes to the config files to continue with the existing behavior. A minor version upgrade will require only stopping the existing process, swapping the binary, and starting the new process.
 
-These guarantees come into effect post 1.0.
+These guarantees will come into effect at release 1.0.
 
 ## Status
 
