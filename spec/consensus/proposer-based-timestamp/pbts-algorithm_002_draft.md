@@ -9,10 +9,10 @@ A value that receives `2f + 1 PREVOTES` in a round of consensus may be re-propos
 A value that is re-proposed retains its original proposal time, assigned by its original proposer.
 In other words, once assigned, the proposal time of a value is definitive.
 
-In the [first version]() of this specification, proposals were defined as pairs `(v, time)`.
+In the [first version][v1] of this specification, proposals were defined as pairs `(v, time)`.
 In addition, the same value could be proposed, in different rounds, associated to distinct times.
 Since this possibility does not exist in this second specification, the proposal time became part of the proposed value.
-With this simplification, several small changes to the arXiv algorithm, replacing `v` by `(v, t)`, are not longer required.
+With this simplification, several small changes to the [arXiv][arXiv] algorithm, replacing `v` by `(v, t)`, are not longer required.
 
 ## Time Monotonicity
 
@@ -24,7 +24,7 @@ For ensuring time monotonicity, it is enough to ensure that a value `v` proposed
 So, if process `p` is the proposer of a round of height `h_p` and reads from its clock a time `now_p <= decision_p[h_p-1]`,
 it should postpone the generation of its proposal until `now_p > decision_p[h_p-1]`.
 
-Notice that monotonicity is not introduced by this proposal, being already ensured by [bfttime]().
+Notice that monotonicity is not introduced by this proposal, being already ensured by [`bfttime`][bfttime].
 In `bfttime`, the `Timestamp` field of every `Precommit` message of height `h_p` sent by a correct process is required to be larger than `decision_p[h_p-1].time`, as one of such `Timestamp` fields becomes the time assigned to a value proposed at height `h_p`.
 
 The time monotonicity of values proposed in heights of consensus is verified by the `valid()` predicate, to which every proposed value is submitted.
@@ -59,6 +59,8 @@ The maximum receiving time `now_p` for `v` be considered `timely` by `p` is deri
 the clock of `p` is `PRECISION` *ahead* of the clock of the proposer of `v`, and the proposal's transmission delay is `MSGDELAY` (maximum).
 
 ## Updated Consensus Algorithm
+
+The following changes are proposed for the algorithm in the [arXiv paper][arXiv].
 
 #### New `StartRound`
 
@@ -113,7 +115,7 @@ upon timely(⟨PROPOSAL, h_p, round_p, v, −1⟩) from proposer(h_p, round_p) w
 }
 ```
 
-#### Rules at Lines 28 - 33 remain untouched
+#### Rules at Lines 28 - 33 remain unchanged
 
 The rule on line 28 applies to values `v` proposed again in the current round because its proposer received `2f + 1 PREVOTE`s for `v` in a previous round `vr`.
 This means that there was a round `r <= vr` in which `2f + 1` processes accepted `v` for the first time, and so sent `PREVOTE`s for `v`.
@@ -121,3 +123,12 @@ Which, in turn, means that these processes executed the line 22 of the algorithm
 
 In other words, we don't need to verify whether `v` is a timely proposal because at least `f + 1` processes judged `v` as `timely` in a previous round,
 and because, since `v` was re-proposed as a `validValue` (line 16), `v.time` has not being updated from its original proposal.
+
+**All other rules remains unchanged.**
+
+Back to [main document][main].
+
+[arXiv]: https://arxiv.org/abs/1807.04938
+[v1]: ./algorithm_001_draft.md
+[main]: ./pbts_001_draft.md
+[bfttime]: https://github.com/tendermint/spec/blob/439a5bcacb5ef6ef1118566d7b0cd68fff3553d4/spec/consensus/bft-time.md
