@@ -129,6 +129,6 @@ and because, since `v` was re-proposed as a `validValue` (line 16), `v.time` has
 Back to [main document][main].
 
 [arXiv]: https://arxiv.org/abs/1807.04938
-[v1]: ./algorithm_001_draft.md
+[v1]: ./pbts-algorithm_001_draft.md
 [main]: ./pbts_001_draft.md
 [bfttime]: https://github.com/tendermint/spec/blob/439a5bcacb5ef6ef1118566d7b0cd68fff3553d4/spec/consensus/bft-time.md
