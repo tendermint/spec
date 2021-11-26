@@ -6,7 +6,7 @@ PBTS computes for a proposed value `v` the proposal time `v.time`, with bounded 
 The proposal time is read from the clock of the process that proposes a value for the first time, its original proposer.
 
 A value that receives `2f + 1 PREVOTES` in a round of consensus may be re-proposed in a subsequent round.
-A value that is re-proposed retains its original proposal time, assigned by its original proposer.
+A value that is re-proposed **retains its original proposal time**, assigned by its original proposer.
 In other words, once assigned, the proposal time of a value is definitive.
 
 In the [first version][v1] of this specification, proposals were defined as pairs `(v, time)`.
@@ -24,6 +24,9 @@ For ensuring time monotonicity, it is enough to ensure that a value `v` proposed
 So, if process `p` is the proposer of a round of height `h_p` and reads from its clock a time `now_p <= decision_p[h_p-1]`,
 it should postpone the generation of its proposal until `now_p > decision_p[h_p-1]`.
 
+> Although it should be considered, this scenario is unlikely during regular operation,
+as from `decision_p[h_p-1].time` and the start of height `h_p`, a complete consensus instance need to terminate.
+
 Notice that monotonicity is not introduced by this proposal, being already ensured by [`bfttime`][bfttime].
 In `bfttime`, the `Timestamp` field of every `Precommit` message of height `h_p` sent by a correct process is required to be larger than `decision_p[h_p-1].time`, as one of such `Timestamp` fields becomes the time assigned to a value proposed at height `h_p`.
 
@@ -40,6 +43,7 @@ As these two time values can be read from different clocks, at different process
 As these two times refer to two distinct events, we need to assume a minimum and a maximum real time interval between the occurrence of the two events.
 
 The two synchronous assumptions adopted to evaluate the `timely` predicate are:
+
 - Synchronized clocks: the values read from clocks of any two correct processes at the same instant of real time differ by at most `PRECISION`;
 - Bounded transmission delays: the real time interval between the sending of a proposal at a correct process, and the reception of the proposal at any correct process is upper bounded by `MSGDELAY`.
 
@@ -47,6 +51,7 @@ The two synchronous assumptions adopted to evaluate the `timely` predicate are:
 
 Let `now_p` be the time, read from the clock of process `p`, at which `p` receives the proposed value `v`.
 The proposal is considered `timely` by `p` when:
+
 1. `now_p >= v.time - PRECISION`
 1. `now_p <= v.time + MSGDELAY + PRECISION`
 
@@ -86,8 +91,7 @@ function StartRound(round) {
   }
    broadcast ⟨PROPOSAL, h_p, round_p, proposal, validRound_p⟩
  } else {
-  schedule OnTimeoutPropose(h_p,round_p) to 
-   be executed after timeoutPropose(round_p)
+  schedule OnTimeoutPropose(h_p,round_p) to be executed after timeoutPropose(round_p)
  }
 }
 ```
@@ -98,8 +102,8 @@ The rule on line 22 applies to values `v` proposed for the first time, i.e., for
 The `PROPOSAL` message, in this case, carry `-1` in its `validRound` field.
 
 The new rule for issuing a `PREVOTE` for a proposed value `v` requires the value to be `timely`.
-As the `timely` predicate is evaluated in the moment that the value is received, as part of a `PROPOSAL` message, we require the `PROPOSAL` message to
-be `timely`.
+As the `timely` predicate is evaluated in the moment that the value is received,
+as part of a `PROPOSAL` message, we require the `PROPOSAL` message to be `timely`.
 
 #### **[PBTS-ALG-UPON-PROP.1]**
 
