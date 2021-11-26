@@ -2,7 +2,7 @@
 
 ## Proposal Time
 
-PBTS provides associating to proposed values `v` their proposal times `v.time`.
+PBTS computes for a proposed value `v` the proposal time `v.time`, with bounded difference to the actual real-time the proposed value was generated.
 The proposal time is read from the clock of the process that proposes a value for the first time, its original proposer.
 
 A value that receives `2f + 1 PREVOTES` in a round of consensus may be re-proposed in a subsequent round.
@@ -12,7 +12,7 @@ In other words, once assigned, the proposal time of a value is definitive.
 In the [first version][v1] of this specification, proposals were defined as pairs `(v, time)`.
 In addition, the same value could be proposed, in different rounds, associated to distinct times.
 Since this possibility does not exist in this second specification, the proposal time became part of the proposed value.
-With this simplification, several small changes to the [arXiv][arXiv] algorithm, replacing `v` by `(v, t)`, are not longer required.
+With this simplification, several small changes to the [arXiv][arXiv] algorithm, replacing `v` by `(v, t)`, are no longer required.
 
 ## Time Monotonicity
 
@@ -33,7 +33,7 @@ A value rejected by the `valid()` implementation is not accepted by any correct 
 ## Timely Proposals
 
 PBTS introduces a new requirement for a process to accept a proposal: the proposal must be `timely`.
-It is a temporal requirement, associated to a couple of synchronous assumptions regarding the behavior of processes and the network.
+It is a temporal requirement, associated to a couple of synchrony (that is, timing) assumptions regarding the behavior of processes and the network.
 
 The evaluation of the `timely` requirement requires comparing the proposal's sending time with the proposal's receiving time.
 As these two time values can be read from different clocks, at different processes, we need to assume that processes' clocks are synchronized.
