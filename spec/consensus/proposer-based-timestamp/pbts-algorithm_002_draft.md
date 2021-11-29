@@ -47,15 +47,10 @@ A value rejected by the `valid()` implementation is not accepted by any correct 
 ## Timely Proposals
 
 PBTS introduces a new requirement for a process to accept a proposal: the proposal must be `timely`.
-It is a temporal requirement, associated to a couple of synchrony (that is, timing) assumptions regarding the behavior of processes and the network.
+It is a temporal requirement, associated to a couple of synchrony (that is, timing)
+[assumptions][model] regarding the behavior of processes and the network:
 
-The evaluation of the `timely` requirement requires comparing the proposal's sending time with the proposal's receiving time.
-As these two time values can be read from different clocks, at different processes, we need to assume that processes' clocks are synchronized.
-As these two times refer to two distinct events, we need to assume a minimum and a maximum real time interval between the occurrence of the two events.
-
-The two synchronous assumptions adopted to evaluate the `timely` predicate are:
-
-- Synchronized clocks: the values read from clocks of any two correct processes at the same instant of real time differ by at most `PRECISION`;
+- Synchronized clocks: the values simultaneously read from clocks of any two correct processes differ by at most `PRECISION`;
 - Bounded transmission delays: the real time interval between the sending of a proposal at a correct process, and the reception of the proposal at any correct process is upper bounded by `MSGDELAY`.
 
 #### **[PBTS-RECEPTION-STEP.1]**
