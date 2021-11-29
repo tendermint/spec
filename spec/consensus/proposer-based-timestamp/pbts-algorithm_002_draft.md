@@ -5,14 +5,25 @@
 PBTS computes for a proposed value `v` the proposal time `v.time`, with bounded difference to the actual real-time the proposed value was generated.
 The proposal time is read from the clock of the process that proposes a value for the first time, its original proposer.
 
-A value that receives `2f + 1 PREVOTES` in a round of consensus may be re-proposed in a subsequent round.
-A value that is re-proposed **retains its original proposal time**, assigned by its original proposer.
-In other words, once assigned, the proposal time of a value is definitive.
+With PBTS, therefore, we assume that processes have access to **synchronized clocks**.
+The proper definition of what it means can be found in the [system model][model],
+but essentially we assume that two correct processes do not simultaneous read from their clocks
+time values that differ more than `PRECISION`, which is a system parameter.
+
+### Proposal times are definitive
+
+When a value `v` is produced by a process, it also assigns the associated time `v.time`.
+If the same value `v` is then re-proposed in a subsequent round of consensus,
+its retains its original time, assigned by its original proposer.
+
+A value `v` should re-proposed when it becomes valid, i.e., when it receives `2f + 1 PREVOTES` in a round `r` of consensus.
+This means that processes with `2f + 1`-equivalent voting power accepted, in round `r`, both `v` and its associated time `v.time`.
+Since the originally proposed value and its associated time were considered valid, there is no reason for reassigning `v.time`.
 
 In the [first version][v1] of this specification, proposals were defined as pairs `(v, time)`.
 In addition, the same value could be proposed, in different rounds, associated to distinct times.
 Since this possibility does not exist in this second specification, the proposal time became part of the proposed value.
-With this simplification, several small changes to the [arXiv][arXiv] algorithm, replacing `v` by `(v, t)`, are no longer required.
+With this simplification, several small changes to the [arXiv][arXiv] algorithm are no longer required.
 
 ## Time Monotonicity
 
@@ -136,3 +147,4 @@ Back to [main document][main].
 [v1]: ./pbts-algorithm_001_draft.md
 [main]: ./pbts_001_draft.md
 [bfttime]: https://github.com/tendermint/spec/blob/439a5bcacb5ef6ef1118566d7b0cd68fff3553d4/spec/consensus/bft-time.md
+[model]: ./pbts-sysmodel_002_draft.md
