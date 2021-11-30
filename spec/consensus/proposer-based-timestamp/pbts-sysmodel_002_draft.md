@@ -11,6 +11,7 @@ No process has direct access to this reference time, used only for specification
 ### Synchronized clocks
 
 Processes are assumed to be equipped with synchronized clocks.
+
 This requires processes to periodically synchronize their local clocks with an
 external and trusted source of the reference time (e.g. NTP servers).
 Each synchronization cycle aligns the process local clock with the external
@@ -21,7 +22,7 @@ which tend to pace slightly faster or slower than the real time.
 To avoid an excessive level detail in the parameters and guarantees of
 synchronized clocks, we adopt a single system parameter `PRECISION` to 
 encapsulate the potential inaccuracy of the synchronization mechanisms,
-and the temporary drifts of local clocks from real time.
+and drifts of local clocks from real time.
 
 #### **[PBTS-CLOCK-PRECISION.0]**
 
@@ -29,10 +30,10 @@ There exists a system parameter `PRECISION`, such that
 for any two processes `p` and `q`, with local clocks `C_p` and `C_q`,
 that read their local clocks at any real-time `t`,  we have:
 
-- `|C_p(t) - C_q(t)| < PRECISION`
+- If `p` and `q` are equipped with synchronized clocks, then `|C_p(t) - C_q(t)| < PRECISION`
 
-`PRECISION` thus bounds the difference on the values simultaneously read by processes from theirs local clocks,
-so that their clocks can still be considered synchronized.
+`PRECISION` thus bounds the difference on the values simultaneously read by processes from their local clocks,
+so that their clocks can be considered synchronized.
 
 #### Accuracy
 
@@ -43,7 +44,8 @@ This parameter was removed in this version for two reasons:
 
 - Clock accuracy is hard, if possible at all, to assess in distributed systems
 - The adoption of an `ACCURACY` parameter renders the `PRECISION` parameter redundant:
-if the accuracy of processes clocks is bound by `ACCURACY`, then the clocks precision must be bound by `2 * ACCURACY`.
+if the accuracy of processes clocks is bound by `ACCURACY`,
+then the clocks precision must be bound by `2 * ACCURACY`.
 
 The adoption of an `ACCURACY` was intended to formalize the relation between a block time and the real time.
 We observe, however, that clients will compare the block time to their local time,
@@ -59,9 +61,9 @@ It is not enough, however, to identify (and reject) block times proposed by Byza
 
 To properly evaluate whether the time assigned to a block or, more generally, to a message is consistent with the real time,
 we need some information regarding the time it takes for the message to be transmitted.
-Together with the `PRECISION`, the *minimal delay* for a message defines the *maximum timestamp*
+Together with the `PRECISION`, the *maximum delay* for a message defines the *minimum timestamp*
 the message could have received from a correct process, equipped with a synchronized clock.
-Correspondingly, the *maximum delay* for a message bounds the *maximum timestamp* assigned to it by a correct process.
+Correspondingly, the *minimum delay* for a message bounds the *maximum timestamp* assigned to it by a correct process.
 
 #### **[PBTS-MSG-D.0]**
 
@@ -73,7 +75,7 @@ such for any two processes `p` and `q`, and any real time `t`:
 We don't want to adopt detailed restrictions regarding the format and content of a message `m`.
 We instead define `m` as a *regular message*, with the meaning that its size should not vary arbitrarily.
 This excludes from this definition messages that carry full blocks, as they can have a variable size,
-while covers size-limited messages that carry parts of a proposed block.
+while covers size-limited messages that a `Proposal` or parts of a proposed block.
 
 ## Problem Statement
 
