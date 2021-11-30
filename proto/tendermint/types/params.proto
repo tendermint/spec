@@ -13,6 +13,7 @@ message ConsensusParams {
   EvidenceParams  evidence  = 2;
   ValidatorParams validator = 3;
   VersionParams   version   = 4;
+  TimingParams    timing    = 5;
 }
 
 // BlockParams contains limits on the block size.
@@ -64,4 +65,11 @@ message VersionParams {
 message HashedParams {
   int64 block_max_bytes = 1;
   int64 block_max_gas   = 2;
+}
+
+message TimingParams {
+  google.protobuf.Duration message_delay = 1
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+  google.protobuf.Duration  precision = 2
+      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }
