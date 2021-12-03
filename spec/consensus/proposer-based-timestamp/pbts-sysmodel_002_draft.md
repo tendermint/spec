@@ -130,9 +130,9 @@ If
 
 Then, where `p` is a such correct process:
 
-- `p` received a `PROPOSE` message of round `r*` and height `h`,
-- the `PROPOSE` message contained a proposal for value `v` with proposal time `v.time`
-- and `p` considered the proposal `timely`
+- `p` received a `PROPOSE` message of round `r*` and height `h`, and
+- the `PROPOSE` message contained a proposal for value `v` with proposal time `v.time`, and
+- a correct process `p` considered the proposal `timely`.
 
 The round `r*` above defined will be, in most cases,
 the round in which `v` was originally proposed, and when `v.time` was assigned,
@@ -149,27 +149,28 @@ If
 
 Then
 
-- there is a valid `POL(v,r*)` for height `h`, with `r* <= r`
-- `POL(v,r*)` contains a `PREVOTE` message from at least one correct process that considered the proposal for `v` a `timely` proposal
+- there is a valid `POL(v,r*)` for height `h`, with `r* <= r`, and
+- `POL(v,r*)` contains a `PREVOTE` message from at least one correct process, and
+- a correct process considered the proposal for `v` `timely` at round `r*`.
 
 The above relation derives from a recursion on the round number `r`.
 It is trivially observed when `r = r*`, the base of the recursion,
-when a *timely* `POL(v,r*)` is obtained.
-We need to ensure that, once a `timely POL(v,r*)` is obtained,
+when a timely `POL(v,r*)` is obtained.
+We need to ensure that, once a timely `POL(v,r*)` is obtained,
 it is possible to obtain a valid `POL(v,r)` with `r > r*`,
 without the need of satisfying the `timely` predicate (again) in round `r`.
 In fact, since rounds are started in order, it is not likely that
-a proposal time `v.time`, assigned when the round `r*` was in progress,
+a proposal time `v.time`, assigned at round `r*`,
 will still be considered `timely` when the round `r > r*` is in progress.
 
 In other words, the algorithm should ensure that once a `POL(v,r*)` attests
-that the proposal for `v` is `timely`, according to at least a correct process,
+that the proposal for `v` is `timely`,
 further valid `POL(v,r)` with `r > r*` can be obtained,
-even though processes do not consider the proposal for `v` `timely` anymore.
+even though processes do not consider the proposal for `v` `timely` any longer.
 
 > This can be achieved if the proposer of round `r' > r*` proposes `v` in a `PROPOSE` message
 with `POLRound = r*`, and at least one correct processes is aware of a `POL(v,r*)`.
-> From this point, if a valid `POL(v,r')` is achieved, it can replace any adopted `POL(v,r*)`.
+> From this point, if a valid `POL(v,r')` is achieved, it can replace the adopted `POL(v,r*)`.
 
 ### SAFETY
 
@@ -186,11 +187,11 @@ If
 
 Then, where `p` is one such correct process:
 
-- since `p` is correct, `p` received a valid `POL(v,r)`
-- `POL(v,r)` contains a `PREVOTE` message from at least one correct process,
-- `POL(v,r)` is derived from a timely `POL(v,r*)` with `r* <= r`,
-- `POL(v,r*)` contains a `PREVOTE` message from at least one correct process,
-- then a correct process considered a proposal for `v` at round `r*` a `timely` proposal.
+- since `p` is correct, `p` received a valid `POL(v,r)`, and
+- `POL(v,r)` contains a `PREVOTE` message from at least one correct process, and
+- `POL(v,r)` is derived from a timely `POL(v,r*)` with `r* <= r`, and
+- `POL(v,r*)` contains a `PREVOTE` message from at least one correct process, and
+- a correct process considered a proposal for `v` `timely` at round `r*`.
 
 Back to [main document][main].
 
