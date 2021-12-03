@@ -73,8 +73,8 @@ There exists a system parameter `MSGDELAY` for end-to-end delays of messages car
 such for any two correct processes `p` and `q`, and any real time `t`:
 
 - If `p` sends a message `m` carrying a proposal at time `ts`,
-then `q` receives the message, and learns the proposal,
-at time `t` such that `ts <= t <= ts + MSGDELAY`.
+then if `q` receives the message and learns the proposal,
+`q` does that at time `t` such that `ts <= t <= ts + MSGDELAY`.
 
 While we don't want to impose particular restrictions regarding the format of `m`,
 we need to assume that their size is upper bounded.
@@ -192,6 +192,28 @@ Then, where `p` is one such correct process:
 - `POL(v,r)` is derived from a timely `POL(v,r*)` with `r* <= r`, and
 - `POL(v,r*)` contains a `PREVOTE` message from at least one correct process, and
 - a correct process considered a proposal for `v` `timely` at round `r*`.
+
+### LIVENESS
+
+In terms of liveness, we need to ensure that a proposal broadcast by a correct process
+will be considered `timely` by any correct process that is ready to accept that proposal.
+So, if:
+
+- the proposer `p` of a round `r` is correct,
+- there is no `POL(v',r')` for any value `v'` and any round `r' < r`,
+- `p` proposes a valid value `v` and sets `v.time` to the time it reads from its local clock,
+
+Then let `q` be a correct process that receives `p`'s proposal, we have:
+
+- `q` receives `p`'s proposal after its clock reads `v.time - PRECISION`, and
+- if `q` is at or joins round `r` while `p`'s proposal is being transmitted,
+then `q` receives `p`'s proposal before its clock reads `v.time + MSGDELAY + PRECISION`
+
+> Note that, before `GST`, we cannot ensure that every correct process receives `p`'s proposals, nor that it does it while ready to accept a round `r` proposal.
+
+A correct process `q` as above defined must then consider `p`'s proposal `timely`.
+It will then broadcast a `PREVOTE` message for `v` at round `r`,
+thus enabling, from the Time-Validity point of view, `v` to be eventually decided.
 
 Back to [main document][main].
 
