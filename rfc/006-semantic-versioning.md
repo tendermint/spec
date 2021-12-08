@@ -28,12 +28,18 @@ We first begin with a round up of the various users and a set of assumptions on 
      - consume the RPC endpoints of nodes like `/block`
      - subscribe to events that are streamed via websockets
      - make queries to the indexer
-  
-    This set are concerned with chain upgrades which will impact their ability to query state and block data as well as broadcast transactions.
-  
-4. There is also a fourth emerging user: IBC module and relayers (although in many ways relayers can also be considered as external clients). The developers of IBC and consumers of their software are concerned about changes that may affect a chains ability to send arbitrary messages to another chain. Specifically, this can happen with a breaking change to the light client verification algorithm.  
 
-In a more broader sense, these four users are inextricably linked and their concerns reflect that of the end user of the applications. The major conclusion that this RFC makes is that **the ability for chains to provide continual service is more important than the actual upgrade burden put on the developers of these chains**. What that means is that although it may be burdensome for application developers to upgrade Tendermint versions, this is far outweighed by the pain node operators experience in upgrading, by the pain that external clients have in accommodating changes and ultimately the pain of end users who are benefiting from the application. Developers have all the time in world to make these changes whilst for other user groups, upgrading can be considered part of this real-time critical path.  
+    This set are concerned with chain upgrades which will impact their ability to query state and block data as well as broadcast transactions.
+
+4. There is also a fourth emerging user: **IBC module and relayers** (although in many ways relayers can also be considered sub components to external clients). The developers of IBC and consumers of their software are concerned about changes that may affect a chains ability to send arbitrary messages to another chain. Specifically, this can happen with a breaking change to the light client verification algorithm.  
+
+In a more broader sense, these four users are inextricably linked and their concerns reflect that of the end user of the applications. The major conclusion that this RFC makes is that **the ability for chains to provide continual service is more important than the actual upgrade burden put on the developers of these chains**. What that means is that although it may be burdensome for application developers to upgrade Tendermint versions and this may cause longer release cycles, the other three groups experience upgrades as downtime which ultimately affects end users of the application.
+
+### Modes of Interprocess Communication
+
+Tendermint has two primary mediums with which it can communicate to other processes: RPC and P2P. The division marks the boundary between the internal and external components of the network. The P2P layer is used in all cases that nodes (validator, full, seed or light) need to communicate with one another whereas the RPC is for any outside process that wants to communicate with a node. The assumption made here is that all communication via the RPC is to a trusted source and thus the ability to interpret information is more important than being able to verify the information. P2P is therefore primary medium for verification. As an example, an in-browser light client would consist of verifying headers (and perhaps application state) via the p2p layer and passing the information on to the client via the RPC layer (or potentially directly via an API).
+
+The exception to this is the IBC module and relayers which are external but require verifiable data. Breaking changes to the light client verification path mean that all neighbouring chains that are connected will no longer be able to verify state transitions and thus pass messages back and forward.
 
 ## Proposal
 
@@ -46,7 +52,7 @@ For the entire cycle of a **major version** in Tendermint:
 - Node RPC endpoints will remain compatible with existing external clients:
     - New endpoints may be added, but old endpoints may not be removed.
     - Old endpoints may be extended to add new request and response fields, but requests not using those fields must function as before the change.
-- Migrations should be automatic. Upgrading of one node can happen asynchronously with respect to other nodes (although agreement of a network-wide upgrade will happen synchronously via consensus).
+- Migrations should be automatic. Upgrading of one node can happen asynchronously with respect to other nodes (although agreement of a network-wide upgrade must still occur synchronously via consensus).
 
 For the entire cycle of a **minor version** in Tendermint:
 
