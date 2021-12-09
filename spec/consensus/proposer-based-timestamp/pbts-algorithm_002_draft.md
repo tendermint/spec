@@ -14,7 +14,7 @@ time values that differ more than `PRECISION`, which is a system parameter.
 
 When a value `v` is produced by a process, it also assigns the associated time `v.time`.
 If the same value `v` is then re-proposed in a subsequent round of consensus,
-its retains its original time, assigned by its original proposer.
+it retains its original time, assigned by its original proposer.
 
 A value `v` should re-proposed when it becomes valid, i.e., when it receives `2f + 1 PREVOTES` in a round `r` of consensus.
 This means that processes with `2f + 1`-equivalent voting power accepted, in round `r`, both `v` and its associated time `v.time`.
