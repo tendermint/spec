@@ -37,21 +37,33 @@ from their local clocks, so that their clocks can be considered synchronized.
 
 #### Accuracy
 
-The [previous system model][v1] included a second clock-related parameter, `ACCURACY`,
-that relates the values read by processes from their synchronized clocks with the real time.
+The [original specification][v1] included a second clock-related parameter, `ACCURACY`,
+that relates the values read by processes from their synchronized clocks with real time:
 
-This parameter was removed in this version for two reasons:
+- If `p` is a process is equipped with a synchronized clock, then at real time
+  `t` it reads from its clock time `C_p(t)` with `|C_p(t) - t| < ACCURACY`
 
-- Clock accuracy is hard, if possible at all, to assess in distributed systems
-- The adoption of an `ACCURACY` parameter renders the `PRECISION` parameter redundant:
-if the accuracy of processes clocks is bound by `ACCURACY`,
-then the clocks precision must be bound by `2 * ACCURACY`.
+The adoption of `ACCURACY` as the upper bound on the difference between clock
+readings and real time, however, renders the `PRECISION` parameter redundant.
+In fact, if we assume that clocks readings are at most `ACCURACY` from real
+time, we would therefore be assuming that they cannot be more than `2 * ACCURACY`
+apart from each other, thus establishing a worst-case upper bound for `PRECISION`.
 
-The adoption of an `ACCURACY` was intended to formalize the relation between a block time and the real time.
-We observe, however, that clients will compare the block time to their local time,
-or to the time they retrieve from a trusted source of time, not to a physical clock.
-The restriction imposed by the `PRECISION` parameter can then be used, indirectly,
-to bound the difference block times and real time.
+The approach we take is to assume that processes clocks are periodically
+synchronized with an external source of time, thus improving their accuracy.
+This allows us to adopt a relaxed version of the above `ACCURACY` definition:
+
+##### **[PBTS-CLOCK-FAIR.0]**
+
+- At real time `t` there is at least one correct process `p` which clock marks
+  `C_p(t)` with `|C_p(t) - t| < ACCURACY`
+
+Then, through [PBTS-CLOCK-PRECISION] we can extend this relation of clock times
+with real time to every correct process, which will have a clock with accuracy
+bound by `ACCURACY + PRECISION`.
+But, for the sake of simpler specification we can assume that the `PRECISION`,
+which is a worst-case parameter that applies to all correct processes,
+includes the best `ACCURACY` achieved by any of them.
 
 ### Message Delays
 
