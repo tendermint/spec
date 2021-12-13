@@ -104,7 +104,7 @@ A proposer proposes a consensus value `v` with an associated proposal time `v.ti
 
 #### **[PBTS-INV-AGREEMENT.0]**
 
-[Agreement] No two correct processes decide on different values `v` or proposal times `v.time`.
+[Agreement] No two correct processes decide on different values `v`. (This implies that no two correct processes decide on different proposal times `v.time`.)
 
 #### **[PBTS-INV-VALID.0]**
 
