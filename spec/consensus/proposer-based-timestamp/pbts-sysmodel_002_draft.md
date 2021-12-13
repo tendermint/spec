@@ -125,6 +125,8 @@ Let `now_p` be time a process `p` reads from its local clock when `p` receives a
 Let `v` be the proposed value and `v.time` the proposal time.
 The proposal is considered `timely` by `p` if:
 
+#### **[PBTS-RECEPTION-STEP.1]**
+
 1. `now_p >= v.time - PRECISION` and
 1. `now_p <= v.time + MSGDELAY + PRECISION`
 
@@ -133,6 +135,8 @@ The proposal is considered `timely` by `p` if:
 We denote by `POL(v,r)` a *Proof-of-Lock* of value `v` at the round `r` of consensus.
 `POL(v,r)` consists of a set of `PREVOTE` messages of round `r` for the value `v`
 from processes whose cumulative voting power is at least `2f + 1`.
+
+#### **[PBTS-TIMELY-POL.1]**
 
 If
 
@@ -153,6 +157,8 @@ In any case, at least one correct process must consider the proposal `timely` at
 to enable a valid `POL(v,r*)` to be observed.
 
 ### Derived Proof-of-Locks
+
+#### **[PBTS-DERIVED-POL.1]**
 
 If
 
