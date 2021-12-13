@@ -233,6 +233,19 @@ A correct process `q` as above defined must then consider `p`'s proposal `timely
 It will then broadcast a `PREVOTE` message for `v` at round `r`,
 thus enabling, from the Time-Validity point of view, `v` to be eventually decided.
 
+#### Under-estimated `MSGDELAY`s
+
+The liveness assumptions of PBTS are conditioned by a conservative and clever
+choice of the timing parameters, specially of `MSGDELAY`.
+In fact, if the transmission delay for a message carrying a proposal is wrongly
+estimated, correct processes may never consider a valid proposal as `timely`.
+
+To circumvent this liveness issue, which could result from a misconfiguration,
+we assume that the `MSGDELAY` parameter can be increased as rounds do not
+succeed on deciding a value, possibly because no proposal is considered
+`timely` by enough processes.
+The precise behavior for this workaround is under [discussion](https://github.com/tendermint/spec/issues/371).
+
 Back to [main document][main].
 
 [main]: ./pbts_001_draft.md
