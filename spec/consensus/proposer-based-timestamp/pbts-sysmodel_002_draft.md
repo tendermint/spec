@@ -20,7 +20,7 @@ The periodic (re)synchronization aims to correct the *drift* of local clocks,
 which tend to pace slightly faster or slower than the real time.
 
 To avoid an excessive level detail in the parameters and guarantees of
-synchronized clocks, we adopt a single system parameter `PRECISION` to 
+synchronized clocks, we adopt a single system parameter `PRECISION` to
 encapsulate the potential inaccuracy of the synchronization mechanisms,
 and drifts of local clocks from real time.
 
