@@ -22,7 +22,7 @@ Finally I would like to remark that this RFC only addresses the "what", as in wh
 
 We first begin with a round up of the various users and a set of assumptions on what these users expect from Tendermint in regards to versioning:
 
-1. **Application Developers**, those that use the ABCI to build applications on top of Tendermint, are chiefly concerned with that API. Breaking changes will force developers to modify large portions of their codebase to accommodate for the changes. Some ABCI changes such as introducing priority for the mempool don't require any effort and can be lazily adopted whilst changes like ABCI++ may force applications to redesign their entire execution system. It's also worth considering that the API's for go developers differ to developers of other languages. The former here can use the entire Tendermint library, most notably the local RPC methods, and so the team must be wary of all public Go API's. 
+1. **Application Developers**, those that use the ABCI to build applications on top of Tendermint, are chiefly concerned with that API. Breaking changes will force developers to modify large portions of their codebase to accommodate for the changes. Some ABCI changes such as introducing priority for the mempool don't require any effort and can be lazily adopted whilst changes like ABCI++ may force applications to redesign their entire execution system. It's also worth considering that the API's for go developers differ to developers of other languages. The former here can use the entire Tendermint library, most notably the local RPC methods, and so the team must be wary of all public Go API's.
 2. **Node Operators**, those running node infrastructure, are predominantly concerned with downtime, complexity and frequency of upgrading, and avoiding data loss. They may be also concerned about changes that may break the scripts and tooling they use to supervise their nodes.
 3. **External Clients** are those that perform any of the following:
      - consume the RPC endpoints of nodes like `/block`
@@ -67,7 +67,7 @@ For the entire cycle of a **minor version** in Tendermint:
 - No breaking changes to the block protocol. This means that all block related data structures should not change in a way that breaks any of the hashes, the consensus engine or light client verification.
 - Upgrades between minor versions may not result in any downtime (i.e., no migrations are required), nor require any changes to the config files to continue with the existing behavior. A minor version upgrade will require only stopping the existing process, swapping the binary, and starting the new process.
 
-A new **patch version** of Tendermint will only contain bug fixes and updates that impact the security and stability of Tendermint. 
+A new **patch version** of Tendermint will only contain bug fixes and updates that impact the security and stability of Tendermint.
 
 These guarantees will come into effect at release 1.0.
 
