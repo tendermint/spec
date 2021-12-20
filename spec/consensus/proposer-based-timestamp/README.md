@@ -1,3 +1,5 @@
+# UNDER CONSTRUCTION
+
 # Proposer-Based Timestamps
 
 This section describes a version of the Tendermint consensus protocol,
