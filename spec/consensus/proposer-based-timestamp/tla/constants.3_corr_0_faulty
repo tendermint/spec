@@ -1,0 +1,12 @@
+N <- 3
+T <- 0
+MaxTimestamp <- 10
+Delay <- 1
+Corr <- {1, 2, 3}
+Faulty <- {}
+InvalidValues <- {}
+Precision <- 1
+MaxRound <- 2
+ValidValues <- {"100"}
+ClockDrift <- FALSE
+Proposer <- [x \in Rounds |-> x + 1]

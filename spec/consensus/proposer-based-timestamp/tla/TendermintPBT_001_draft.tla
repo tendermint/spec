@@ -25,13 +25,13 @@ CONSTANTS
     MaxTimestamp,  \* the maximal value of the clock tick
     Delay,         \* message delay
     Precision,     \* clock precision: the maximal difference between two local clocks  
-    Accuracy,      \* clock accuracy: the maximal difference between a local clock and the real time
     Proposer,      \* the proposer function from 0..NRounds to 1..N
     ClockDrift     \* is there clock drift between the local clocks and the global clock
 
 ASSUME(N = Cardinality(Corr \union Faulty))
 
 (*************************** DEFINITIONS ************************************)
+
 AllProcs == Corr \union Faulty      \* the set of all processes
 Rounds == 0..MaxRound               \* the set of potential rounds
 Timestamps == 0..MaxTimestamp       \* the set of clock ticks
@@ -46,6 +46,8 @@ ValuesOrNil == Values \union {NilValue}
 Decisions == Values \X Timestamps \X Rounds
 NilDecision == <<NilValue, NilTimestamp, NilRound>>
 
+
+\* Proposer == [x \in Rounds |-> x+1]
 
 \* a value hash is modeled as identity
 Id(v) == v
@@ -158,7 +160,7 @@ BenignRoundsInMessages(msgfun) ==
 Init ==
     /\ round = [p \in Corr |-> 0]
     /\ \/ /\ ~ClockDrift
-          /\ localClock \in [Corr -> 0..Accuracy]
+          /\ localClock \in [Corr -> 0..Precision]
        \/ /\ ClockDrift
           /\ localClock = [p \in Corr |-> 0]
     /\ realTime = 0
@@ -177,7 +179,7 @@ Init ==
     /\ BenignRoundsInMessages(msgsPrevote)
     /\ BenignRoundsInMessages(msgsPrecommit)
     /\ evidence = EmptyMsgSet
-    /\ action' = "Init"
+    /\ action = "Init"
     /\ beginConsensus = Min({localClock[p] : p \in Corr})
     /\ endConsensus = [p \in Corr |-> NilTimestamp]
     /\ lastBeginConsensus = Max({localClock[p] : p \in Corr})
@@ -466,7 +468,7 @@ AdvanceRealTime ==
           /\ UNCHANGED localClock
     /\ UNCHANGED <<round, step, decision, lockedValue, lockedRound,
                   validValue, validRound, evidence, msgsPropose, msgsPrevote, msgsPrecommit,
-                  localClock, receivedTimelyProposal, inspectedProposal,
+                  receivedTimelyProposal, inspectedProposal,
                   beginConsensus, endConsensus, lastBeginConsensus, proposalTime, proposalReceivedTime>> 
     /\ action' = "AdvanceRealTime"
     
@@ -483,9 +485,9 @@ AdvanceLocalClock(p) ==
 \* process timely messages
 MessageProcessing(p) ==
     \* start round
-    \/ InsertProposal(p)
+    \/ /\ InsertProposal(p)
     \* reception step
-    \/ ReceiveProposal(p)
+       /\ ReceiveProposal(p)
     \* processing step
     \/ UponProposalInPropose(p)
     \/ UponProposalInProposeAndPrevote(p)
@@ -555,15 +557,15 @@ ConsensusRealTimeValidCorr ==
     \A t \in Timestamps, r \in Rounds :
        (/\ \E p \in Corr, v \in ValidValues : decision[p] = Decision(v, t, r) 
         /\ proposalTime[r] /= NilTimestamp)
-        => /\ proposalTime[r] - Accuracy < t
-           /\ t < proposalTime[r] + Accuracy
+        => /\ t >= proposalTime[r] - Precision
+           /\ t <= proposalTime[r] + Precision
 
 \* [PBTS-CONSENSUS-REALTIME-VALID.0]
 ConsensusRealTimeValid ==
     \A t \in Timestamps, r \in Rounds :
        (\E p \in Corr, v \in ValidValues : decision[p] = Decision(v, t, r)) 
-        => /\ proposalReceivedTime[r] - Accuracy - Precision < t
-           /\ t < proposalReceivedTime[r] + Accuracy + Precision + Delay
+        => /\ t >= proposalReceivedTime[r] - Precision
+           /\ t <= proposalReceivedTime[r] + Delay + Precision
 
 \* [PBTS-MSG-FAIR.0]
 BoundedDelay ==
