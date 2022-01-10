@@ -13,7 +13,7 @@ message ConsensusParams {
   EvidenceParams  evidence  = 2;
   ValidatorParams validator = 3;
   VersionParams   version   = 4;
-  SynchronyParams timing    = 5;
+  SynchronyParams synchrony = 5;
 }
 
 // BlockParams contains limits on the block size.
