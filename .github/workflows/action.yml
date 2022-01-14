@@ -8,3 +8,5 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
+      with:
+        check-modified-files-only: 'yes'
