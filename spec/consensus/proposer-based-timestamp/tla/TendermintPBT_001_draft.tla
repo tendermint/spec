@@ -266,15 +266,15 @@ ReceiveProposal(p) ==
       /\ p \notin inspectedProposal[r]
       /\ <<p, msg>> \notin receivedTimelyProposal
       /\ inspectedProposal' = [inspectedProposal EXCEPT ![r] = @ \union {p}]
-      /\ \/ /\ localClock[p] - Precision < t 
-            /\ t < localClock[p] + Precision + Delay
+      /\ \/ /\ t + Precision + Delay >= localClock[p]
+            /\ localClock[p] >= t - Precision
             /\ receivedTimelyProposal' = receivedTimelyProposal \union {<<p, msg>>}
             /\ \/ /\ proposalReceivedTime[r] = NilTimestamp
                   /\ proposalReceivedTime' = [proposalReceivedTime EXCEPT ![r] = realTime]
                \/ /\ proposalReceivedTime[r] /= NilTimestamp
                   /\ UNCHANGED proposalReceivedTime
-         \/ /\ \/ localClock[p] - Precision >= t
-               \/ t >= localClock[p] + Precision + Delay
+         \/ /\ \/  t + Precision + Delay < localClock[p]
+               \/ localClock[p] < t - Precision
             /\ UNCHANGED <<receivedTimelyProposal, proposalReceivedTime>>
       /\ UNCHANGED <<round, step, decision, lockedValue, lockedRound,
           validValue, validRound, evidence, msgsPropose, msgsPrevote, msgsPrecommit,
@@ -485,9 +485,9 @@ AdvanceLocalClock(p) ==
 \* process timely messages
 MessageProcessing(p) ==
     \* start round
-    \/ /\ InsertProposal(p)
+    \/ InsertProposal(p)
     \* reception step
-       /\ ReceiveProposal(p)
+    \/ ReceiveProposal(p)
     \* processing step
     \/ UponProposalInPropose(p)
     \/ UponProposalInProposeAndPrevote(p)
@@ -570,18 +570,20 @@ ConsensusRealTimeValid ==
 \* [PBTS-MSG-FAIR.0]
 BoundedDelay ==
     \A r \in Rounds : 
-        (/\ proposalTime[r] /= NilTimestamp
+        (/\ inspectedProposal[r] /= EmptyProcSet
+         /\ proposalTime[r] /= NilTimestamp
          /\ proposalTime[r] + Delay < realTime)
-            => inspectedProposal[r] = Corr
+            => \A p \in inspectedProposal[r]: p \in Corr
 
 \* [PBTS-CONSENSUS-TIME-LIVE.0]
 ConsensusTimeLive ==
     \A r \in Rounds, p \in Corr : 
-       (/\ proposalTime[r] /= NilTimestamp
+       (/\ inspectedProposal[r] /= EmptyProcSet
+        /\ proposalTime[r] /= NilTimestamp
         /\ proposalTime[r] + Delay < realTime 
         /\ Proposer[r] \in Corr
         /\ round[p] <= r)
-            => \E msg \in RoundProposals(r) : <<p, msg>> \in receivedTimelyProposal
+            => \E msg \in RoundProposals(r) : <<p, msg>> \in receivedTimelyProposal /\ p \in inspectedProposal[r]
 
 \* a conjunction of all invariants
 Inv ==
