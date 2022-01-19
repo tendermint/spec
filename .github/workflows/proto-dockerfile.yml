@@ -18,7 +18,7 @@ on:
       - "proto/*"
   schedule:
     # run this job once a month to recieve any go or buf updates
-    - cron: "* * 1 * *"
+    - cron: "0 9 1 * *"
 
 env:
   REGISTRY: ghcr.io
