@@ -2,6 +2,8 @@
 
 The Tendermint specification follows [semantic versioning](https://semver.org/). Implementations of the Tendermint protocol are encouraged to either mirror versions or have some form of mapping for clear readibility of the state of the implementation. The `master` branch is used for active protocol development. Developers should be wary that the specifications are subject to change and should instead rely on the latest release. In the event of a security vulnerability, fixes may be backported to prior major releases but generally only the last major release is supported. The following documentation is provided to describe the release process.
 
+Releases should capture a complete snapshot of the specification at a point in time. The protocols described must be coherent and capable of functioning together. There should be no drafts or outstanding/unanswered comments. Some specifications contain references to a versioning schema that is used for formal verification. There should be no ambiguity around what version is being used. Uncompleted or proposed but not yet finalized work can remain in master but it is preferable that large protocol designs use a separate long living branch.
+
 ## Major Releases
 
 Before any major release, it is preferable to create release candidates (RC) for Tendermint implementations as well as applications to test out and validate. This is done using git tags which are built off major release branches i.e. `v0.35.x`.
