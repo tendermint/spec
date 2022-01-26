@@ -1,4 +1,4 @@
-# Proposer-Based Time v2 - Part I
+# PBTS: System Model and Properties
 
 ## System Model
 
@@ -37,7 +37,7 @@ from their local clocks, so that their clocks can be considered synchronized.
 
 #### Accuracy
 
-The [original specification][v1] included a second clock-related parameter, `ACCURACY`,
+The [first draft][sysmodel_v1] of this specification included a second clock-related parameter, `ACCURACY`,
 that relates the values read by processes from their synchronized clocks with real time:
 
 - If `p` is a process is equipped with a synchronized clock, then at real time
@@ -248,6 +248,13 @@ The precise behavior for this workaround is under [discussion](https://github.co
 
 Back to [main document][main].
 
-[main]: ./pbts_001_draft.md
-[v1]: ./pbts-sysmodel_001_draft.md
+[main]: ./README.md
+[main_v1]: ./pbts_001_draft.md
+
+[algorithm]: ./pbts-algorithm_002_draft.md
+[algorithm_v1]: ./pbts-algorithm_001_draft.md
+
+[sysmodel]: ./pbts-sysmodel_002_draft.md
+[sysmodel_v1]: ./pbts-sysmodel_001_draft.md
+
 [arXiv]: https://arxiv.org/abs/1807.04938

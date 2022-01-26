@@ -1,4 +1,4 @@
-# Proposer-Based Timestamps
+# Proposer-Based Timestamps (PBTS)
 
 This section describes a version of the Tendermint consensus protocol
 that uses proposer-based timestamps.
@@ -10,7 +10,7 @@ defined by the `Time` field present in the headers of committed blocks,
 representing the block's timestamp.
 
 In the current consensus implementation, the timestamp of a block is
-computed by the [BFT Time][bfttime] algorithm:
+computed by the [`BFTTime`][bfttime] algorithm:
 
 - Validators timestamps the `Precommit` messages they broadcast.
 Timestamps are retrieved from the validator's local clocks,
@@ -31,7 +31,7 @@ is selected by the block's proposer and stored in the `Commit` field of the bloc
 
 Assuming that the voting power controlled by Byzantine validators is bounded by `f`,
 the cumulative voting power of any valid `Commit` set must be at least `2f+1`.
-As a result, the timestamp computed by [BFT Time][bfttime] is not influenced by Byzantine validators,
+As a result, the timestamp computed by `BFTTime` is not influenced by Byzantine validators,
 as the weighted median of `Commit` timestamps comes from the clock of a non-faulty validator.
 
 Tendermint does not make any assumptions regarding the clocks of (correct) validators,
@@ -41,12 +41,12 @@ such as IBC, the evidence, staking, and slashing modules.
 And it is used based on the common belief that block timestamps
 should bear some resemblance to real time, which is **not guaranteed**.
 
-A more comprehensive discussion of the limitations of the current method to assign timestamps to blocks
-can be found in the [first draft][main_v1] of the PBTS proposal.
+A more comprehensive discussion of the limitations of `BFTTime`
+can be found in the [first draft][main_v1] of this proposal.
 Of particular interest is to possibility of having validators equipped "faulty" clocks,
-in the sense of not fairly accurate with real time, that detain more than `f` voting power,
-plus the flexibility that a proposer has to select a `Commit` set,
-and thus to choose the timestamp for a block.
+not fairly accurate with real time, that detain more than `f` voting power,
+plus the proposer's flexibility when selecting a `Commit` set,
+and thus determining the timestamp for a block.
 
 ## Proposal
 
@@ -82,8 +82,8 @@ The right inequality of the *timely* predicate establishes that proposed timesta
 should not be too much in the past, more precisely, not more than `MSGDELAY` in the past,
 when adjusted by the clocks `PRECISION`.
 
-Refer to the [System Model and Properties][sysmodel] document
-for a more detailed and formalized description.
+A more detailed and formalized description is available in the
+[System Model and Properties][sysmodel] document
 
 ## Implementation
 
@@ -135,6 +135,6 @@ The full solution is detailed and formalized in the [Protocol Specification][alg
 
 [proposertla]: ./tla/TendermintPBT_001_draft.tla
 
-[bfttime]: ../bft-time.md
+[bfttime]: https://github.com/tendermint/spec/blob/master/spec/consensus/bft-time.md
 [arXiv]: https://arxiv.org/abs/1807.04938
 
