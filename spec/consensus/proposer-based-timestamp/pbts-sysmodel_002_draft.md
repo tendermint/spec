@@ -255,4 +255,4 @@ Back to [main document][main].
 [sysmodel]: ./pbts-sysmodel_002_draft.md
 [sysmodel_v1]: ./v1/pbts-sysmodel_001_draft.md
 
-[arXiv]: https://arxiv.org/abs/1807.04938
+[arXiv]: https://arxiv.org/pdf/1807.04938.pdf

@@ -145,4 +145,4 @@ Back to [main document][main].
 [sysmodel]: ./pbts-sysmodel_002_draft.md
 
 [bfttime]: https://github.com/tendermint/spec/blob/master/spec/consensus/bft-time.md
-[arXiv]: https://arxiv.org/abs/1807.04938
+[arXiv]: https://arxiv.org/pdf/1807.04938.pdf
