@@ -249,12 +249,10 @@ The precise behavior for this workaround is under [discussion](https://github.co
 Back to [main document][main].
 
 [main]: ./README.md
-[main_v1]: ./pbts_001_draft.md
 
 [algorithm]: ./pbts-algorithm_002_draft.md
-[algorithm_v1]: ./pbts-algorithm_001_draft.md
 
 [sysmodel]: ./pbts-sysmodel_002_draft.md
-[sysmodel_v1]: ./pbts-sysmodel_001_draft.md
+[sysmodel_v1]: ./v1/pbts-sysmodel_001_draft.md
 
 [arXiv]: https://arxiv.org/abs/1807.04938

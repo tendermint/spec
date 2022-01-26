@@ -259,7 +259,7 @@ This specification describes the changes needed to be done to the Tendermint con
 
 [sysmodel_v1]: ./pbts-sysmodel_001_draft.md
 
-[proposertla]: ./tla/TendermintPBT_001_draft.tla
+[proposertla]: ../tla/TendermintPBT_001_draft.tla
 
 [bfttime]: https://github.com/tendermint/spec/blob/master/spec/consensus/bft-time.md
 [tlatender]: https://github.com/tendermint/spec/blob/master/rust-spec/tendermint-accountability/README.md

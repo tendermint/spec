@@ -125,13 +125,13 @@ The full solution is detailed and formalized in the [Protocol Specification][alg
 - [Protocol Specification][algorithm]
 - [TLA+ Specification][proposertla] (**outdated**)
 
-[main_v1]: ./pbts_001_draft.md
+[main_v1]: ./v1/pbts_001_draft.md
 
 [algorithm]: ./pbts-algorithm_002_draft.md
-[algorithm_v1]: ./pbts-algorithm_001_draft.md
+[algorithm_v1]: ./v1/pbts-algorithm_001_draft.md
 
 [sysmodel]: ./pbts-sysmodel_002_draft.md
-[sysmodel_v1]: ./pbts-sysmodel_001_draft.md
+[sysmodel_v1]: ./v1/pbts-sysmodel_001_draft.md
 
 [proposertla]: ./tla/TendermintPBT_001_draft.tla
 
