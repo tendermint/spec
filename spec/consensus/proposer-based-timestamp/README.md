@@ -67,20 +67,58 @@ The right inequality of the *timely* predicate establishes that proposed timesta
 should not be too much in the past, more precisely, not more than `MSGDELAY` in the past,
 when adjusted by the clocks `PRECISION`.
 
-## Contents
+Refer to the [System Model and Properties][sysmodel] document
+for a more detailed and formalized description.
 
-- [Proposer-Based Time][main] (entry point)
-- [Part I - System Model and Properties][sysmodel]
-- [Part II - Protocol Specification][algorithm]
-- [TLA+ Specification][proposertla]
+## Implementation
 
+The implementation of PBTS requires some changes in Tendermint consensus algorithm,
+summarized below:
+
+- A proposer timestamps a block with the current time, read from its local clock.
+The block's timestamp represents the time at which it was assembled
+(after the `getValue()` call in line 18 of the [arXiv][arXiv] algorithm):
+
+	- Block timestamps are definitive, meaning that the original timestamp
+	is retained when a block is re-proposed (line 16);
+
+	- To preserve monotonicity, a proposer might need to wait until its clock
+	reads a time greater than the timestamp of the previous block;
+
+- A validator only prevotes for *timely* blocks,
+that is, blocks whose timestamps are considered *timely* (check added to line 23).
+If the block proposed in a round is considered *untimely*,
+the validator prevotes `nil` (line 26):
+
+	- Validators register the time at which they received `Proposal` messages,
+	in order to evaluate the *timely* predicate;
+
+	- Blocks that are re-proposed because they received `2f+1 Prevotes`
+	in a previous round (line 28) are not subject to the *timely* predicate,
+	as they have already been evaluated as *timely* at a previous round.
+
+The more complex change proposed regards blocks that can be re-proposed in multiple rounds.
+The current solution improves the [first version][algorithm_v1]
+by simplifying the way this situation is handled,
+from a recursive reasoning regarding valid blocks that are re-proposed.
+
+The full solution is detailed and formalized in the [protocol specification][algorithm] document.
+
+## Further details
+
+- [System Model and Properties][sysmodel]
+- [Protocol Specification][algorithm]
+- [TLA+ Specification][proposertla] (**outdated**)
 
 [bfttime]: ../bft-time.md
 
 [algorithm]: ./pbts-algorithm_002_draft.md
+[algorithm_v1]: ./pbts-algorithm_001_draft.md
 
 [sysmodel]: ./pbts-sysmodel_001_draft.md
 
 [main]: ./pbts_001_draft.md
 
 [proposertla]: ./tla/TendermintPBT_001_draft.tla
+
+[arXiv]: https://arxiv.org/abs/1807.04938
