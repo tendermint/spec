@@ -44,13 +44,13 @@ maintained by Informal Systems.
 - [ABCI++](./spec/abci++/README.md): Specification of interactions between the
   application and consensus engine over ABCI++
 
-### Request For Comment
+### Request For Comment (RFC)
 
 [RFCs](./rfc/README.md) are used to define a problem space and discuss an approach to solving the problem. RFCs are usually the first step towards large protocol changes.
   
 ### Protocol Buffers
 
-The data structures of the Tendermint protocol are located in the `proto` directory. These specify the  P2P messages that each implementation should follow to be compatible. More information can be found in the [Proto Readme](./proto/README.md).
+The data structures of the Tendermint protocol are defined as protocol buffer messages, from the files located in the `proto` directory. These specify the P2P messages that each implementation must use to be compatible. More information can be found in the [Proto Readme](./proto/README.md).
 
 ### Releases
 
