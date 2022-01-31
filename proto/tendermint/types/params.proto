@@ -67,9 +67,17 @@ message HashedParams {
   int64 block_max_gas   = 2;
 }
 
+// SynchronyParams configure the bounds under which a proposed block's timestamp is considered valid.
+// These parameters are part of the proposer-based timestamps algorithm. For more information,
+// see the specification of proposer-based timestamps:
+// https://github.com/tendermint/spec/tree/master/spec/consensus/proposer-based-timestamp
 message SynchronyParams {
+	// message_delay bounds how long a proposal message may take to reach all validators on a newtork
+	// and still be considered valid.
   google.protobuf.Duration message_delay = 1
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+      [(gogoproto.stdduration) = true];
+	// precision bounds how skewed a proposer's clock may be from any validator
+	// on the network while still producing valid proposals.
   google.protobuf.Duration precision = 2
-      [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+      [(gogoproto.stdduration) = true];
 }
