@@ -36,6 +36,7 @@ The Tendermint blockchains consists of a short list of data types:
     - [EvidenceParams](#evidenceparams)
     - [ValidatorParams](#validatorparams)
     - [VersionParams](#versionparams)
+    - [SynchronyParams](#synchronyparams)
   - [Proof](#proof)
 
 
@@ -445,6 +446,13 @@ func SumTruncated(bz []byte) []byte {
 | Name        | Type   | Description                   | Field Number |
 |-------------|--------|-------------------------------|--------------|
 | app_version | uint64 | The ABCI application version. | 1            |
+
+### SynchronyParams
+
+| Name          | Type   | Description                   | Field Number |
+|---------------|--------|-------------------------------|--------------|
+| message_delay | [google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration) | Bound for how long a proposal message may take to reach all validators on a newtork and still be considered valid. | 1            |
+| precision     | [google.protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration) | Bound for how skewed a proposer's clock may be from any validator on the network while still producing valid proposals. | 2            |
 
 ## Proof
 
