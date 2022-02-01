@@ -16,7 +16,7 @@ Evidence has one channel. The channel identifier is listed below.
 
 ### Evidence
 
-Verified evidence that has already been propagated throughout the network. This evidence can appear within an EvidenceList within the [block](../../core/data_structures.md#block) as well.
+Verified evidence that has already been propagated throughout the network. This evidence will appear within the EvidenceList struct of a [block](../../core/data_structures.md#block) as well.
 
 | Name     | Type                                                        | Description            | Field Number |
 |----------|-------------------------------------------------------------|------------------------|--------------|
