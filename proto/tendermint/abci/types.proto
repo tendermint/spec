@@ -36,8 +36,9 @@ message Request {
     RequestLoadSnapshotChunk   load_snapshot_chunk   = 13;
     RequestApplySnapshotChunk  apply_snapshot_chunk  = 14;
     RequestPrepareProposal     prepare_proposal      = 15;
-    RequestExtendVote          extend_vote           = 16;
-    RequestVerifyVoteExtension verify_vote_extension = 17;
+    RequestProcessProposal     process_proposal      = 16;
+    RequestExtendVote          extend_vote           = 17;
+    RequestVerifyVoteExtension verify_vote_extension = 18;
   }
 }
 
@@ -142,6 +143,11 @@ message RequestVerifyVoteExtension {
   types.Vote vote = 1;
 }
 
+message RequestProcessProposal {
+  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
+  repeated bytes txs = 2;
+}
+
 //----------------------------------------
 // Response types
 
@@ -163,8 +169,9 @@ message Response {
     ResponseLoadSnapshotChunk   load_snapshot_chunk   = 14;
     ResponseApplySnapshotChunk  apply_snapshot_chunk  = 15;
     ResponsePrepareProposal     prepare_proposal      = 16;
-    ResponseExtendVote          extend_vote           = 17;
-    ResponseVerifyVoteExtension verify_vote_extension = 18;
+    ResponseProcessProposal     process_proposal      = 17;
+    ResponseExtendVote          extend_vote           = 18;
+    ResponseVerifyVoteExtension verify_vote_extension = 19;
   }
 }
 
@@ -302,10 +309,21 @@ message ResponseVerifyVoteExtension {
   Result result = 1;
 
   enum Result {
-    UNKNOWN       = 0;  // Unknown result, treat as ACCEPT by default
+    UNKNOWN       = 0;  // Unknown result, reject vote extension
     ACCEPT        = 1;  // Vote extension verified, include the vote
     SLASH         = 2;  // Vote extension verification aborted, continue but slash validator
     REJECT        = 3;  // Vote extension invalidated
+  }
+}
+
+message ResponseProcessProposal {
+  Result result = 1;
+  repeated bytes evidence = 2;
+
+  enum Result {
+    UNKNOWN       = 0;  // Unknown result, invalidate
+    ACCEPT        = 1;  // proposal verified, vote on the proposal
+    REJECT        = 2;  // proposal invalidated
   }
 }
 
@@ -414,6 +432,7 @@ service ABCIApplication {
   rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
   rpc ApplySnapshotChunk(RequestApplySnapshotChunk) returns (ResponseApplySnapshotChunk);
   rpc PrepareProposal(RequestPrepareProposal) returns (ResponsePrepareProposal);
+  rpc ProcessProposal(RequestProcessProposal) returns (ResponseProcessProposal);
   rpc ExtendVote(RequestExtendVote) returns (ResponseExtendVote);
   rpc VerifyVoteExtension(RequestVerifyVoteExtension) returns (ResponseVerifyVoteExtension);
 }
