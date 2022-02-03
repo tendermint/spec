@@ -86,12 +86,11 @@ message SynchronyParams {
 // TimeoutParams configure the timeouts for the steps of the Tendermint consensus algorithm.
 message TimeoutParams {
 
-  // propose along with propose_delta configure the timeout for the propose step of
-  // the Tendermint consensus algorithm.
-  //
-  // propose configures the initial timeout and propose_delta configures by how much the timeout
-  // grows each subsequent round. For the first round, this propose timeout is used
-  // and for every subsequent round, the timeout grows by propose_delta.
+  // These fields configure the timeouts for the propose step of the Tendermint
+  // consensus algorithm: propose is the initial timeout and propose_delta
+  // determines how much the timeout grows in subsequent rounds.
+  // For the first round, this propose timeout is used and for every subsequent
+  // round, the timeout grows by propose_delta.
   //
   // For example:
   // With propose = 10ms, propose_delta = 5ms, the first round's propose phase
