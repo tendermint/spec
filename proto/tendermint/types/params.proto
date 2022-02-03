@@ -130,7 +130,7 @@ message TimeoutParams {
   // enable_commit_timeout_bypass configures the node to proceed immediately to
   // the next height once the node has received all precommits for a block, forgoing
   // the remaining commit timeout.
-  // Setting enable_commit_timeout_bypass = false configures Tendermint to wait
+  // Setting enable_commit_timeout_bypass false (the default) causes Tendermint to wait
   // for the full commit.
   bool enable_commit_timeout_bypass = 6;
 }
