@@ -39,6 +39,7 @@ message Request {
     RequestProcessProposal     process_proposal      = 16;
     RequestExtendVote          extend_vote           = 17;
     RequestVerifyVoteExtension verify_vote_extension = 18;
+    RequestFinalizeBlock       finalize_block        = 19;
   }
 }
 
@@ -145,6 +146,14 @@ message RequestProcessProposal {
   repeated bytes txs = 2;
 }
 
+message RequestFinalizeBlock {
+  repeated bytes          txs                  = 1;
+  bytes                   hash                 = 2;
+  tendermint.types.Header header               = 3 [(gogoproto.nullable) = false];
+  LastCommitInfo          last_commit_info     = 4 [(gogoproto.nullable) = false];
+  repeated Evidence       byzantine_validators = 5 [(gogoproto.nullable) = false];
+}
+
 //----------------------------------------
 // Response types
 
@@ -169,6 +178,7 @@ message Response {
     ResponseProcessProposal     process_proposal      = 17;
     ResponseExtendVote          extend_vote           = 18;
     ResponseVerifyVoteExtension verify_vote_extension = 19;
+    ResponseFinalizeBlock       finalize_block        = 20;
   }
 }
 
@@ -324,6 +334,13 @@ message ResponseProcessProposal {
   }
 }
 
+message ResponseFinalizeBlock {
+  repeated ResponseDeliverTx       txs                     = 1;
+  repeated ValidatorUpdate         validator_updates       = 2 [(gogoproto.nullable) = false];
+  tendermint.types.ConsensusParams consensus_param_updates = 3;
+  repeated Event                   events                  = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+}
+
 //----------------------------------------
 // Misc.
 
@@ -432,4 +449,5 @@ service ABCIApplication {
   rpc ProcessProposal(RequestProcessProposal) returns (ResponseProcessProposal);
   rpc ExtendVote(RequestExtendVote) returns (ResponseExtendVote);
   rpc VerifyVoteExtension(RequestVerifyVoteExtension) returns (ResponseVerifyVoteExtension);
+  rpc FinalizeBlock(RequestFinalizeBlock) returns (ResponseFinalizeBlock);
 }
