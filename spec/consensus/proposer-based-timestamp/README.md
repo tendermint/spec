@@ -15,7 +15,7 @@ computed by the [`BFTTime`][bfttime] algorithm:
 Timestamps are retrieved from the validators' local clocks,
 with the only restriction that they must be **monotonic**:
 
-	- The timestamp of a `Precommit` message voting for a block
+    - The timestamp of a `Precommit` message voting for a block
 	cannot be earlier than the `Time` field of that block;
 
 - The timestamp of a block is deterministically computed from the timestamps of
@@ -23,7 +23,7 @@ a set of `Precommit` messages that certify the commit of the previous block.
 This certificate, a set of `Precommit` messages from a round of the previous height,
 is selected by the block's proposer and stored in the `Commit` field of the block:
 
-	- The block timestamp is the *median* of the timestamps of the `Precommit` messages
+    - The block timestamp is the *median* of the timestamps of the `Precommit` messages
 	included in the `Commit` field, weighted by their voting power.
 	Block timestamps are **monotonic** because
 	timestamps of valid `Precommit` messages are monotonic;
@@ -93,10 +93,10 @@ summarized below:
 The block's timestamp represents the time at which it was assembled
 (after the `getValue()` call in line 18 of the [arXiv][arXiv] algorithm):
 
-	- Block timestamps are definitive, meaning that the original timestamp
+    - Block timestamps are definitive, meaning that the original timestamp
 	is retained when a block is re-proposed (line 16);
 
-	- To preserve monotonicity, a proposer might need to wait until its clock
+    - To preserve monotonicity, a proposer might need to wait until its clock
 	reads a time greater than the timestamp of the previous block;
 
 - A validator only prevotes for *timely* blocks,
@@ -104,10 +104,10 @@ that is, blocks whose timestamps are considered *timely* (compared to the origin
 If the block proposed in a round is considered *untimely*,
 the validator prevotes `nil` (line 26):
 
-	- Validators register the time at which they received `Proposal` messages,
+    - Validators register the time at which they received `Proposal` messages,
 	in order to evaluate the *timely* predicate;
 
-	- Blocks that are re-proposed because they received `2f+1 Prevotes`
+    - Blocks that are re-proposed because they received `2f+1 Prevotes`
 	in a previous round (line 28) are not subject to the *timely* predicate,
 	as they have already been evaluated as *timely* at a previous round.
 
