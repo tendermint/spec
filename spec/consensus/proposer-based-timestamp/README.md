@@ -6,14 +6,13 @@ that uses proposer-based timestamps.
 ## Context
 
 Tendermint provides a deterministic, Byzantine fault-tolerant, source of time,
-defined by the `Time` field present in the headers of committed blocks,
-representing the block's timestamp.
+defined by the `Time` field present in the headers of committed blocks.
 
 In the current consensus implementation, the timestamp of a block is
 computed by the [`BFTTime`][bfttime] algorithm:
 
-- Validators timestamps the `Precommit` messages they broadcast.
-Timestamps are retrieved from the validator's local clocks,
+- Validators include a timestamp in the `Precommit` messages they broadcast.
+Timestamps are retrieved from the validators' local clocks,
 with the only restriction that they must be **monotonic**:
 
 	- The timestamp of a `Precommit` message voting for a block
@@ -43,8 +42,8 @@ should bear some resemblance to real time, which is **not guaranteed**.
 
 A more comprehensive discussion of the limitations of `BFTTime`
 can be found in the [first draft][main_v1] of this proposal.
-Of particular interest is to possibility of having validators equipped "faulty" clocks,
-not fairly accurate with real time, that detain more than `f` voting power,
+Of particular interest is to possibility of having validators equipped with "faulty" clocks,
+not fairly accurate with real time, that control more than `f` voting power,
 plus the proposer's flexibility when selecting a `Commit` set,
 and thus determining the timestamp for a block.
 
@@ -101,7 +100,7 @@ The block's timestamp represents the time at which it was assembled
 	reads a time greater than the timestamp of the previous block;
 
 - A validator only prevotes for *timely* blocks,
-that is, blocks whose timestamps are considered *timely* (check added to line 23).
+that is, blocks whose timestamps are considered *timely* (compared to the original Tendermint consensus, a check is added to line 23).
 If the block proposed in a round is considered *untimely*,
 the validator prevotes `nil` (line 26):
 
@@ -113,7 +112,7 @@ the validator prevotes `nil` (line 26):
 	as they have already been evaluated as *timely* at a previous round.
 
 The more complex change proposed regards blocks that can be re-proposed in multiple rounds.
-The current solution improves the [first version][algorithm_v1]
+The current solution improves the [first version of the specification][algorithm_v1] (that never had been implemented)
 by simplifying the way this situation is handled,
 from a recursive reasoning regarding valid blocks that are re-proposed.
 
