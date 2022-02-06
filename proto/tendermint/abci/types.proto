@@ -134,9 +134,10 @@ message RequestProcessProposal {
 message RequestFinalizeBlock {
   repeated bytes          txs                  = 1;
   bytes                   hash                 = 2;
-  tendermint.types.Header header               = 3 [(gogoproto.nullable) = false];
-  LastCommitInfo          last_commit_info     = 4 [(gogoproto.nullable) = false];
-  repeated Evidence       byzantine_validators = 5 [(gogoproto.nullable) = false];
+  int64                   height               = 3;
+  tendermint.types.Header header               = 4 [(gogoproto.nullable) = false];
+  LastCommitInfo          last_commit_info     = 5 [(gogoproto.nullable) = false];
+  repeated Evidence       byzantine_validators = 6 [(gogoproto.nullable) = false];
 }
 
 //----------------------------------------
