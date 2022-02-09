@@ -212,6 +212,10 @@ message ResponseQuery {
   string                     codespace = 10;
 }
 
+message ResponseBeginBlock {
+  repeated Event events = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+}
+
 message ResponseCheckTx {
   uint32         code       = 1;
   bytes          data       = 2;
@@ -239,6 +243,12 @@ message ResponseDeliverTx {
   repeated Event events     = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];  // nondeterministic
   string codespace = 8;
+}
+
+message ResponseEndBlock {
+  repeated ValidatorUpdate         validator_updates       = 1 [(gogoproto.nullable) = false];
+  tendermint.types.ConsensusParams consensus_param_updates = 2;
+  repeated Event                   events                  = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
 }
 
 message ResponseCommit {
