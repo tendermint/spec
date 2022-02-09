@@ -21,13 +21,13 @@ import "gogoproto/gogo.proto";
 
 message Request {
   oneof value {
-    RequestEcho                echo                  = 1;
-    RequestFlush               flush                 = 2;
-    RequestInfo                info                  = 3;
-    RequestInitChain           init_chain            = 4;
-    RequestQuery               query                 = 5;
+    RequestEcho      echo       = 1;
+    RequestFlush     flush      = 2;
+    RequestInfo      info       = 3;
+    RequestInitChain init_chain = 4;
+    RequestQuery     query      = 5;
     // RequestBeginBlock          begin_block           = 6;
-    RequestCheckTx             check_tx              = 7;
+    RequestCheckTx check_tx = 7;
     // RequestDeliverTx           deliver_tx            = 8;
     // RequestEndBlock            end_block             = 9;
     RequestCommit              commit                = 10;
@@ -127,8 +127,11 @@ message RequestVerifyVoteExtension {
 }
 
 message RequestProcessProposal {
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false];
-  repeated bytes txs = 2;
+  bytes                   hash                 = 1;
+  tendermint.types.Header header               = 2;
+  repeated bytes          txs                  = 3;
+  LastCommitInfo          last_commit_info     = 4;
+  repeated Evidence       byzantine_validators = 5;
 }
 
 message RequestFinalizeBlock {
@@ -145,14 +148,14 @@ message RequestFinalizeBlock {
 
 message Response {
   oneof value {
-    ResponseException           exception             = 1;
-    ResponseEcho                echo                  = 2;
-    ResponseFlush               flush                 = 3;
-    ResponseInfo                info                  = 4;
-    ResponseInitChain           init_chain            = 5;
-    ResponseQuery               query                 = 6;
+    ResponseException exception  = 1;
+    ResponseEcho      echo       = 2;
+    ResponseFlush     flush      = 3;
+    ResponseInfo      info       = 4;
+    ResponseInitChain init_chain = 5;
+    ResponseQuery     query      = 6;
     // ResponseBeginBlock          begin_block           = 7;
-    ResponseCheckTx             check_tx              = 8;
+    ResponseCheckTx check_tx = 8;
     // ResponseDeliverTx           deliver_tx            = 9;
     // ResponseEndBlock            end_block             = 10;
     ResponseCommit              commit                = 11;
@@ -292,22 +295,19 @@ message ResponseVerifyVoteExtension {
   Result result = 1;
 
   enum Result {
-    UNKNOWN       = 0;  // Unknown result, reject vote extension
-    ACCEPT        = 1;  // Vote extension verified, include the vote
-    SLASH         = 2;  // Vote extension verification aborted, continue but slash validator
-    REJECT        = 3;  // Vote extension invalidated
+    UNKNOWN = 0;  // Unknown result, reject vote extension
+    ACCEPT  = 1;  // Vote extension verified, include the vote
+    SLASH   = 2;  // Vote extension verification aborted, continue but slash validator
+    REJECT  = 3;  // Vote extension invalidated
   }
 }
 
 message ResponseProcessProposal {
-  Result result = 1;
-  repeated bytes evidence = 2;
-
-  enum Result {
-    UNKNOWN       = 0;  // Unknown result, invalidate
-    ACCEPT        = 1;  // proposal verified, vote on the proposal
-    REJECT        = 2;  // proposal invalidated
-  }
+  bool                             accept                  = 1;
+  bytes                            app_hash                = 2;
+  repeated ExecTxResult            tx_results              = 3;
+  repeated ValidatorUpdate         validator_updates       = 4;
+  tendermint.types.ConsensusParams consensus_param_updates = 5;
 }
 
 message ResponseFinalizeBlock {
@@ -340,14 +340,18 @@ message EventAttribute {
   bool   index = 3;  // nondeterministic
 }
 
-// TxResult contains results of executing the transaction.
+// ExecTxResult contains results of executing the transaction.
 //
 // One usage is indexing transaction results.
-message TxResult {
-  int64             height = 1;
-  uint32            index  = 2;
-  bytes             tx     = 3;
-  ResponseDeliverTx result = 4 [(gogoproto.nullable) = false];
+message ExecTxResult {
+  uint32         code       = 1;
+  bytes          data       = 2;
+  string         log        = 3;
+  string         info       = 4;
+  int64          gas_wanted = 5;
+  int64          gas_used   = 6;
+  repeated Event tx_events  = 7;
+  string         codespace  = 8;
 }
 
 //----------------------------------------

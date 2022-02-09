@@ -108,10 +108,10 @@ message Vote {
   ];  // zero if vote is nil.
   google.protobuf.Timestamp timestamp = 5
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes validator_address = 6;
-  int32 validator_index   = 7;
-  bytes signature         = 8;
-  VoteExtension vote_extension = 9;
+  bytes         validator_address = 6;
+  int32         validator_index   = 7;
+  bytes         signature         = 8;
+  VoteExtension vote_extension    = 9;
 }
 
 // VoteExtension is app-defined additional information to the validator votes.
@@ -142,7 +142,7 @@ message CommitSig {
   bytes                     validator_address = 2;
   google.protobuf.Timestamp timestamp         = 3
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  bytes signature = 4;
+  bytes               signature      = 4;
   VoteExtensionToSign vote_extension = 5;
 }
 
