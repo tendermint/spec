@@ -9,7 +9,6 @@
   @typeAlias: TIME = Int;
   @typeAlias: PROPOSAL = <<VALUE, TIME>>;
   @typeAlias: DECISION = <<VALUE, TIME, ROUND>>;
-  @typeAlias: RCVPROP = <<PROCESS, PROPMESSAGE>>;
   @typeAlias: PROPMESSAGE = 
   [
     type: STEP, 
