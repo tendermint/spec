@@ -377,7 +377,7 @@ message ExecTxResult {
   int64          gas_used   = 6;
   repeated Event tx_events  = 7 [(gogoproto.nullable) = false];
   string         codespace  = 8;
-  uint32         index  = 9;
+  uint32         index      = 9;
 }
 
 //----------------------------------------
