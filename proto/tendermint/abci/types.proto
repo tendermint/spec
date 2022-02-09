@@ -21,15 +21,15 @@ import "gogoproto/gogo.proto";
 
 message Request {
   oneof value {
-    RequestEcho      echo       = 1;
-    RequestFlush     flush      = 2;
-    RequestInfo      info       = 3;
-    RequestInitChain init_chain = 4;
-    RequestQuery     query      = 5;
-    // RequestBeginBlock          begin_block           = 6;
-    RequestCheckTx check_tx = 7;
-    // RequestDeliverTx           deliver_tx            = 8;
-    // RequestEndBlock            end_block             = 9;
+    RequestEcho                echo                  = 1;
+    RequestFlush               flush                 = 2;
+    RequestInfo                info                  = 3;
+    RequestInitChain           init_chain            = 4;
+    RequestQuery               query                 = 5;
+    RequestBeginBlock          begin_block           = 6;
+    RequestCheckTx             check_tx              = 7;
+    RequestDeliverTx           deliver_tx            = 8;
+    RequestEndBlock            end_block             = 9;
     RequestCommit              commit                = 10;
     RequestListSnapshots       list_snapshots        = 11;
     RequestOfferSnapshot       offer_snapshot        = 12;
@@ -45,6 +45,13 @@ message Request {
 
 message RequestEcho {
   string message = 1;
+}
+
+message RequestBeginBlock {
+  bytes                   hash                 = 1;
+  tendermint.types.Header header               = 2 [(gogoproto.nullable) = false];
+  LastCommitInfo          last_commit_info     = 3 [(gogoproto.nullable) = false];
+  repeated Evidence       byzantine_validators = 4 [(gogoproto.nullable) = false];
 }
 
 message RequestFlush {}
@@ -75,6 +82,14 @@ message RequestQuery {
 enum CheckTxType {
   NEW     = 0 [(gogoproto.enumvalue_customname) = "New"];
   RECHECK = 1 [(gogoproto.enumvalue_customname) = "Recheck"];
+}
+
+message RequestDeliverTx {
+  bytes tx = 1;
+}
+
+message RequestEndBlock {
+  int64 height = 1;
 }
 
 message RequestCheckTx {
@@ -148,16 +163,16 @@ message RequestFinalizeBlock {
 
 message Response {
   oneof value {
-    ResponseException exception  = 1;
-    ResponseEcho      echo       = 2;
-    ResponseFlush     flush      = 3;
-    ResponseInfo      info       = 4;
-    ResponseInitChain init_chain = 5;
-    ResponseQuery     query      = 6;
-    // ResponseBeginBlock          begin_block           = 7;
-    ResponseCheckTx check_tx = 8;
-    // ResponseDeliverTx           deliver_tx            = 9;
-    // ResponseEndBlock            end_block             = 10;
+    ResponseException           exception             = 1;
+    ResponseEcho                echo                  = 2;
+    ResponseFlush               flush                 = 3;
+    ResponseInfo                info                  = 4;
+    ResponseInitChain           init_chain            = 5;
+    ResponseQuery               query                 = 6;
+    ResponseBeginBlock          begin_block           = 7;
+    ResponseCheckTx             check_tx              = 8;
+    ResponseDeliverTx           deliver_tx            = 9;
+    ResponseEndBlock            end_block             = 10;
     ResponseCommit              commit                = 11;
     ResponseListSnapshots       list_snapshots        = 12;
     ResponseOfferSnapshot       offer_snapshot        = 13;
@@ -424,13 +439,13 @@ service ABCIApplication {
   rpc Echo(RequestEcho) returns (ResponseEcho);
   rpc Flush(RequestFlush) returns (ResponseFlush);
   rpc Info(RequestInfo) returns (ResponseInfo);
-  // rpc DeliverTx(RequestDeliverTx) returns (ResponseDeliverTx);
+  rpc DeliverTx(RequestDeliverTx) returns (ResponseDeliverTx);
   rpc CheckTx(RequestCheckTx) returns (ResponseCheckTx);
   rpc Query(RequestQuery) returns (ResponseQuery);
   rpc Commit(RequestCommit) returns (ResponseCommit);
   rpc InitChain(RequestInitChain) returns (ResponseInitChain);
-  // rpc BeginBlock(RequestBeginBlock) returns (ResponseBeginBlock);
-  // rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
+  rpc BeginBlock(RequestBeginBlock) returns (ResponseBeginBlock);
+  rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
   rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
   rpc OfferSnapshot(RequestOfferSnapshot) returns (ResponseOfferSnapshot);
   rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
