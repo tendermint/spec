@@ -143,10 +143,10 @@ message RequestVerifyVoteExtension {
 
 message RequestProcessProposal {
   bytes                   hash                 = 1;
-  tendermint.types.Header header               = 2;
+  tendermint.types.Header header               = 2 [(gogoproto.nullable) = false];
   repeated bytes          txs                  = 3;
-  LastCommitInfo          last_commit_info     = 4;
-  repeated Evidence       byzantine_validators = 5;
+  LastCommitInfo          last_commit_info     = 4 [(gogoproto.nullable) = false];
+  repeated Evidence       byzantine_validators = 5 [(gogoproto.nullable) = false];
 }
 
 message RequestFinalizeBlock {
