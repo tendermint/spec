@@ -116,17 +116,17 @@ message RequestPrepareProposal {
   int64 block_data_size = 2;
   // votes includes all votes from the previous block. This contains vote extension data that can be used in proposal
   // preparation. The votes here will then form the last commit that gets sent in the proposed block.
-  repeated types.Vote votes = 3;
+  repeated tendermint.types.Vote votes = 3;
 }
 
 // Extends a vote with application-side injection
 message RequestExtendVote {
-  types.Vote vote = 1;
+  tendermint.types.Vote vote = 1;
 }
 
 // Verify the vote extension
 message RequestVerifyVoteExtension {
-  types.Vote vote = 1;
+  tendermint.types.Vote vote = 1;
 }
 
 message RequestProcessProposal {
