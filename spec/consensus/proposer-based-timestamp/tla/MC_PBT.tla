@@ -67,8 +67,7 @@ INSTANCE TendermintPBT_002_draft WITH
   MaxRound <- 2,
   MaxTimestamp <- 10,
   Delay <- 2,        
-  Precision <- 2,
-  ClockDrift <- FALSE
+  Precision <- 2
 
 \* run Apalache with --cinit=CInit
 CInit == \* the proposer is arbitrary -- works for safety

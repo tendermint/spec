@@ -40,9 +40,7 @@ CONSTANTS
   \* @type: TIME;
   Delay,         \* message delay
   \* @type: TIME;
-  Precision,     \* clock precision: the maximal difference between two local clocks  
-  \* @type: Bool;
-  ClockDrift     \* is there clock drift between the local clocks and the global clock
+  Precision     \* clock precision: the maximal difference between two local clocks  
 
 ASSUME(N = Cardinality(Corr \union Faulty))
 
@@ -290,10 +288,7 @@ BenignRoundsInMessages(msgfun) ==
 \* The initial states of the protocol. Some faults can be in the system already.
 Init ==
     /\ round = [p \in Corr |-> 0]
-    /\ \/ /\ ~ClockDrift
-          /\ localClock \in [Corr -> 0..Precision]
-       \/ /\ ClockDrift
-          /\ localClock = [p \in Corr |-> 0]
+    /\ localClock \in [Corr -> 0..Precision]
     /\ realTime = 0
     /\ step = [p \in Corr |-> "PROPOSE"]
     /\ decision = [p \in Corr |-> NilDecision]
@@ -737,23 +732,20 @@ AdvanceRealTime ==
     /\ \E t \in Timestamps:
       /\ t > realTime
       /\ realTime' = t
-      /\ \/ /\ ~ClockDrift
-            /\ localClock' = [p \in Corr |-> localClock[p] + (t - realTime)]  
-         \/ /\ ClockDrift
-            /\ UNCHANGED localClock
+      /\ localClock' = [p \in Corr |-> localClock[p] + (t - realTime)]  
     /\ UNCHANGED <<coreVars, bookkeepingVars, invariantVars>>
     /\ action' = "AdvanceRealTime"
     
 \* advance the local clock of node p to some larger time t, not necessarily by 1
-\* @type: (PROCESS) => Bool;
-AdvanceLocalClock(p) ==
-    /\ ValidTime(localClock[p])
-    /\ \E t \in Timestamps:
-      /\ t > localClock[p] 
-      /\ localClock' = [localClock EXCEPT ![p] = t]
-    /\ UNCHANGED <<coreVars, bookkeepingVars, invariantVars>>
-    /\ UNCHANGED realTime
-    /\ action' = "AdvanceLocalClock"
+\* #type: (PROCESS) => Bool;
+\* AdvanceLocalClock(p) ==
+\*     /\ ValidTime(localClock[p])
+\*     /\ \E t \in Timestamps:
+\*       /\ t > localClock[p] 
+\*       /\ localClock' = [localClock EXCEPT ![p] = t]
+\*     /\ UNCHANGED <<coreVars, bookkeepingVars, invariantVars>>
+\*     /\ UNCHANGED realTime
+\*     /\ action' = "AdvanceLocalClock"
 
 \* process timely messages
 \* @type: (PROCESS) => Bool;
@@ -780,8 +772,6 @@ MessageProcessing(p) ==
  *)
 Next == 
   \/ AdvanceRealTime
-  \/ /\ ClockDrift
-     /\ \E p \in Corr: AdvanceLocalClock(p)
   \/ /\ SynchronizedLocalClocks
      /\ \E p \in Corr: MessageProcessing(p)
 
@@ -837,20 +827,20 @@ ConsensusRealTimeValid ==
            /\ t < proposalReceivedTime[r] + Precision + Delay
 
 \* [PBTS-MSG-FAIR.0]
-BoundedDelay ==
-    \A r \in Rounds : 
-        (/\ proposalTime[r] /= NilTimestamp
-         /\ proposalTime[r] + Delay < realTime)
-            => inspectedProposal[r] = Corr
+\* BoundedDelay ==
+\*     \A r \in Rounds : 
+\*         (/\ proposalTime[r] /= NilTimestamp
+\*          /\ proposalTime[r] + Delay < realTime)
+\*             => inspectedProposal[r] = Corr
 
 \* [PBTS-CONSENSUS-TIME-LIVE.0]
-ConsensusTimeLive ==
-    \A r \in Rounds, p \in Corr : 
-       (/\ proposalTime[r] /= NilTimestamp
-        /\ proposalTime[r] + Delay < realTime 
-        /\ Proposer[r] \in Corr
-        /\ round[p] <= r)
-            => \E msg \in RoundProposals(r) : msg \in receivedTimelyProposal[p]
+\* ConsensusTimeLive ==
+\*     \A r \in Rounds, p \in Corr : 
+\*        (/\ proposalTime[r] /= NilTimestamp
+\*         /\ proposalTime[r] + Delay < realTime 
+\*         /\ Proposer[r] \in Corr
+\*         /\ round[p] <= r)
+\*             => \E msg \in RoundProposals(r) : msg \in receivedTimelyProposal[p]
 
 \* a conjunction of all invariants
 Inv ==
@@ -859,9 +849,9 @@ Inv ==
     /\ ConsensusSafeValidCorrProp
     /\ ConsensusRealTimeValid
     /\ ConsensusRealTimeValidCorr
-    /\ BoundedDelay
+    \* /\ BoundedDelay
 
-Liveness ==
-    ConsensusTimeLive    
+\* Liveness ==
+\*     ConsensusTimeLive    
 
 =============================================================================    
