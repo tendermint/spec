@@ -39,7 +39,7 @@ VARIABLES
   \* @type: ACTION;
   action,       \* we use this variable to see which action was taken
   \* @type: PROCESS -> Set(PROPMESSAGE);
-  receivedTimelyProposal, \* used to keep track when a process receives a timely PROPOSAL message
+  receivedTimelyProposal, \* used to keep track when a process receives a timely VALUE message
   \* @type: ROUND -> Set(PROCESS);
   inspectedProposal \* used to keep track when a process tries to receive a message
   
@@ -65,7 +65,7 @@ INSTANCE TendermintPBT_002_draft WITH
   ValidValues <- { "v0", "v1" },
   InvalidValues <- {"v2"},
   MaxRound <- 2,
-  MaxTimestamp <- 100,
+  MaxTimestamp <- 10,
   Delay <- 2,        
   Precision <- 2,
   ClockDrift <- FALSE
