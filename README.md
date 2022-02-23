@@ -1,3 +1,7 @@
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Tendermint Spec
 
 This repository contains specifications for the Tendermint protocol.
@@ -47,7 +51,7 @@ maintained by Informal Systems.
 ### RFC
 
 - [RFC](./rfc/README.md): RFCs describe proposals to change the spec.
-  
+
 ### ProtoBuf
 
 - [Proto](./proto/README.md): The data structures of the Tendermint protocol are located in the `proto` directory. These specify P2P messages that each implementation should follow to be compatible.

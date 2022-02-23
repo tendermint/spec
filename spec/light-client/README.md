@@ -6,6 +6,10 @@ parent:
 ---
 <!-- markdown-link-check-disable -->
 
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Light Client Specification
 
 This directory contains work-in-progress English and TLA+ specifications for the Light Client

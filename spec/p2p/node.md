@@ -1,3 +1,7 @@
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Peer Discovery
 
 A Tendermint P2P network has different kinds of nodes with different requirements for connectivity to one another.

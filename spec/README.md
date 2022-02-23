@@ -6,6 +6,10 @@ parent:
   order: 7
 ---
 
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Tendermint Spec
 
 This is a Markdown specification of the Tendermint blockchain.
