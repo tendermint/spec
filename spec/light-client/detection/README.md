@@ -5,6 +5,10 @@ parent:
   order: 2
 ---
 
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Tendermint fork detection and IBC fork detection
 
 ## Status

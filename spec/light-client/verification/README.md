@@ -4,6 +4,11 @@ parent:
   title: Verification
   order: 2
 ---
+
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Core Verification
 
 ## Problem statement

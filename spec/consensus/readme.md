@@ -5,6 +5,10 @@ parent:
   order: 4
 ---
 
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Consensus
 
 Specification of the Tendermint consensus protocol.

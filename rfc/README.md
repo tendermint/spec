@@ -1,3 +1,7 @@
+**THIS REPOSITORY HAS BEEN ARCHIVED. THE TENDERMINT SPECIFICATION IS NOW LOCATED IN THE [TENDERMINT/TENDERMINT](https://github.com/tendermint/tendermint/tree/master/spec) REPOSITORY.**
+
+---
+
 # Request for Comments (RFC)
 
 RFC stands for `Request for Comments`. It is a social device use to float and polish an idea prior to the inclusion into an existing or new spec/paper/research topic.
